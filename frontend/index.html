@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEO – Material Management Tool</title>
+      <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+    <div class="container-fluid p-0 w-100">
+
+        <!-- Header -->
+        <header class="header d-flex align-items-center justify-content-between px-4">
+          <!-- Logo and Title (left) -->
+          <div class="d-flex align-items-center">
+            <div class="logo me-3">
+              <a href="index.html">
+                <svg width="120" height="48" viewBox="0 0 167 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="genpact-logo">
+                  <g id="Group 1597881160">
+                    <g id="Group">
+                      <path id="Vector" d="M70.6328 37.8217C71.2676 39.0041 72.5372 39.8266 73.9823 39.8266C76.0893 39.8266 77.7776 38.1044 77.7776 35.9967V35.8554L77.7236 35.8297C76.5485 36.9349 75.0358 37.6032 73.3476 37.6032C69.7279 37.6032 66.8105 34.4674 66.8105 30.6375C66.8105 26.8077 69.7414 23.6719 73.3476 23.6719C75.0358 23.6719 76.5485 24.353 77.7236 25.484L77.7776 25.4583V24.0446H81.1541V35.9967C81.1541 39.7752 78.1693 42.821 74.1309 42.821C71.4162 42.821 69.0661 41.4716 67.7965 39.4153L70.6328 37.8346V37.8217ZM74.0634 34.6345C76.1974 34.6345 77.9802 32.8609 77.9802 30.6375C77.9802 28.4142 76.1974 26.6406 74.0634 26.6406C71.9294 26.6406 70.1736 28.4142 70.1736 30.6375C70.1736 32.8609 71.9564 34.6345 74.0634 34.6345Z" fill="black"></path>
+                      <path id="Vector_2" d="M92.9314 33.3366L95.2814 35.5085C93.9173 36.8066 92.0264 37.5905 89.9465 37.5905C85.7866 37.5905 82.4775 34.4932 82.4775 30.6249C82.4775 26.7565 85.7055 23.6592 89.7439 23.6592C93.7822 23.6592 96.9697 26.7565 96.9697 30.6249C96.9697 31.2417 96.9157 31.4088 96.9157 31.4088H85.8541C85.8541 32.8739 87.6909 34.5961 89.7979 34.5961C91.0405 34.5961 92.121 34.082 92.9314 33.3237M93.323 28.7999L93.35 28.7485C92.5937 27.4505 91.2701 26.5765 89.7304 26.5765C88.1907 26.5765 86.8941 27.3991 86.0837 28.7485L86.1107 28.7999H93.3095H93.323Z" fill="black"></path>
+                      <path id="Vector_3" d="M101.764 30.6377V37.2307H98.3877V24.0319H101.764V25.6384L101.818 25.6641C102.966 24.3403 104.506 23.6592 106.1 23.6592C112.124 23.6592 112.272 28.787 112.272 30.3678V37.2178H108.896V30.6249C108.896 29.0441 108.869 26.6279 105.37 26.6279C103.385 26.6279 101.751 28.4015 101.751 30.6249" fill="black"></path>
+                      <path id="Vector_4" d="M121.74 37.6034C120.025 37.6034 118.539 36.9608 117.337 35.8041L117.283 35.8298V42.4485H113.906V24.0319H117.283V25.407L117.337 25.4327C118.539 24.3275 120.025 23.6592 121.74 23.6592C125.36 23.6592 128.277 26.7565 128.277 30.6249C128.277 34.4932 125.346 37.5905 121.74 37.5905M121.011 26.6279C118.836 26.6279 117.094 28.4015 117.094 30.5991C117.094 32.7968 118.85 34.6089 121.011 34.6089C123.117 34.6089 124.9 32.8354 124.9 30.5991C124.9 28.3629 123.117 26.6279 121.011 26.6279Z" fill="black"></path>
+                      <path id="Vector_5" d="M135.963 23.6719C137.651 23.6719 139.15 24.353 140.325 25.484L140.393 25.4583V24.0446H143.769V37.2434H140.393V35.8939L140.325 35.8425C139.15 36.9349 137.638 37.6161 135.963 37.6161C132.343 37.6161 129.426 34.5188 129.426 30.6504C129.426 26.782 132.357 23.6847 135.963 23.6847M136.692 34.6087C138.84 34.6087 140.582 32.8609 140.582 30.6375C140.582 28.4142 138.84 26.6278 136.692 26.6278C134.545 26.6278 132.802 28.4013 132.802 30.6375C132.802 32.8738 134.585 34.6087 136.692 34.6087Z" fill="black"></path>
+                      <path id="Vector_6" d="M157.869 35.5085C156.519 36.8066 154.614 37.5905 152.534 37.5905C148.374 37.5905 145.065 34.4932 145.065 30.6249C145.065 26.7565 148.388 23.6592 152.534 23.6592C154.614 23.6592 156.519 24.4431 157.869 25.7412L155.492 27.8232C154.736 27.0649 153.709 26.6151 152.534 26.6151C150.238 26.6151 148.442 28.4143 148.442 30.6249C148.442 32.8354 150.252 34.5961 152.534 34.5961C153.709 34.5961 154.79 34.1205 155.546 33.3494L157.869 35.4957V35.5085Z" fill="black"></path>
+                      <path id="Vector_7" d="M164.663 27.0907V37.2307H161.287V27.0907H158.95V24.0448H161.287V18.1201H164.663V24.0448H167V27.0907H164.663Z" fill="black"></path>
+                    </g>
+                    <path id="Vector_8" d="M48.9177 31.2892C48.9177 31.2892 48.8707 31.2445 48.8472 31.2222C48.8119 31.1775 48.7766 31.1329 48.7296 31.0994L37.3848 23.8548L48.7296 16.5097C48.8942 16.4092 48.9882 16.2306 48.9882 16.052C48.9882 15.8734 48.8942 15.6948 48.7296 15.5943L24.8292 0.100465C24.6293 -0.0334882 24.3707 -0.0334882 24.1708 0.100465L0.258637 15.5943C0.258637 15.5943 0.164587 15.6837 0.117562 15.7395C0.117562 15.7506 0.0940499 15.7618 0.0822937 15.7841C0.0352687 15.8623 0 15.9627 0 16.0632V47.0621C0 47.2519 0.0940499 47.4193 0.258637 47.5198L24.1708 63.0248C24.1708 63.0248 24.1943 63.0248 24.2061 63.0248C24.2061 63.0248 24.2178 63.036 24.2296 63.0472C24.3001 63.0807 24.3824 63.0918 24.453 63.103C24.4647 63.103 24.4882 63.1141 24.5 63.1141C24.594 63.1141 24.6881 63.0918 24.7704 63.0472C24.7821 63.0472 24.7939 63.0248 24.8057 63.0248H24.8292L48.7414 47.5198C48.9059 47.4193 49 47.2407 49 47.0621V31.5682C49 31.4678 48.9647 31.3785 48.9177 31.3003V31.2892ZM13.2258 24.1673L24.5 16.8557L35.304 23.8659L24.1708 31.0994C24.1708 31.0994 24.112 31.1664 24.0885 31.1887C24.0533 31.2222 24.018 31.2445 23.9945 31.2892C23.971 31.3338 23.971 31.3785 23.9592 31.4343C23.9592 31.4789 23.9239 31.5124 23.9239 31.5571V45.89L13.2375 38.958V24.1673H13.2258ZM35.3628 39.2817L25.0878 45.89V32.6175L35.3628 39.2929V39.2817ZM36.4091 38.6119L25.5463 31.5571L36.3503 24.5357L47.3659 31.5682L36.4091 38.6119ZM24.5 1.23906L47.3659 16.0632L36.3385 23.1962L24.8174 15.7283C24.6176 15.5943 24.3589 15.5943 24.1591 15.7283L12.6262 23.2073L1.63412 16.0632L24.5 1.23906ZM1.17562 17.1236L12.0501 24.1673V39.2482C12.0501 39.438 12.1442 39.6054 12.3088 39.7059L23.9122 47.2296V61.5067L1.17562 46.7719V17.1236ZM47.8244 46.7719L25.0878 61.5067V47.2407L25.4875 46.984L47.8244 32.6175V46.7719Z" fill="black"></path>
+                  </g>
+                </svg>
+              </a>
+            </div>
+            <div class="navbar-title">
+              <span style="font-size: 16px; font-weight: 600; color: var(--gray-800);">AEO – Material Management Tool</span>
+            </div>
+          </div>
+    
+          <!-- Navigation Menu (right) -->
+          <nav class="navbar-nav">
+            <ul class="nav-menu d-flex list-unstyled mb-0">
+              <li class="nav-item me-3 dropdown">
+                <a href="index.html" class="nav-link active">
+                  Home
+                </a>
+              </li>
+              <li class="nav-item me-3 dropdown">
+                <a href="#engine-delivery" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                  Engine Delivery <i class="fas fa-chevron-down ms-1"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="demand.html">Demand</a></li>
+                  <li><a class="dropdown-item" href="BOMexplosion.html">BOM Explosion</a></li>
+                  <li><a class="dropdown-item" href="GapAnalysis.html">GAP Analysis</a></li>
+                </ul>
+              </li>
+              <li class="nav-item me-3 dropdown">
+                <a href="#fulfillment-expediting" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                  Fulfillment <i class="fas fa-chevron-down ms-1"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#">Buyback</a></li>
+                  <li><a class="dropdown-item" href="#">Line up change actions</a></li>
+                  <li><a class="dropdown-item" href="#">Part Escalation actions</a></li>
+                </ul>
+              </li>
+              <li class="nav-item me-3 dropdown">
+                <a href="#sourcing" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                  Sourcing <i class="fas fa-chevron-down ms-1"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#">Say do-ratio</a></li>
+                  <li><a class="dropdown-item" href="#">Quality instances</a></li>
+                  <li><a class="dropdown-item" href="#">L/T management / Costing</a></li>
+                  <li><a class="dropdown-item" href="#">Alternate sources / escalation</a></li>
+                </ul>
+              </li>
+              <li class="nav-item me-3 dropdown">
+                <a href="#critical-order" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                  Critical Order <i class="fas fa-chevron-down ms-1"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="4critical_demand.html">Demand</a></li>
+                  <li><a class="dropdown-item" href="4critical_gapAnalysis.html">GAP Analysis</a></li>
+                </ul>
+              </li>
+              <!-- <li class="nav-item">
+                <a href="datatable.html" class="nav-link">
+                  Data Table <i class="fas fa-table ms-1"></i>
+                </a>
+              </li> -->
+            </ul>
+          </nav>
+        </header>
+    
+        <div class="container my-3" style="margin: 5px auto; padding: 0; max-width: calc(100% - 10px); width: 100%;">
+          <!-- Main Content Area -->
+          <div class="main-content text-center">
+            <h1 class="main-title">AEO Material Management <span class="highlight">Dashboard</span></h1>
+            <p class="subtitle">Navigate through our comprehensive material management modules to streamline your engine delivery operations</p>
+            
+            <div class="row justify-content-center mt-4">
+              <!-- Executive Summary -->
+              <div class="feature-col">
+                <div class="feature-card h-100">
+                  <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                  </div>
+                  <h3 class="card-title">Executive Summary</h3>
+                  <p class="card-description">Comprehensive overview of critical insights, and recommendations for material management</p>
+                  <div class="card-submenu mt-3">
+                    <a href="#" class="submenu-btn">Engine Delivery</a>
+                    <a href="#" class="submenu-btn">Fulfillment / Expediting</a>
+                    <a href="#" class="submenu-btn">Sourcing</a>
+                    <a href="#" class="submenu-btn">Critical Order</a>
+                  </div>
+                </div>
+              </div>
+              <!-- Engine Delivery Card -->
+              <div class="feature-col">
+                <div class="feature-card">
+                  <div class="card-icon">
+                    <i class="fas fa-shipping-fast"></i>
+                  </div>
+                  <h3 class="card-title">Engine Delivery</h3>
+                  <p class="card-description">Successful engine delivery requires precise logistics, thorough inspection, and seamless installation</p>
+                  <div class="card-submenu mt-3">
+                    <a href="demand.html" class="submenu-btn">Demand</a>
+                    <a href="BOMexplosion.html" class="submenu-btn">BOM Explosion</a>
+                    <a href="GapAnalysis.html" class="submenu-btn">GAP Analysis</a>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Fulfillment / Expediting Card -->
+              <div class="feature-col">
+                <div class="feature-card">
+                  <div class="card-icon">
+                    <i class="fas fa-tasks"></i>
+                  </div>
+                  <h3 class="card-title">Fulfillment / Expediting</h3>
+                  <p class="card-description">Timely engine delivery depends on effective fulfillment and expediting of all production processes</p>
+                  <div class="card-submenu mt-3">
+                    <a href="#" class="submenu-btn">Buyback</a>
+                    <a href="#" class="submenu-btn">Line up change actions</a>
+                    <a href="#" class="submenu-btn">Part Escalation actions</a>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Sourcing Card -->
+              <div class="feature-col">
+                <div class="feature-card">
+                  <div class="card-icon">
+                    <i class="fas fa-handshake"></i>
+                  </div>
+                  <h3 class="card-title">Sourcing</h3>
+                  <p class="card-description">Reliable sourcing of high-quality components is critical for successful aircraft engine delivery</p>
+                  <div class="card-submenu mt-3">
+                    <a href="#" class="submenu-btn">Say do-ratio</a>
+                    <a href="#" class="submenu-btn">Quality instances</a>
+                    <a href="#" class="submenu-btn">L/T management / Costing</a>
+                    <a href="#" class="submenu-btn">Alternate sources / escalation</a>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Critical Order / Delinquency Management Card -->
+              <div class="feature-col">
+                <div class="feature-card">
+                  <div class="card-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                  </div>
+                  <h3 class="card-title">Critical Order / Delinquency Management</h3>
+                  <p class="card-description">Critical order tracking and delinquency management ensure timely delivery without delays</p>
+                  <div class="card-submenu mt-3">
+                    <a href="4critical_demand.html" class="submenu-btn">Demand</a>
+                    <a href="4critical_gapAnalysis.html" class="submenu-btn">GAP Analysis</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+     <!-- Bootstrap 5 JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

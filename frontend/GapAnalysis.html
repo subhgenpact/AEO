@@ -1,0 +1,3664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gap Analysis Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* Base Reset & Typography */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, 
+              rgba(0, 102, 204, 0.7) 0%,
+              rgba(0, 68, 153, 0.75) 20%,
+              rgba(0, 51, 102, 0.8) 40%,
+              rgba(0, 34, 68, 0.75) 60%,
+              rgba(26, 26, 26, 0.7) 80%,
+              rgba(32, 33, 36, 0.75) 100%),
+              url('src/images/slide1.jpg') no-repeat center center fixed;
+  background-size: cover;
+  background-attachment: fixed;
+  color: var(--gray-50);
+  font-size: 14px;
+  line-height: 1.4;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Container */
+.container.dashboard {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* KPI Cards */
+.kpi {
+  border-radius: 12px;
+  padding: 1.8rem 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.kpi:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+.kpi h3 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: inherit;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.kpi span {
+  margin-top: 0.8rem;
+  font-size: 16px;
+  font-weight: 600;
+  display: block;
+  opacity: 0.9;
+}
+
+/* KPI Variants - Modern gradient backgrounds */
+.kpi.demand {
+  background: linear-gradient(135deg, rgba(25, 135, 84, 0.9), rgba(40, 167, 69, 0.8));
+  color: #ffffff;
+  border-left: 5px solid #198754;
+}
+
+.kpi.planned {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(255, 99, 132, 0.8));
+  color: #ffffff;
+  border-left: 5px solid #dc3545;
+}
+
+.kpi.highPriority {
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.9), rgba(255, 140, 0, 0.8));
+  color: #ffffff;
+  border-left: 5px solid #ff6600;
+}
+
+.kpi.lowpriority {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.9), rgba(255, 235, 59, 0.8));
+  color: #212529;
+  border-left: 5px solid #ffc107;
+}
+
+.kpi.confirmed {
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.9), rgba(54, 162, 235, 0.8));
+  color: #ffffff;
+  border-left: 5px solid #0d6efd;
+}
+
+.kpi.gap {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(255, 99, 132, 0.8));
+  color: #ffffff;
+  border-left: 5px solid #dc3545;
+}
+
+/* ESN Display */
+.kpi-esn {
+  position: absolute;
+  top: 12px;
+  left: 15px;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.8;
+  text-align: left;
+}
+
+/* KPI Breakdown */
+.kpi-breakdown {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* Filters */
+.filters {
+margin-bottom: 2rem;
+}
+
+.list-group {
+padding: 0;
+margin: 0;
+list-style: none;
+overflow-x: auto;
+scrollbar-width: thin;
+scrollbar-color: #6699cc transparent;
+border-radius: 8px;
+border: 1.5px solid #2a4b7c;
+background-color: rgba(255,255,255,0.1);
+}
+
+.list-group-item {
+display: flex;
+flex-wrap: nowrap;
+gap: 1rem;
+padding: 1rem 1.5rem;
+align-items: flex-start;
+}
+
+.list-group-item::-webkit-scrollbar {
+height: 6px;
+}
+.list-group-item::-webkit-scrollbar-thumb {
+background-color: #6699cc;
+border-radius: 3px;
+}
+
+.filter-item {
+display: flex;
+flex-direction: column;
+min-width: 140px;
+flex: 1 1 150px;
+}
+
+.filter-item label {
+font-weight: 600;
+font-size: 15px;
+margin-bottom: 6px;
+color: #d4e6f7;
+cursor: pointer;
+}
+
+.form-select {
+
+background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org…' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+background-image: var(--bs-form-select-bg-img), var(--bs-form-select-bg-icon, none);
+}
+
+/* Dashboard Content */
+.dashboard-content {
+display: flex;
+flex-direction: column;
+gap: 2rem;
+margin-top: 25px;
+}
+
+/* Cards */
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: #222;
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+}
+
+.card h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0066cc;
+  border-left: 4px solid #0066cc;
+  padding-left: 1rem;
+  user-select: none;
+}
+
+.card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #0066cc;
+  border-left: 4px solid #0066cc;
+  padding-left: 1rem;
+}
+
+/* Width Helpers */
+.full-width {
+width: 100%;
+}
+
+.row {
+display: flex;
+gap: 2rem;
+flex-wrap: wrap;
+}
+
+.half-width {
+flex: 1 1 45%;
+}
+
+/* Table Styles */
+.table-responsive {
+overflow-x: auto;
+margin-top: 1rem;
+}
+
+table.table {
+width: 100%;
+border-collapse: collapse;
+background-color: white;
+border-radius: 8px;
+overflow: hidden;
+}
+
+table.table thead tr {
+background-color: #004a80;
+color: white;
+}
+
+table.table th,
+table.table td {
+padding: 0.8rem 1rem;
+border: 1px solid #ddd;
+text-align: left;
+font-size: 14px;
+}
+
+table.table tbody tr:nth-child(even) {
+background-color: #f4f8ff;
+}
+
+/* Buttons */
+.btn-group {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background: linear-gradient(135deg, #0066cc, #0052a3);
+  border: none;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  user-select: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.btn:hover {
+  background: linear-gradient(135deg, #ff6600, #e55a00);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 102, 0, 0.4);
+}
+
+.btn.active {
+  background: linear-gradient(135deg, #ff6600, #e55a00);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 102, 0, 0.4);
+}
+
+/* Margin top helper */
+.mt-4 {
+margin-top: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+.row {
+  flex-direction: column;
+}
+.half-width {
+  flex: 1 1 100%;
+}
+}
+
+a.btn {
+text-decoration: none !important;
+}
+
+/* Chart Sizes */
+#doughnutChart {
+max-height: 220px;
+}
+#lineChart  {
+max-height: 420px;
+}
+
+</style>
+
+<style>
+  /* dropdown filter */
+  .section-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.filters-inline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.filters-inline .form-select-sm {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #0066cc;
+  color: #0066cc;
+  font-weight: 600;
+  background-position: right 8px center;
+  background-size: 14px 14px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.filters-inline .form-select-sm:hover {
+  background: rgba(0, 102, 204, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 102, 204, 0.2);
+}
+
+/* Search inputs styled like dark filter fields, square-cornered */
+.search-input {
+  height: 28px;
+  background-color: #004a80;
+  color: #f5f7fa;
+  border: 1.5px solid #0066cc;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.search-input::placeholder {
+  color: #cceeff;
+  opacity: .7;
+}
+.search-input:focus {
+  outline: none;
+  background-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+  border-color: #0099ff;
+}
+
+.filters-inline .filter-item {
+  min-width: auto;
+  max-width: none;
+}
+
+</style> 
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+/* Genpact Brand Colors */
+--primary: #0066cc;          /* Genpact Blue */
+--secondary: #ff6600;        /* Genpact Orange */
+--accent: #0099ff;           /* Light Blue */
+--success: #00cc66;          /* Green */
+--warning: #ff9900;          /* Orange */
+--danger: #cc0000;           /* Red */
+--dark: #1a1a1a;             /* Dark Gray */
+--gray-50: #f8f9fa;
+--gray-100: #f1f3f4;
+--gray-200: #e8eaed;
+--gray-300: #dadce0;
+--gray-400: #bdc1c6;
+--gray-500: #9aa0a6;
+--gray-600: #80868b;
+--gray-700: #5f6368;
+--gray-800: #3c4043;
+--gray-900: #202124;
+}
+
+html, body {
+margin: 0;
+padding: 0;
+font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: linear-gradient(135deg, 
+            rgba(0, 102, 204, 0.7) 0%,
+            rgba(0, 68, 153, 0.75) 20%,
+            rgba(0, 51, 102, 0.8) 40%,
+            rgba(0, 34, 68, 0.75) 60%,
+            rgba(26, 26, 26, 0.7) 80%,
+            rgba(32, 33, 36, 0.75) 100%),
+            url('src/images/slide1.jpg') no-repeat center center fixed;
+background-size: cover;
+background-attachment: fixed;
+color: var(--gray-50);
+font-size: 14px;
+line-height: 1.4;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Compact Circuit pattern overlay */
+body::before {
+content: '';
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+pointer-events: none;
+background-image: 
+  radial-gradient(circle at 25% 25%, rgba(0, 102, 204, 0.1) 1px, transparent 1px),
+  radial-gradient(circle at 75% 75%, rgba(0, 153, 255, 0.08) 1px, transparent 1px);
+background-size: 80px 80px, 120px 120px;
+z-index: -1;
+}
+
+.logo img {
+height: 2.5rem;
+width: auto;
+user-select: none;
+filter: brightness(0) invert(1);
+max-width: 100%;
+}
+
+/* Header Styles - White Background */
+.header {
+background: rgba(255, 255, 255, 0.95);
+backdrop-filter: blur(15px);
+-webkit-backdrop-filter: blur(15px);
+margin: 8px auto;
+max-width: calc(100% - 16px);
+width: 100%;
+border-radius: 10px;
+padding: 8px 20px;
+font-size: 16px;
+font-weight: 600;
+color: var(--gray-800);
+box-shadow: 
+  0 4px 16px rgba(0, 0, 0, 0.1),
+  0 2px 8px rgba(0, 0, 0, 0.05);
+border: 1px solid rgba(0, 0, 0, 0.08);
+transition: all 0.3s ease;
+z-index: 1000;
+display: flex;
+flex-wrap: nowrap;       /* prevent wrapping */
+align-items: center;     /* vertical alignment */
+justify-content: space-between; /* space between logo/title and nav */
+
+}
+
+.header:hover {
+background: rgba(255, 255, 255, 0.98);
+transform: translateY(-1px);
+box-shadow: 
+  0 6px 20px rgba(0, 0, 0, 0.15),
+  0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.d-flex {
+display: flex;
+align-items: center;
+margin-bottom: 10px;
+
+}
+.logo img {
+height: 32px;
+width: auto;
+max-width: 100%;
+filter: none;
+user-select: none;
+object-fit: contain;
+transition: all 0.3s ease;
+}
+
+.navbar-title span {
+font-weight: 600;
+letter-spacing: 0.2px;
+text-shadow: none;
+font-size: 16px;
+color: var(--gray-800);
+}
+
+/* Home Button */
+.home-button .btn {
+background: rgba(59, 130, 246, 0.8);
+border: 1px solid rgba(147, 197, 253, 0.3);
+color: white;
+font-weight: 500;
+padding: 8px 16px;
+border-radius: 8px;
+transition: all 0.3s ease;
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+}
+
+.home-button .btn:hover {
+background: rgba(59, 130, 246, 1);
+border-color: rgba(147, 197, 253, 0.5);
+transform: translateY(-1px);
+box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Navigation Menu Styles - Gradient Buttons */
+.navbar-nav {
+display: flex;
+align-items: center;
+position: relative;
+z-index: 1001;
+}
+
+.nav-menu {
+display: flex;
+align-items: center;
+gap: 10px;
+
+list-style-type: none;
+padding-left: 0;
+margin: 0;
+}
+
+
+.nav-item {
+position: relative;
+z-index: 1002;
+}
+
+.nav-link {
+color: white !important;
+text-decoration: none;
+padding: 8px 16px;
+border-radius: 4px;
+font-weight: 500;
+font-size: 13px;
+transition: all 0.3s ease;
+background: var(--primary);
+border: 1px solid rgba(255, 255, 255, 0.2);
+backdrop-filter: blur(8px);
+-webkit-backdrop-filter: blur(8px);
+box-shadow: 0 2px 8px rgba(0, 153, 255, 0.3);
+}
+
+.nav-link:hover, .nav-link:active, .nav-link.active {
+background: var(--secondary);
+color: white !important;
+border-color: var(--secondary);
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
+}
+
+/* Dropdown Styles - White Background */
+.dropdown-menu {
+background: rgba(255, 255, 255, 0.98) !important;
+backdrop-filter: blur(15px);
+-webkit-backdrop-filter: blur(15px);
+border: 1px solid rgba(0, 0, 0, 0.1) !important;
+border-radius: 8px !important;
+box-shadow: 
+  0 8px 32px rgba(0, 0, 0, 0.15),
+  0 4px 16px rgba(0, 0, 0, 0.1) !important;
+padding: 8px;
+min-width: 220px;
+margin-top: 4px !important;
+z-index: 1050 !important;
+/* overflow: hidden; */
+display: none;
+}
+
+.dropdown-item {
+color: var(--gray-800) !important;
+padding: 8px 12px !important;
+font-size: 13px;
+font-weight: 500;
+transition: all 0.3s ease;
+border-radius: 6px;
+margin: 2px 4px;
+width: calc(100% - 8px);
+box-sizing: border-box;
+}
+
+.dropdown-item:hover {
+background: var(--warning);
+color: white !important;
+transform: scale(1.02);
+margin-left: 6px;
+margin-right: 2px;
+}
+
+.dropdown-toggle::after {
+display: none !important;
+}
+
+.nav-link i.fa-chevron-down {
+font-size: 8px;
+transition: transform 0.3s ease;
+color: white;
+}
+
+.dropdown.show .nav-link i.fa-chevron-down {
+transform: rotate(180deg);
+}
+
+.main-content {
+padding: 30px 15px;
+}
+
+.main-title {
+font-size: 2.8rem;
+font-weight: 800;
+margin-bottom: 16px;
+color: var(--gray-50);
+text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+letter-spacing: -0.5px;
+}
+
+.main-title .highlight {
+color: var(--secondary);
+background: linear-gradient(135deg, var(--secondary), var(--warning));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+text-shadow: none;
+}
+
+.subtitle {
+font-size: 1.4rem;
+color: var(--gray-100);
+margin-bottom: 35px;
+font-weight: 500;
+max-width: 800px;
+margin-left: auto;
+margin-right: auto;
+line-height: 1.6;
+text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Design - Compact */
+@media (max-width: 768px) {
+.header {
+  margin: 5px;
+  padding: 8px 15px;
+  flex-direction: column;
+  text-align: center;
+  gap: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.logo img {
+  height: 28px;
+}
+
+.navbar-title span {
+  font-size: 14px;
+  color: var(--gray-800);
+}
+
+.nav-menu {
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.nav-item {
+  width: 100%;
+}
+
+.nav-link {
+  text-align: center;
+  width: 100%;
+  justify-content: center;
+  font-size: 12px;
+  padding: 8px 12px;
+  background: var(--primary);
+  color: white !important;
+  border-radius: 4px;
+}
+}
+
+.btn:hover, .btn:active, .btn.active {
+background: var(--secondary);
+color: white !important;
+border-color: var(--secondary);
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
+}
+
+</style>
+
+
+ <style>
+/* ===== Modal Backdrop ===== */
+#initialActionPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in-out;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ===== Modal Box ===== */
+.modal-popup {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  animation: slideUp 0.3s ease-in-out;
+  overflow: hidden;
+  align-items: center;
+}
+
+/* ===== Modal Content ===== */
+.modal-content {
+  padding: 28px 36px;
+  overflow-y: auto;
+  flex: 1;
+  width: 100%;
+}
+
+/* ===== Title ===== */
+.modal-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  /* color: #1e293b; */
+  text-align: center;
+  margin-bottom: 18px;
+  background: #dc2626;;
+  padding: 8px 12px;
+  border-radius: 8px;
+  /* display: inline-block; */
+}
+
+/* ===== Alert List ===== */
+.modal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.critical-alert {
+  background: #fef2f2;
+  border: 0.5px solid #dc2626;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+/* ===== Alert Header ===== */
+.alert-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 8px;
+}
+
+/* ===== Badge Styles (P1/P2) ===== */
+.alert-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.p1-critical {
+  background: #dc2626;
+}
+.p1-urgent {
+  background: #dc2626;
+ 
+}
+.p2 {
+  /* background: #f97316; */
+  background: #dc2626;
+}
+
+/* ===== Details Box ===== */
+.alert-details-box {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.alert-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+
+/* .alert-inline .span {
+  width: 62%;
+} */
+/* ===== Colored Texts ===== */
+.overdue-text,
+.red-link {
+  color: #dc2626;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.warning-text,
+.orange-link {
+  color: #dc2626;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.info-text,
+.blue-link {
+  /* color: #ea580c; */
+  color: #dc2626;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* ===== Close Button ===== */
+.modal-close-btn {
+  width: 50%;
+  padding: 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin: 0 0 38px 0;
+}
+
+.modal-close-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+.chart-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+</style> 
+
+  <style>
+    /* === Layout + Theme === */
+   
+    .container.dashboard {
+      max-width: 1400px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h2, h3 {
+      margin: 0;
+      color: #004aad;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .full-width { width: 100%; }
+    .half-width { width: 48%; }
+
+    .row {
+      display: none;
+      /* display: flex; */
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+
+    /* === KPI Grid === */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .kpi {
+      background-color: #f0f4ff;
+      border-radius: 10px;
+      text-align: center;
+      padding: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .kpi:hover {
+      transform: scale(1.03);
+    }
+
+    .kpi h3 {
+      font-size: 2rem;
+      color: #004aad;
+    }
+
+    .kpi span {
+      color: #555;
+      font-weight: 600;
+    }
+
+    /* === Table === */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      border: 1px solid #e1e1e1;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #004aad;
+      color: white;
+    }
+
+    /* === GAP Highlighting === */
+    tr.gap-high {
+      background-color: #ffe5e5 !important; /* Light red */
+    }
+
+    tr.gap-medium {
+      background-color: #fff6e5 !important; /* Light amber */
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    /* === Chart Styles === */
+    canvas {
+      width: 100% !important;
+      height: 350px !important;
+    }
+
+    @media (max-width: 768px) {
+      .half-width {
+        width: 100%;
+      }
+    }
+
+
+
+    .toggle-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .toggle-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid #0066cc;
+      color: #0066cc;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .toggle-btn.active {
+      background: linear-gradient(135deg, #0066cc, #0052a3);
+      color: #fff;
+      border-color: #0066cc;
+      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .toggle-btn:hover {
+      background: linear-gradient(135deg, #ff6600, #e55a00);
+      color: #fff;
+      border-color: #ff6600;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+    }
+
+    .summary {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 15px;
+      color: #444;
+    }
+
+    canvas {
+      margin: auto;
+      display: block;
+      max-height: 350px;
+    }
+  </style>
+  
+
+
+
+  <style>
+    .number {
+      font-size: 20px;
+      font-weight: bold;
+      padding: 5px 12px;
+      border-radius: 10px;
+      color: #fff;
+    }
+  
+    .section {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
+      font-size: 14px;
+    }
+  
+    hr {
+      border: none;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      margin: 8px 0;
+    }
+  
+    /* ===============================
+       CARD COLOR VARIANTS (KPI-aligned)
+       =============================== */
+  
+    /* CRITICAL / PLANNED */
+    .card1 {
+      background-color: #fef2f2;   /* Soft red (same as .kpi.planned) */
+      color: #842029;              /* Dark red for readability */
+      border: 1px solid #cc0000;
+      border-radius: 8px;
+    }
+    .card1 .number {
+      background-color: rgba(204, 0, 0, 0.2);
+      color: #842029;
+    }
+  
+    /* DEMAND / SUCCESS */
+    .card2 {
+      background-color: #e9d9d4;
+    /* color: #fff3cd; */
+    border: 1px solid #ea580c;
+    }
+    .card2 .number {
+      background-color: rgba(25, 135, 84, 0.2);
+      color: #0f5132;
+    }
+  
+    /* LOW PRIORITY / WARNING */
+    .card4 {
+      background-color: #fffbea;   /* Light yellow (same as .kpi.lowpriority) */
+      color: #856404;
+      border: 1px solid #ffcc00;
+      border-radius: 8px;
+    }
+    .card4 .number {
+      background-color: rgba(255, 204, 0, 0.2);
+      color: #856404;
+    }
+  
+    /* CONFIRMED / PRIMARY */
+    .card3{
+      background-color: #cfe2ff;   /* Soft blue (same as .kpi.confirmed) */
+      color: #084298;
+      border: 1px solid #0d6efd;
+      border-radius: 8px;
+    }
+    .card3 .number {
+      background-color: rgba(13, 110, 253, 0.2);
+      color: #084298;
+    }
+  
+    /* Optional: HOVER EFFECT (adds depth) */
+    .card.full-width > .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease-in-out;
+    }
+  
+    /* CARD CONTAINER LAYOUT */
+    .card.full-width {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px; /* space between cards */
+      justify-content: space-between;
+    }
+  
+    .card.full-width > .card {
+      flex: 0 0 calc(50% - 10px); /* half-width layout */
+      box-sizing: border-box;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+
+  
+
+
+/* ===============================
+   COMPACT ROUND STATUS TRACKER
+   =============================== */
+   .status-tracker {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  margin-top: 10px;
+  padding: 10px 5px 0;
+}
+
+/* connecting line */
+.status-tracker::before {
+  content: "";
+  position: absolute;
+  top: 18px; /* center of circles */
+  left: 7%;
+  right: 7%;
+  height: 3px;
+  background-color: #e0e0e0;
+  z-index: 1;
+}
+
+/* each step */
+.step {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+}
+
+/* circle style */
+.step .circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 6px;
+  font-size: 14px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* label under each circle */
+.step .label {
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* reason text for delays */
+.step .reason {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #842029;
+  font-style: italic;
+}
+
+/* ✅ Completed */
+.step.completed .circle {
+  background-color: #198754;
+  color: #fff;
+}
+
+/* 🔵 Active */
+.step.active .circle {
+  background-color: #0d6efd;
+  color: #fff;
+  box-shadow: 0 0 6px rgba(13, 110, 253, 0.6);
+}
+
+/* ❌ Delayed */
+.step.delayed .circle {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* Hover animation */
+.step:hover .circle {
+  transform: scale(1.1);
+}
+
+/* Smaller screens */
+@media (max-width: 600px) {
+  .step .label {
+    font-size: 10px;
+  }
+  .step .circle {
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+  }
+}
+
+/* ===============================
+   COMPACT ROUND STATUS TRACKER
+   =============================== */
+   .status-tracker {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  margin-top: 10px;
+  padding: 10px 5px 0;
+}
+
+/* connecting line */
+.status-tracker::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 7%;
+  right: 7%;
+  height: 3px;
+  background-color: #e0e0e0;
+  z-index: 1;
+}
+
+/* each step */
+.step {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+}
+
+/* circle style */
+.step .circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 6px;
+  font-size: 14px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* label */
+.step .label {
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* reason for delay */
+.step .reason {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #842029;
+  font-style: italic;
+}
+
+/* ✅ completed */
+.step.completed .circle {
+  background-color: #198754;
+  color: #fff;
+}
+
+/* 🔵 active */
+.step.active .circle {
+  background-color: #0d6efd;
+  color: #fff;
+  box-shadow: 0 0 6px rgba(13, 110, 253, 0.6);
+}
+
+/* ❌ delayed */
+.step.delayed .circle {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* hover animation */
+.step:hover .circle {
+  transform: scale(1.1);
+}
+
+/* small screen responsiveness */
+@media (max-width: 600px) {
+  .step .label {
+    font-size: 10px;
+  }
+  .step .circle {
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+  }
+}
+
+
+
+  </style>
+
+  <style>
+    #gapTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+
+
+
+#gapTable th, #gapTable td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+#gapTable th {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.status-cell {
+  background-color: #fff3cd; /* light yellow */
+  color: #856404;
+  font-weight: bold;
+}
+
+.email-btn {
+  background-color: #0d6efd; /* blue */
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.action-btn {
+  background-color: #198754; /* green */
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.comment-btn {
+  background-color: #6c757d; /* gray */
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.card.full-width {
+  max-height: 300px; /* Set your desired height */
+  overflow-y: auto;  /* Enables vertical scroll */
+}
+
+  </style>
+  
+
+
+
+
+
+
+
+
+
+  <style>
+ 
+    .header h1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* -webkit-background-clip: text; */
+        -webkit-text-fill-color: transparent;
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+    .header p { color: #666; font-size: 16px; }
+    .kpi-container {
+      display: none;
+        /* display: grid; */
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .kpi-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        border-left: 5px solid #667eea;
+        transition: transform 0.3s;
+    }
+    .kpi-card:hover { transform: translateY(-5px); }
+    .kpi-card.gap { border-left-color: #e74c3c; }
+    .kpi-card h3 { font-size: 12px; color: #888; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .kpi-card .value { font-size: 36px; font-weight: bold; color: #2c3e50; }
+    .kpi-card.gap .value { color: #e74c3c; }
+    .breadcrumb {
+        background: white;
+        padding: 10px 30px;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        margin-bottom: 20px;
+        display: none;
+        align-items: center;
+        gap: 15px;
+    }
+    .breadcrumb.active { display: flex; }
+    .breadcrumb button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    .breadcrumb button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+    .breadcrumb span { color: #999; font-size: 20px; }
+    .breadcrumb .current { color: #2c3e50; font-weight: 600; font-size: 16px; }
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .chart-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .chart-card:hover { 
+      transform: translateY(-8px); 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.18); 
+    }
+    .chart-card h2 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+    .chart-card p { color: #666; font-size: 12px; margin-bottom: 15px; }
+    .chart-wrapper { position: relative; height: 400px; }
+    
+    /* Status Cards Container */
+    .status-cards-container {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        margin-top: 20px;
+        display: none;
+    }
+    .status-cards-container.active { 
+      display: block;
+       }
+    .status-cards-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 25px 30px;
+        border-radius: 12px;
+        margin: -40px -40px 30px -40px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    .status-cards-header h3 {
+        color: white;
+        font-size: 24px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .status-cards-header .part-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 22px;
+        font-weight: bold;
+        border: 2px solid rgba(255,255,255,0.4);
+    }
+    .status-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 18px;
+        margin-top: 10px;
+    }
+    .status-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        border: 2px solid #e0e0e0;
+        position: relative;
+    }
+    .status-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        border-radius: 12px 12px 0 0;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    }
+    .status-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        border-color: #667eea;
+    }
+    .status-card.critical { border-color: #e74c3c; }
+    .status-card.critical::before { background: #e74c3c; }
+    .status-card.warning { border-color: #f39c12; }
+    .status-card.warning::before { background: #f39c12; }
+    .status-card.success { border-color: #27ae60; }
+    .status-card.success::before { background: #27ae60; }
+    .status-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    .status-card-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #2c3e50;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .status-card-csn-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 16px;
+        color: white;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+    .card-info-section {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .gap-detail-item {
+        background: white;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        border-left: 3px solid #e74c3c;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    .gap-detail-item:last-child {
+        margin-bottom: 0;
+    }
+    .gap-detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+    .gap-detail-row:last-child {
+        margin-bottom: 0;
+    }
+    .gap-detail-label {
+        color: #666;
+        font-weight: 600;
+        font-size: 11px;
+    }
+    .gap-detail-value {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 11px;
+        text-align: right;
+        max-width: 60%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .no-gap-message {
+        text-align: center;
+        color: #27ae60;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 10px;
+    }
+    .priority-distribution {
+        margin-top: 12px;
+    }
+    .priority-distribution-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .priority-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: all 0.2s;
+    }
+    .priority-badge:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+    .priority-badge.p1 { background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); }
+    .priority-badge.p2 { background: linear-gradient(135deg, #e74c3c 0%, #ec7063 100%); }
+    .priority-badge.p3 { background: linear-gradient(135deg, #f39c12 0%, #f8c471 100%); }
+    .priority-badge.p4 { background: linear-gradient(135deg, #f1c40f 0%, #f4d03f 100%); }
+    .priority-badge.p5 { background: linear-gradient(135deg, #3498db 0%, #5dade2 100%); }
+    .priority-badge.p6 { background: linear-gradient(135deg, #9b59b6 0%, #bb8fce 100%); }
+    .priority-badge.p7 { background: linear-gradient(135deg, #27ae60 0%, #52be80 100%); }
+    .priority-badge.p8 { background: linear-gradient(135deg, #16a085 0%, #48c9b0 100%); }
+    .priority-badge-label {
+        font-weight: 700;
+        font-size: 11px;
+    }
+    .priority-badge-count {
+        background: rgba(255,255,255,0.3);
+        padding: 1px 6px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 12px;
+    }
+    .gap-indicator {
+        margin-top: 12px;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .gap-indicator.has-gap {
+        background: #ffe5e5;
+        border: 2px solid #e74c3c;
+        color: #c0392b;
+    }
+    .gap-indicator.no-gap {
+        background: #e8f8f5;
+        border: 2px solid #27ae60;
+        color: #196f3d;
+    }
+    .gap-indicator-text {
+        font-size: 13px;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+</style>
+
+<style>
+  
+    /* Action Items Table */
+    .table-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-top: 2rem;
+    }
+    
+    .section-title {
+        margin: 0 0 1.5rem 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #0066cc;
+        border-left: 4px solid #0066cc;
+        padding-left: 1rem;
+    }
+    .filter-info {
+        background: linear-gradient(135deg, rgba(0, 102, 204, 0.1), rgba(0, 153, 255, 0.1));
+        border: 2px solid #0066cc;
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #0066cc;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .clear-filter {
+        background: linear-gradient(135deg, #ff6600, #e55a00);
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+    
+    .clear-filter:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(255, 102, 0, 0.3);
+    }
+    .table-wrap { 
+        overflow-x: auto; 
+        border-radius: 8px; 
+        border: 1px solid rgba(0, 102, 204, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        font-size: 0.85rem; 
+        color: #333;
+    }
+    thead { 
+        background: linear-gradient(135deg, #0066cc, #0052a3); 
+    }
+    th {
+        padding: 1rem 0.8rem;
+        text-align: left;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: none;
+    }
+    td { 
+        padding: 0.8rem; 
+        border-bottom: 1px solid rgba(0, 102, 204, 0.1); 
+    }
+    tbody tr { 
+        transition: all 0.3s ease; 
+        background: rgba(255, 255, 255, 0.8);
+    }
+    tbody tr:hover { 
+        background: rgba(0, 102, 204, 0.05);
+        transform: translateX(2px);
+    }
+    tbody tr.hidden { display: none; }
+    tr.overdue { 
+        background: rgba(220, 53, 69, 0.1);
+        border-left: 4px solid #dc3545;
+    }
+    tr.overdue:hover { 
+        background: rgba(220, 53, 69, 0.15); 
+    }
+    tr.highlight {
+        animation: highlightRow 2s ease;
+    }
+    @keyframes highlightRow {
+        0%, 100% { background: #f9fafb; }
+        50% { background: #dbeafe; }
+    }
+    .pill {
+        display: inline-block;
+        padding: 0.3rem 0.7rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .pill-red { 
+        background: linear-gradient(135deg, #dc3545, #c82333); 
+        color: white; 
+        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
+    }
+    .pill-yellow { 
+        background: linear-gradient(135deg, #ffc107, #e0a800); 
+        color: #212529; 
+        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+    }
+    .pill-blue { 
+        background: linear-gradient(135deg, #0066cc, #0052a3); 
+        color: white; 
+        box-shadow: 0 2px 6px rgba(0, 102, 204, 0.3);
+    }
+    .pill-orange { 
+        background: linear-gradient(135deg, #ff6600, #e55a00); 
+        color: white; 
+        box-shadow: 0 2px 6px rgba(255, 102, 0, 0.3);
+    }
+    .pill-green { 
+        background: linear-gradient(135deg, #198754, #157347); 
+        color: white; 
+        box-shadow: 0 2px 6px rgba(25, 135, 84, 0.3);
+    }
+    .pill-purple { 
+        background: linear-gradient(135deg, #6f42c1, #5a32a3); 
+        color: white; 
+        box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
+    }
+    
+    .action-buttons { display: flex; gap: 0.35rem; }
+    .btn-close, .btn-comment {
+        padding: 0.5rem 0.8rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-close {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+    }
+    .btn-close:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+    .btn-comment {
+        background: linear-gradient(135deg, #0066cc, #0052a3);
+        color: white;
+        box-shadow: 0 2px 6px rgba(0, 102, 204, 0.3);
+    }
+    .btn-comment:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+    }
+    
+    .comment-section {
+        display: none;
+        margin-top: 0.6rem;
+        padding: 0.75rem;
+        background: #f9fafb;
+        border-radius: 0.5rem;
+    }
+    .comment-section.show { display: block; }
+    .comment-input {
+        width: 100%;
+        padding: 0.6rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.4rem;
+        font-size: 0.8rem;
+        font-family: inherit;
+        margin-bottom: 0.5rem;
+        resize: vertical;
+        min-height: 55px;
+    }
+    .comment-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+    }
+    .comment-actions { display: flex; gap: 0.4rem; }
+    .btn-submit {
+        background: #3b82f6;
+        color: white;
+        padding: 0.45rem 0.85rem;
+        border: none;
+        border-radius: 0.4rem;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+    .btn-cancel {
+        background: #e5e7eb;
+        color: #374151;
+        padding: 0.45rem 0.85rem;
+        border: none;
+        border-radius: 0.4rem;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+    
+    /* Modal */
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .modal {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 12px;
+        max-width: 700px;
+        width: 100%;
+        max-height: 90vh;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .modal-header {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+    }
+    .modal-header h2 { font-size: 1.15rem; }
+    .close-x {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        font-size: 1.4rem;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+    }
+    .modal-body { padding: 1.25rem; max-height: 65vh; overflow-y: auto; }
+    .alert-card {
+        background: #fef2f2;
+        border-left: 3px solid #ef4444;
+        border-radius: 0.5rem;
+        padding: 0.85rem;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .alert-card:hover {
+        background: #fee2e2;
+        transform: translateX(4px);
+    }
+    .alert-top { display: flex; gap: 0.4rem; margin-bottom: 0.4rem; align-items: center; }
+    .priority-pill { 
+        background: #dc2626; 
+        color: white; 
+        padding: 0.2rem 0.5rem; 
+        border-radius: 0.4rem; 
+        font-size: 0.7rem; 
+        font-weight: 700;
+    }
+    .priority-p2 { background: #f97316; }
+    .alert-title { font-size: 0.85rem; font-weight: 700; color: #991b1b; }
+    .alert-text { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.4rem; }
+    .alert-grid { 
+        display: grid; 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 0.3rem; 
+        background: white; 
+        padding: 0.6rem; 
+        border-radius: 0.4rem; 
+        font-size: 0.75rem;
+        color: black;
+    }
+    .modal-footer { padding: 1.25rem; background: #f9fafb; }
+    .btn-primary {
+        width: 100%;
+        background: #3b82f6;
+        color: white;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    
+    /* Email Modal */
+    .email-modal { max-width: 850px; }
+    .email-preview { 
+        background: #f9fafb; 
+        border: 2px solid #e5e7eb; 
+        border-radius: 0.75rem; 
+        margin: 0.75rem 0; 
+        overflow: hidden;
+    }
+    .email-header { 
+        background: white; 
+        padding: 0.85rem 1rem; 
+        border-bottom: 1px solid #e5e7eb; 
+    }
+    .email-field { 
+        display: flex; 
+        gap: 0.75rem; 
+        margin-bottom: 0.4rem; 
+        font-size: 0.85rem; 
+    }
+    .email-field strong { 
+        color: #6b7280; 
+        min-width: 70px; 
+        font-weight: 600; 
+    }
+    .email-body { 
+        padding: 1.25rem; 
+        background: white; 
+        font-size: 0.9rem; 
+        line-height: 1.6; 
+    }
+</style>
+</head>
+<body>
+
+
+  <div class="container-fluid p-0 w-100">
+
+    <!-- Header -->
+    <header class="header d-flex align-items-center justify-content-between px-4 fixed-top">
+      <!-- Logo and Title (left) -->
+      <div class="d-flex align-items-center">
+        <div class="logo me-3">
+          <a href="index.html">
+            <svg width="120" height="48" viewBox="0 0 167 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="genpact-logo">
+              <g id="Group 1597881160">
+                <g id="Group">
+                  <path id="Vector" d="M70.6328 37.8217C71.2676 39.0041 72.5372 39.8266 73.9823 39.8266C76.0893 39.8266 77.7776 38.1044 77.7776 35.9967V35.8554L77.7236 35.8297C76.5485 36.9349 75.0358 37.6032 73.3476 37.6032C69.7279 37.6032 66.8105 34.4674 66.8105 30.6375C66.8105 26.8077 69.7414 23.6719 73.3476 23.6719C75.0358 23.6719 76.5485 24.353 77.7236 25.484L77.7776 25.4583V24.0446H81.1541V35.9967C81.1541 39.7752 78.1693 42.821 74.1309 42.821C71.4162 42.821 69.0661 41.4716 67.7965 39.4153L70.6328 37.8346V37.8217ZM74.0634 34.6345C76.1974 34.6345 77.9802 32.8609 77.9802 30.6375C77.9802 28.4142 76.1974 26.6406 74.0634 26.6406C71.9294 26.6406 70.1736 28.4142 70.1736 30.6375C70.1736 32.8609 71.9564 34.6345 74.0634 34.6345Z" fill="black"></path>
+                  <path id="Vector_2" d="M92.9314 33.3366L95.2814 35.5085C93.9173 36.8066 92.0264 37.5905 89.9465 37.5905C85.7866 37.5905 82.4775 34.4932 82.4775 30.6249C82.4775 26.7565 85.7055 23.6592 89.7439 23.6592C93.7822 23.6592 96.9697 26.7565 96.9697 30.6249C96.9697 31.2417 96.9157 31.4088 96.9157 31.4088H85.8541C85.8541 32.8739 87.6909 34.5961 89.7979 34.5961C91.0405 34.5961 92.121 34.082 92.9314 33.3237M93.323 28.7999L93.35 28.7485C92.5937 27.4505 91.2701 26.5765 89.7304 26.5765C88.1907 26.5765 86.8941 27.3991 86.0837 28.7485L86.1107 28.7999H93.3095H93.323Z" fill="black"></path>
+                  <path id="Vector_3" d="M101.764 30.6377V37.2307H98.3877V24.0319H101.764V25.6384L101.818 25.6641C102.966 24.3403 104.506 23.6592 106.1 23.6592C112.124 23.6592 112.272 28.787 112.272 30.3678V37.2178H108.896V30.6249C108.896 29.0441 108.869 26.6279 105.37 26.6279C103.385 26.6279 101.751 28.4015 101.751 30.6249" fill="black"></path>
+                  <path id="Vector_4" d="M121.74 37.6034C120.025 37.6034 118.539 36.9608 117.337 35.8041L117.283 35.8298V42.4485H113.906V24.0319H117.283V25.407L117.337 25.4327C118.539 24.3275 120.025 23.6592 121.74 23.6592C125.36 23.6592 128.277 26.7565 128.277 30.6249C128.277 34.4932 125.346 37.5905 121.74 37.5905M121.011 26.6279C118.836 26.6279 117.094 28.4015 117.094 30.5991C117.094 32.7968 118.85 34.6089 121.011 34.6089C123.117 34.6089 124.9 32.8354 124.9 30.5991C124.9 28.3629 123.117 26.6279 121.011 26.6279Z" fill="black"></path>
+                  <path id="Vector_5" d="M135.963 23.6719C137.651 23.6719 139.15 24.353 140.325 25.484L140.393 25.4583V24.0446H143.769V37.2434H140.393V35.8939L140.325 35.8425C139.15 36.9349 137.638 37.6161 135.963 37.6161C132.343 37.6161 129.426 34.5188 129.426 30.6504C129.426 26.782 132.357 23.6847 135.963 23.6847M136.692 34.6087C138.84 34.6087 140.582 32.8609 140.582 30.6375C140.582 28.4142 138.84 26.6278 136.692 26.6278C134.545 26.6278 132.802 28.4013 132.802 30.6375C132.802 32.8738 134.585 34.6087 136.692 34.6087Z" fill="black"></path>
+                  <path id="Vector_6" d="M157.869 35.5085C156.519 36.8066 154.614 37.5905 152.534 37.5905C148.374 37.5905 145.065 34.4932 145.065 30.6249C145.065 26.7565 148.388 23.6592 152.534 23.6592C154.614 23.6592 156.519 24.4431 157.869 25.7412L155.492 27.8232C154.736 27.0649 153.709 26.6151 152.534 26.6151C150.238 26.6151 148.442 28.4143 148.442 30.6249C148.442 32.8354 150.252 34.5961 152.534 34.5961C153.709 34.5961 154.79 34.1205 155.546 33.3494L157.869 35.4957V35.5085Z" fill="black"></path>
+                  <path id="Vector_7" d="M164.663 27.0907V37.2307H161.287V27.0907H158.95V24.0448H161.287V18.1201H164.663V24.0448H167V27.0907H164.663Z" fill="black"></path>
+                </g>
+                <path id="Vector_8" d="M48.9177 31.2892C48.9177 31.2892 48.8707 31.2445 48.8472 31.2222C48.8119 31.1775 48.7766 31.1329 48.7296 31.0994L37.3848 23.8548L48.7296 16.5097C48.8942 16.4092 48.9882 16.2306 48.9882 16.052C48.9882 15.8734 48.8942 15.6948 48.7296 15.5943L24.8292 0.100465C24.6293 -0.0334882 24.3707 -0.0334882 24.1708 0.100465L0.258637 15.5943C0.258637 15.5943 0.164587 15.6837 0.117562 15.7395C0.117562 15.7506 0.0940499 15.7618 0.0822937 15.7841C0.0352687 15.8623 0 15.9627 0 16.0632V47.0621C0 47.2519 0.0940499 47.4193 0.258637 47.5198L24.1708 63.0248C24.1708 63.0248 24.1943 63.0248 24.2061 63.0248C24.2061 63.0248 24.2178 63.036 24.2296 63.0472C24.3001 63.0807 24.3824 63.0918 24.453 63.103C24.4647 63.103 24.4882 63.1141 24.5 63.1141C24.594 63.1141 24.6881 63.0918 24.7704 63.0472C24.7821 63.0472 24.7939 63.0248 24.8057 63.0248H24.8292L48.7414 47.5198C48.9059 47.4193 49 47.2407 49 47.0621V31.5682C49 31.4678 48.9647 31.3785 48.9177 31.3003V31.2892ZM13.2258 24.1673L24.5 16.8557L35.304 23.8659L24.1708 31.0994C24.1708 31.0994 24.112 31.1664 24.0885 31.1887C24.0533 31.2222 24.018 31.2445 23.9945 31.2892C23.971 31.3338 23.971 31.3785 23.9592 31.4343C23.9592 31.4789 23.9239 31.5124 23.9239 31.5571V45.89L13.2375 38.958V24.1673H13.2258ZM35.3628 39.2817L25.0878 45.89V32.6175L35.3628 39.2929V39.2817ZM36.4091 38.6119L25.5463 31.5571L36.3503 24.5357L47.3659 31.5682L36.4091 38.6119ZM24.5 1.23906L47.3659 16.0632L36.3385 23.1962L24.8174 15.7283C24.6176 15.5943 24.3589 15.5943 24.1591 15.7283L12.6262 23.2073L1.63412 16.0632L24.5 1.23906ZM1.17562 17.1236L12.0501 24.1673V39.2482C12.0501 39.438 12.1442 39.6054 12.3088 39.7059L23.9122 47.2296V61.5067L1.17562 46.7719V17.1236ZM47.8244 46.7719L25.0878 61.5067V47.2407L25.4875 46.984L47.8244 32.6175V46.7719Z" fill="black"></path>
+              </g>
+            </svg>
+          </a>
+        </div>
+        <div class="navbar-title">
+          <span style="font-size: 16px; font-weight: 600; color: var(--gray-800);">AEO – Material Management Tool</span>
+        </div>
+      </div>
+    
+      <!-- Navigation Menu (right) -->
+      <nav class="navbar-nav">
+        <ul class="nav-menu d-flex list-unstyled mb-0">
+          <li class="nav-item me-3 dropdown">
+            <a href="index.html" class="nav-link">
+              Home
+            </a>
+          </li>
+          <li class="nav-item me-3 dropdown">
+            <a href="#engine-delivery" class="nav-link dropdown-toggle active" data-bs-toggle="dropdown">
+              Engine Delivery <i class="fas fa-chevron-down ms-1"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="demand.html">Demand</a></li>
+              <li><a class="dropdown-item" href="BOMexplosion.html">BOM Explosion</a></li>
+              <li><a class="dropdown-item" href="GapAnalysis.html">GAP Analysis</a></li>
+            </ul>
+          </li>
+          <li class="nav-item me-3 dropdown">
+            <a href="#fulfillment-expediting" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+              Fulfillment <i class="fas fa-chevron-down ms-1"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">Buyback</a></li>
+              <li><a class="dropdown-item" href="#">Line up change actions</a></li>
+              <li><a class="dropdown-item" href="#">Part Escalation actions</a></li>
+            </ul>
+          </li>
+          <li class="nav-item me-3 dropdown">
+            <a href="#sourcing" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+              Sourcing <i class="fas fa-chevron-down ms-1"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">Say do-ratio</a></li>
+              <li><a class="dropdown-item" href="#">Quality instances</a></li>
+              <li><a class="dropdown-item" href="#">L/T management / Costing</a></li>
+              <li><a class="dropdown-item" href="#">Alternate sources / escalation</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a href="#critical-order" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+              Critical Order <i class="fas fa-chevron-down ms-1"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="4critical_demand.html">Demand</a></li>
+              <li><a class="dropdown-item" href="4critical_gapAnalysis.html">GAP Analysis</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+  </div>
+
+
+
+  <div class="container dashboard" style="margin-top: 0;">
+  
+
+    <!-- KPI Grid (Updated Layout) -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi demand">
+        <div class="kpi-esn">
+          <i class="fas fa-cogs"></i> All Programs
+        </div>
+        <h3 id="kpiTotalGaps">12</h3>
+        <span>Total Gaps</span>
+        <div class="kpi-breakdown">
+          Status: 12% Gap Rate
+        </div>
+      </div>
+
+      <div class="kpi planned">
+        <div class="kpi-esn">
+          <i class="fas fa-exclamation-triangle"></i> Critical
+        </div>
+        <h3 id="kpiCriticalPriority">3</h3>
+        <span>Critical Priority</span>
+        <div class="kpi-breakdown">
+          Status: Past Due
+        </div>
+      </div>
+
+      <div class="kpi highPriority">
+        <div class="kpi-esn">
+          <i class="fas fa-clock"></i> Urgent
+        </div>
+        <h3 id="kpiHighPriority">3</h3>
+        <span>High Priority</span>
+        <div class="kpi-breakdown">
+          Status: Due in 3 weeks
+        </div>
+      </div>
+
+      <div class="kpi confirmed">
+        <div class="kpi-esn">
+          <i class="fas fa-list-check"></i> Medium
+        </div>
+        <h3 id="kpiMediumPriority">3</h3>
+        <span>Medium Priority</span>
+        <div class="kpi-breakdown">
+          Status: Late commits
+        </div>
+      </div>
+
+      <div class="kpi lowpriority">
+        <div class="kpi-esn">
+          <i class="fas fa-info-circle"></i> Low
+        </div>
+        <h3 id="kpiLowPriority">3</h3>
+        <span>Low Priority</span>
+        <div class="kpi-breakdown">
+          Status: Missing commits
+        </div>
+      </div>
+    </div>
+
+  <!-- Filters Section -->
+  <div class="card" style="margin-bottom: 2rem;">
+    <h3><i class="fas fa-filter" style="margin-right: 0.5rem; color: #0066cc;"></i>Filters & Controls</h3>
+    <div class="filters-inline" style="width: 100%; justify-content: flex-start; display: flex; flex-wrap: wrap; gap: 1rem;">
+        <!-- 0: Product Line -->
+        <div class="filter-item">
+          <div class="dropdown-filter">
+            <button class="form-select form-select-sm" type="button" id="productLineDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false">
+              Product Line
+            </button>
+            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control form-control-sm" id="productLineSearch" placeholder="Search..."
+                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
+                <button class="btn btn-sm py-1 px-3" id="selectAllProductLines"
+                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
+                <button class="btn btn-sm py-1 px-3" id="clearProductLines" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+              </div>
+              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+                <!-- Options will be populated dynamically by JavaScript -->
+              </div>
+              <div class="d-flex justify-content-end border-top pt-3">
+                <button class="btn btn-sm w-100" id="applyProductLines" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 1: Year -->
+        <div class="filter-item">
+          <div class="dropdown-filter">
+            <button class="form-select form-select-sm" type="button" id="yearDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false">
+              Year
+            </button>
+            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control form-control-sm" id="yearSearch" placeholder="Search..."
+                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
+                <button class="btn btn-sm py-1 px-3" id="selectAllYears"
+                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
+                <button class="btn btn-sm py-1 px-3" id="clearYears" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+              </div>
+              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+                <!-- Options will be populated dynamically by JavaScript -->
+              </div>
+              <div class="d-flex justify-content-end border-top pt-3">
+                <button class="btn btn-sm w-100" id="applyYears" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 2: Eng Config -->
+        <div class="filter-item">
+          <div class="dropdown-filter">
+            <button class="form-select form-select-sm" type="button" id="engConfigDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false">
+              Engine Config
+            </button>
+            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control form-control-sm" id="engConfigSearch" placeholder="Search..."
+                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
+                <button class="btn btn-sm py-1 px-3" id="selectAllConfigs"
+                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
+                <button class="btn btn-sm py-1 px-3" id="clearConfigs" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+              </div>
+              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+                <!-- Options will be populated dynamically by JavaScript -->
+              </div>
+              <div class="d-flex justify-content-end border-top pt-3">
+                <button class="btn btn-sm w-100" id="applyConfigs" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 3: Supplier -->
+        <div class="filter-item">
+          <div class="dropdown-filter">
+            <button class="form-select form-select-sm" type="button" id="supplierDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false">
+              Supplier
+            </button>
+            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control form-control-sm" id="supplierSearch" placeholder="Search..."
+                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
+                <button class="btn btn-sm py-1 px-3" id="selectAllSuppliers"
+                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
+                <button class="btn btn-sm py-1 px-3" id="clearSuppliers"
+                  title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+              </div>
+              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+                <!-- Options will be populated dynamically by JavaScript -->
+              </div>
+              <div class="d-flex justify-content-end border-top pt-3">
+                <button class="btn btn-sm w-100" id="applySuppliers" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+         <!-- 4: RM Supplier (subset of Supplier) -->
+        <div class="filter-item">
+          <div class="dropdown-filter">
+            <button class="form-select form-select-sm" type="button" id="rmSupplierDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false">
+              RM Supplier
+            </button>
+            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control form-control-sm" id="rmSupplierSearch" placeholder="Search..."
+                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
+                <button class="btn btn-sm py-1 px-3" id="selectAllRmSuppliers"
+                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
+                <button class="btn btn-sm py-1 px-3" id="clearRmSuppliers" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+              </div>
+              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+                <!-- Options will be populated dynamically by JavaScript -->
+              </div>
+              <div class="d-flex justify-content-end border-top pt-3">
+                <button class="btn btn-sm w-100" id="applyRmSuppliers" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 5: HW Owner -->
+        <div class="filter-item">
+          <div class="dropdown-filter">
+            <button class="form-select form-select-sm" type="button" id="hwOwnerDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false">
+              HW Owner
+            </button>
+            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control form-control-sm" id="hwOwnerSearch" placeholder="Search..."
+                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
+                <button class="btn btn-sm py-1 px-3" id="selectAllHwOwners"
+                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
+                <button class="btn btn-sm py-1 px-3" id="clearHwOwners" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+              </div>
+              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+                <!-- Options will be populated dynamically by JavaScript -->
+              </div>
+              <div class="d-flex justify-content-end border-top pt-3">
+                <button class="btn btn-sm w-100" id="applyHwOwners" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 6: Module (placeholder) -->
+        <div class="filter-item">
+          <div class="dropdown-filter">
+            <button class="form-select form-select-sm" type="button" id="moduleDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false">
+              Module
+            </button>
+            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control form-control-sm" id="moduleSearch" placeholder="Search..."
+                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
+                <button class="btn btn-sm py-1 px-3" id="selectAllModules"
+                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
+                <button class="btn btn-sm py-1 px-3" id="clearModules" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+              </div>
+              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+                <!-- Options will be populated dynamically by JavaScript -->
+              </div>
+              <div class="d-flex justify-content-end border-top pt-3">
+                <button class="btn btn-sm w-100" id="applyModules" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 7: Part No -->
+        <div class="filter-item">
+          <div class="dropdown-filter">
+            <button class="form-select form-select-sm" type="button" id="partNoDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false">
+              Part No
+            </button>
+            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control form-control-sm" id="partNoSearch" placeholder="Search..."
+                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
+                <button class="btn btn-sm py-1 px-3" id="selectAllPartNos"
+                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
+                <button class="btn btn-sm py-1 px-3" id="clearPartNos" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+              </div>
+              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+                <!-- Options will be populated dynamically by JavaScript -->
+              </div>
+              <div class="d-flex justify-content-end border-top pt-3">
+                <button class="btn btn-sm w-100" id="applyPartNos" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+       
+      </div>
+  </div>
+    
+
+  <div class="kpi-container">
+    <div class="kpi-card">
+        <h3>Total Records</h3>
+        <div class="value" id="kpi-total">0</div>
+    </div>
+    <div class="kpi-card">
+        <h3>Unique CSNs</h3>
+        <div class="value" id="kpi-csns">0</div>
+    </div>
+    <div class="kpi-card gap">
+        <h3>Gap Records</h3>
+        <div class="value" id="kpi-gaps">0</div>
+    </div>
+    <div class="kpi-card gap">
+        <h3>Overall Gap %</h3>
+        <div class="value" id="kpi-gap-pct">0%</div>
+    </div>
+</div>
+<div class="breadcrumb" id="breadcrumb" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2);">
+    <button onclick="resetDashboard()" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+        <i class="fas fa-home" style="margin-right: 0.5rem;"></i>Reset All
+    </button>
+    <span style="color: #666; margin: 0 1rem;">/</span>
+    <span class="current" id="breadcrumb-text" style="color: #0066cc; font-weight: 600;"></span>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <h2><i class="fas fa-layer-group" style="margin-right: 0.5rem; color: #0066cc;"></i>Level 1: Gap % by Raw Material</h2>
+        <p style="color: #666; margin-bottom: 1rem;">Click any bar to filter suppliers and parts →</p>
+        <div class="chart-wrapper"><canvas id="chart1"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <h2><i class="fas fa-industry" style="margin-right: 0.5rem; color: #0066cc;"></i>Level 2: Gap % by Supplier</h2>
+        <p id="chart2-subtitle" style="color: #666; margin-bottom: 1rem;">All suppliers shown - Click any bar to filter parts →</p>
+        <div class="chart-wrapper"><canvas id="chart2"></canvas></div>
+    </div>
+    <div class="chart-card">
+        <h2><i class="fas fa-cog" style="margin-right: 0.5rem; color: #0066cc;"></i>Level 3: Parts - Past Due Analysis</h2>
+        <p id="chart3-subtitle" style="color: #666; margin-bottom: 1rem;">Click any bar to see detailed status & priority breakdown ↓</p>
+        <div class="chart-wrapper"><canvas id="chart3"></canvas></div>
+    </div>
+</div>
+<!-- <div class="status-cards-container" id="status-cards-container">
+    <div class="status-cards-header">
+        <h3>📋 Status & Priority Analysis for Part: <span class="part-badge" id="selected-part-name"></span></h3>
+    </div>
+    <div class="status-cards-grid" id="status-cards-grid"></div>
+</div> -->
+
+
+
+
+
+    <!-- DETAILS TABLE
+    <div class="card full-width">
+      <h3>📋Action Items </h3>
+      <table id="gapTable">
+        <thead>
+       <tr>
+         <th>Priority</th>
+         <th>RM Part</th>
+         <th>Parent</th>
+         <th>Part Number</th>
+         <th>Status</th>
+         <th>Due Date</th>
+         <th>Email</th>
+         <th>Actions</th>
+       </tr>
+
+        </thead>
+        <tbody id="gapTableBody"></tbody>
+      </table>
+    </div> -->
+
+      <!-- Action Items Table with ALL Priority Levels -->
+      <div class="table-section">
+        <h2 class="section-title">📋 Priority Action Items (All Priorities)</h2>
+        <div id="filterInfo" class="filter-info" style="display: none;">
+            Filtered by: <strong id="filterCarName"></strong>
+            <button class="clear-filter" onclick="clearFilter()">Clear Filter</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Priority</th>
+                        <th>RM Part</th>
+                        <th>Parent Part Number</th>
+                        <th>ESN</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Action Required</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- P1 Items -->
+                    <tr class="overdue" id="row-1" data-car="CAR-2024-001">
+                        <td><span class="pill pill-red">P1</span></td>
+                        <td style="font-weight: 700;">RM-12345</td>
+                        <td>PP-5678</td>
+                        <td>ESN-001</td>
+                        <td><span class="pill pill-yellow">No PO</span></td>
+                        <td>
+                            <div style="font-size: 0.75rem;">10/26</div>
+                            <div style="color: #dc2626; font-size: 0.7rem; font-weight: 700;">⏰ 3d</div>
+                        </td>
+                        <td>Place PO immediately</td>
+                        <td><span class="pill pill-blue">Daily</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(1)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-1" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(1)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(1)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr id="row-2" data-car="CAR-2024-001">
+                        <td><span class="pill pill-red">P1</span></td>
+                        <td style="font-weight: 700;">RM-34567</td>
+                        <td>PP-3456</td>
+                        <td>ESN-001</td>
+                        <td><span class="pill pill-yellow">No Fcst</span></td>
+                        <td style="font-size: 0.75rem;">11/15</td>
+                        <td>Add to forecast</td>
+                        <td><span class="pill pill-blue">Alt</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(2)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(2)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-2" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(2)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(2)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- P1 Item -->
+                    <tr id="row-3" data-car="CAR-2024-002">
+                        <td><span class="pill pill-red">P1</span></td>
+                        <td style="font-weight: 700;">RM-67890</td>
+                        <td>PP-9012</td>
+                        <td>CAR-002</td>
+                        <td><span class="pill pill-yellow">Late</span></td>
+                        <td style="font-size: 0.75rem;">11/02</td>
+                        <td>Follow up with supplier</td>
+                        <td><span class="pill pill-blue">Daily</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(3)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(3)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-3" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(3)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- P2 Items -->
+                    <tr id="row-4" data-car="CAR-2024-002">
+                        <td><span class="pill pill-orange">P2</span></td>
+                        <td style="font-weight: 700;">RM-45678</td>
+                        <td>PP-7890</td>
+                        <td>CAR-002</td>
+                        <td><span class="pill pill-yellow">Pending</span></td>
+                        <td style="font-size: 0.75rem;">11/20</td>
+                        <td>Review forecast</td>
+                        <td><span class="pill pill-blue">Alt</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(4)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(4)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-4" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(4)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(4)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr id="row-5" data-car="CAR-2024-003">
+                        <td><span class="pill pill-orange">P2</span></td>
+                        <td style="font-weight: 700;">RM-78901</td>
+                        <td>PP-2345</td>
+                        <td>CAR-003</td>
+                        <td><span class="pill pill-yellow">No Commit</span></td>
+                        <td style="font-size: 0.75rem;">11/25</td>
+                        <td>Get supplier commit</td>
+                        <td><span class="pill pill-blue">Alt</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(5)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(5)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-5" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(5)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(5)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr id="row-6" data-car="CAR-2024-004">
+                        <td><span class="pill pill-orange">P2</span></td>
+                        <td style="font-weight: 700;">RM-23456</td>
+                        <td>PP-6789</td>
+                        <td>CAR-004</td>
+                        <td><span class="pill pill-yellow">Delayed PO</span></td>
+                        <td style="font-size: 0.75rem;">11/05</td>
+                        <td>Expedite PO placement</td>
+                        <td><span class="pill pill-blue">Daily</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(6)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(6)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-6" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(6)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(6)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- P3 Items -->
+                    <tr id="row-7" data-car="CAR-2024-001">
+                        <td><span class="pill pill-yellow">P3</span></td>
+                        <td style="font-weight: 700;">RM-55555</td>
+                        <td>PP-1111</td>
+                        <td>ESN-001</td>
+                        <td><span class="pill pill-blue">Forecasted</span></td>
+                        <td style="font-size: 0.75rem;">12/01</td>
+                        <td>Monitor delivery</td>
+                        <td><span class="pill pill-blue">Weekly</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(7)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(7)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-7" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(7)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(7)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr id="row-8" data-car="CAR-2024-003">
+                        <td><span class="pill pill-yellow">P3</span></td>
+                        <td style="font-weight: 700;">RM-66666</td>
+                        <td>PP-2222</td>
+                        <td>ESN-003</td>
+                        <td><span class="pill pill-blue">In Transit</span></td>
+                        <td style="font-size: 0.75rem;">12/05</td>
+                        <td>Track shipment</td>
+                        <td><span class="pill pill-blue">Weekly</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(8)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(8)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-8" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(8)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(8)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- P4 Items -->
+                    <tr id="row-9" data-car="CAR-2024-004">
+                        <td><span class="pill pill-blue">P4</span></td>
+                        <td style="font-weight: 700;">RM-77777</td>
+                        <td>PP-3333</td>
+                        <td>ESN-004</td>
+                        <td><span class="pill pill-green">On Track</span></td>
+                        <td style="font-size: 0.75rem;">12/10</td>
+                        <td>Regular follow-up</td>
+                        <td><span class="pill pill-blue">Weekly</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(9)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(9)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-9" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(9)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(9)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- P5 Items -->
+                    <tr id="row-10" data-car="CAR-2024-002">
+                        <td><span class="pill pill-purple">P5</span></td>
+                        <td style="font-weight: 700;">RM-88888</td>
+                        <td>PP-4444</td>
+                        <td>ESN-002</td>
+                        <td><span class="pill pill-green">Good</span></td>
+                        <td style="font-size: 0.75rem;">12/15</td>
+                        <td>Status update</td>
+                        <td><span class="pill pill-blue">Monthly</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-close" onclick="closeAction(10)">Close</button>
+                                <button class="btn-comment" onclick="toggleComment(10)">Comment</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <div id="comment-10" class="comment-section">
+                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                                <div class="comment-actions">
+                                    <button class="btn-submit" onclick="submitComment(10)">Submit</button>
+                                    <button class="btn-cancel" onclick="toggleComment(10)">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+  </div>
+
+ 
+ 
+
+
+
+
+
+
+
+        {
+          data: Object.values(pastDueData),
+          backgroundColor: ["#dc3545", "#fd7e14"], // Red for “Due in next 3 weeks”, Orange for “Past Due”
+          hoverOffset: 10,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { font: { size: 14 } },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.label}: ${ctx.formattedValue}`,
+          },
+        },
+        title: {
+          display: true,
+          // text: "Past Due Distribution",
+          font: { size: 16 },
+        },
+      },
+    },
+  });
+
+
+
+
+
+
+</script> 
+
+
+
+ <!-- Alert Modal -->
+  <div id="alertModal" class="modal-backdrop">
+  <div class="modal">
+      <div class="modal-header">
+          <h2>🚨 3 New Alerts</h2>
+          <button class="close-x" onclick="hideModal('alertModal')">×</button>
+      </div>
+      <div class="modal-body">
+          <div class="alert-card" onclick="goToRow('row-1')">
+              <div class="alert-top">
+                  <span class="priority-pill">P1</span>
+                  <span class="alert-title">Critical: RM Part RM-12345 Past Due</span>
+              </div>
+              <p class="alert-text">PO not placed. Due date was 3 days ago.</p>
+              <div class="alert-grid">
+                  <div><strong>Part Number:</strong> PN-2024-001</div>
+                  <div><strong>RM Part:</strong> RM-12345</div>
+                  <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">🔴 3 days overdue - Click to view</div>
+              </div>
+          </div>
+          <div class="alert-card" onclick="goToRow('row-3')">
+              <div class="alert-top">
+                  <span class="priority-pill">P1</span>
+                  <span class="alert-title">Urgent: RM Part RM-67890</span>
+              </div>
+              <p class="alert-text">Part delivery late. Follow up with supplier.</p>
+              <div class="alert-grid">
+                  <div><strong>Part Number:</strong> PN-2024-002</div>
+                  <div><strong>RM Part:</strong> RM-67890</div>
+                  <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">⚠️ Click to view details</div>
+              </div>
+          </div>
+          <div class="alert-card" onclick="goToRow('row-4')">
+              <div class="alert-top">
+                  <span class="priority-pill priority-p2">P2</span>
+                  <span class="alert-title">RM Part RM-45678 - Pending Review</span>
+              </div>
+              <p class="alert-text">Review forecast for this part.</p>
+              <div class="alert-grid">
+                  <div><strong>Part Number:</strong> PN-2024-002</div>
+                  <div><strong>RM Part:</strong> RM-45678</div>
+                  <div style="color: #f97316; font-weight: bold; grid-column: span 2;">📋 Click to view action</div>
+              </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+          <button class="btn-primary" onclick="hideModal('alertModal')">Close</button>
+      </div>
+  </div>
+</div>   
+
+
+ <script>
+ 
+  document.addEventListener('DOMContentLoaded', function() {
+    const popup = document.getElementById('initialActionPopup');
+    const closeBtn = document.getElementById('closeInitialPopup');
+    if (closeBtn) {
+      closeBtn.onclick = function() {
+        popup.style.display = 'none';
+      };
+    }
+  });
+</script>
+
+<script>
+  const actionItems = [
+  {
+    "priority": "Critical",
+    "rmPart": "RM-001",
+    "parent": "Parent-01",
+    "partNumber": "XYZ-001",
+    "status": "Pending",
+    "dueDate": "2025-11-05",
+    "email": "user1@example.com"
+  },
+  {
+    "priority": "Critical",
+    "rmPart": "RM-001",
+    "parent": "Parent-01",
+    "partNumber": "XYZ-001",
+    "status": "Pending",
+    "dueDate": "2025-11-05",
+    "email": "user1@example.com"
+  },
+  {
+    "priority": "Critical",
+    "rmPart": "RM-001",
+    "parent": "Parent-01",
+    "partNumber": "XYZ-001",
+    "status": "Pending",
+    "dueDate": "2025-11-05",
+    "email": "user1@example.com"
+  },
+  {
+    "priority": "Medium",
+    "rmPart": "RM-002",
+    "parent": "Parent-02",
+    "partNumber": "XYZ-002",
+    "status": "In Progress",
+    "dueDate": "2025-11-10",
+    "email": "user2@example.com"
+  },
+  {
+    "priority": "Low",
+    "rmPart": "RM-003",
+    "parent": "Parent-03",
+    "partNumber": "XYZ-003",
+    "status": "Completed",
+    "dueDate": "2025-11-15",
+    "email": "user3@example.com"
+  }
+];
+const tableBody = document.getElementById("gapTableBody");
+
+actionItems.forEach(item => {
+  const row = document.createElement("tr");
+
+  row.innerHTML = `
+    <td>${item.priority}</td>
+    <td>${item.rmPart}</td>
+    <td>${item.parent}</td>
+    <td>${item.partNumber}</td>
+    <td class="status-cell">${item.status}</td>
+    <td>${item.dueDate}</td>
+    <td><button class="email-btn" onclick="sendEmail('${item.email}')">Send Email</button></td>
+    <td>
+      <button class="action-btn" onclick="performAction('${item.partNumber}')">Action</button>
+      <button class="comment-btn" onclick="addComment('${item.partNumber}')">Comment</button>
+    </td>
+  `;
+
+  tableBody.appendChild(row);
+});
+
+// Functions for buttons
+function sendEmail(email) {
+  window.location.href = `mailto:${email}`;
+}
+
+function performAction(partNumber) {
+  alert(`Performing action on part: ${partNumber}`);
+}
+
+function addComment(partNumber) {
+  const comment = prompt(`Add comment for part ${partNumber}:`);
+  if(comment) {
+    alert(`Comment added: ${comment}`);
+  }
+}
+
+</script>
+
+<script>
+  const csvData = `Car Family,CSN,Configuration,Target Ship Date,Part Number,Quantity,Supplier,Owner,Raw Material Type,Total Lead Time,Raw Material Need By,Planned PO Date Target,RM PN,RM Supplier,PO Available (Y/N),PO Placed on Time (Y/N/NA),Status,Delivery Date of RM Part,Past Due,Due Days,Action Recommendation,Gap (Y/N)
+Model S,CSN-2025-001,Premium,2025-12-15,PN-4521,4,ABC Automotive,John Smith,Casting Structural,45,2025-10-31,2025-10-15,RM-AL-7075,RM Supplier 20,N,N,Forecasted,2025-11-15,Past Due,-15,Alert HWO,Y
+Model S,CSN-2025-001,Premium,2025-12-15,PN-8834,2,XYZ Electronics,Sarah Johnson,Casting Airfoil,60,2025-10-16,2025-09-30,RM-ST-304,RM Supplier 41,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
+Model S,CSN-2025-001,Premium,2025-12-15,PN-1205,8,RM Supplier 35,Mike Chen,Plate,30,2025-11-15,2025-10-30,RM-PL-ABS,RM Supplier 18,N,NA,Forecasted,2025-11-20,Due in next 3 weeks,12,Alert HWO,
+Model S,CSN-2025-001,Premium,2025-12-15,PN-3301,3,Tech Solutions,Anna Lee,Forging ring,40,2025-11-05,2025-10-20,RM-CU-101,RM Supplier 32,Y,Y,Good Commits,2025-11-03,NA,NA,No Action,
+Model S,CSN-2025-002,Standard,2025-12-10,PN-4521,4,ABC Automotive,John Smith,Casting Structural,45,2025-10-26,2025-10-10,RM-AL-7075,RM Supplier 20,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
+Model S,CSN-2025-002,Standard,2025-12-10,PN-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-11-19,2025-11-04,RM-CU-220,RM Supplier 26,N,N,Forecasted,2025-11-25,Not due in next 3,25,Alert HWO,
+Model S,CSN-2025-002,Standard,2025-12-10,PN-8834,2,XYZ Electronics,Sarah Johnson,Plate,60,2025-10-11,2025-09-25,RM-PL-HDPE,RM Supplier 18,Y,Y,No Forecast,NA,NA,NA,Execution,Y
+Model S,CSN-2025-002,Standard,2025-12-10,PN-5567,6,Quality Parts,Tom Wilson,Casting Airfoil,35,2025-11-05,2025-10-20,RM-ST-450,RM Supplier 35,Y,Y,Delivered On Time,2025-11-03,NA,NA,No Action,
+Model S,CSN-2025-003,Sport,2025-12-20,PN-4521,6,ABC Automotive,John Smith,Casting Airfoil,45,2025-11-05,2025-10-20,RM-ST-420,RM Supplier 41,Y,Y,Delivered On Time,2025-11-03,NA,NA,No Action,
+Model S,CSN-2025-003,Sport,2025-12-20,PN-7743,4,Performance Parts,David Lee,Forging Closed Die,50,2025-10-31,2025-10-10,RM-CF-300,RM Supplier 37,Y,Y,Good Commits,2025-10-29,NA,NA,No Action,
+Model S,CSN-2025-003,Sport,2025-12-20,PN-1205,10,RM Supplier 35,Mike Chen,Plate,30,2025-11-20,2025-11-05,RM-PL-ABS,RM Supplier 18,Y,Y,Delivered On Time,2025-11-18,NA,NA,No Action,
+Model S,CSN-2025-003,Sport,2025-12-20,PN-2234,5,Premium Components,Lisa Chen,Casting Structural,42,2025-11-08,2025-10-22,RM-AL-6063,RM Supplier 42,Y,N,Late Commits,2025-11-15,NA,NA,HWO Action,Y
+Model S,CSN-2025-004,Premium,2025-12-25,PN-8834,2,XYZ Electronics,Sarah Johnson,Casting Airfoil,60,2025-10-26,2025-10-10,RM-ST-304,RM Supplier 41,Y,N,Delivered Late,2025-11-20,Past Due,-25,Past Due Action,Y
+Model S,CSN-2025-004,Premium,2025-12-25,PN-5521,6,Premium Auto,Lisa Wang,Casting Structural,35,2025-11-20,2025-11-05,RM-AL-6061,RM Supplier 20,Y,Y,Good Commits,2025-11-18,NA,NA,No Action,
+Model S,CSN-2025-004,Premium,2025-12-25,PN-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-12-04,2025-11-19,RM-CU-220,RM Supplier 26,Y,Y,Late Commits,2025-12-06,NA,NA,Alert HWO,Y
+Model S,CSN-2025-004,Premium,2025-12-25,PN-6678,4,Elite Manufacturing,Robert Kim,Plate,28,2025-11-27,2025-11-12,RM-PL-PP,RM Supplier 40,Y,Y,Good Commits,2025-11-25,NA,NA,No Action,
+Model S,CSN-2025-005,Standard,2025-11-30,PN-7743,4,Performance Parts,David Lee,Forging Closed Die,50,2025-10-11,2025-09-26,RM-CF-300,RM Supplier 37,NA,NA,NA,NA,NA,NA,Connect SFL,
+Model S,CSN-2025-005,Standard,2025-11-30,PN-1205,8, RM Supplier 35,Mike Chen,Casting Airfoil,30,2025-10-31,2025-10-16,RM-ST-304,RM Supplier 41,Y,N,Delivered Late,2025-11-05,NA,NA,Tag as LATE,
+Model S,CSN-2025-005,Standard,2025-11-30,PN-4521,4,ABC Automotive,John Smith,Plate,45,2025-10-16,2025-10-01,RM-PL-PP,RM Supplier 18,Y,Y,Delivered On Time,2025-10-14,NA,NA,No Action,
+Model S,CSN-2025-005,Standard,2025-11-30,PN-3398,7,Precision Parts,Mark Davis,Casting Structural,38,2025-10-23,2025-10-08,RM-AL-5052,RM Supplier 42,Y,Y,Good Commits,2025-10-21,NA,NA,No Action,
+Model S,CSN-2025-006,Sport,2026-01-05,PN-5521,8,Premium Auto,Lisa Wang,Forging ring,35,2025-12-01,2025-11-16,RM-CU-110,RM Supplier 26,Y,Y,Late Commits,2025-12-03,NA,NA,Improve commits,Y
+Model S,CSN-2025-006,Sport,2026-01-05,PN-8834,3,XYZ Electronics,Sarah Johnson,Casting Structural,60,2025-11-06,2025-10-21,RM-AL-5052,RM Supplier 20,Y,Y,Missing Commits,2025-11-10,NA,NA,Update commits,Y
+Model S,CSN-2025-006,Sport,2026-01-05,PN-9912,2,Tech Components,Emily Davis,Plate,21,2025-12-15,2025-11-30,RM-PL-ABS,RM Supplier 18,Y,Y,Good Commits,2025-12-13,NA,NA,Execution,
+Model S,CSN-2025-006,Sport,2026-01-05,PN-7721,5,Industrial Supply,Kevin Zhang,Casting Airfoil,44,2025-11-21,2025-11-06,RM-ST-316,RM Supplier 35,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
+Model S,CSN-2025-007,Premium,2025-12-05,PN-4521,5,ABC Automotive,John Smith,Casting Structural,45,2025-10-21,2025-10-05,RM-AL-7075,RM Supplier 20,Y,N,Delivered Late,2025-11-08,Past Due,-18,Tag as LATE,
+Model S,CSN-2025-007,Premium,2025-12-05,PN-7743,6,Performance Parts,David Lee,Casting Airfoil,50,2025-10-16,2025-10-01,RM-ST-420,RM Supplier 41,Y,Y,Delivered On Time,2025-10-15,NA,NA,No Action,
+Model S,CSN-2025-007,Premium,2025-12-05,PN-1205,12,RM Supplier 35,Mike Chen,Plate,30,2025-11-05,2025-10-21,RM-PL-HDPE,RM Supplier 18,Y,Y,Good Commits,2025-11-03,NA,NA,No Action,
+Model S,CSN-2025-007,Premium,2025-12-05,PN-4456,3,Superior Parts,Jessica Brown,Forging Closed Die,55,2025-10-11,2025-09-26,RM-CF-700,RM Supplier 45,Y,Y,Good Commits,2025-10-09,NA,NA,No Action,
+Model S,CSN-2025-008,Standard,2025-12-18,PN-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-11-27,2025-11-12,RM-CU-220,RM Supplier 26,Y,Y,Late Commits,2025-11-29,NA,NA,Improve commits,Y
+Model S,CSN-2025-008,Standard,2025-12-18,PN-5521,4,Premium Auto,Lisa Wang,Casting Airfoil,35,2025-11-13,2025-10-29,RM-ST-304,RM Supplier 41,Y,Y,Missing Commits,2025-11-16,NA,NA,Update commits,Y
+Model S,CSN-2025-008,Standard,2025-12-18,PN-8834,2,XYZ Electronics,Sarah Johnson,Forging Closed Die,60,2025-10-19,2025-10-03,RM-CF-T700,RM Supplier 37,Y,Y,Delivered On Time,2025-10-17,NA,NA,No Action,
+Model S,CSN-2025-008,Standard,2025-12-18,PN-2298,6,Modern Manufacturing,Daniel Park,Casting Structural,33,2025-11-15,2025-10-30,RM-AL-2024,RM Supplier 42 ,Y,Y,Good Commits,2025-11-13,NA,NA,No Action,
+Model S,CSN-2025-009,Premium,2025-12-22,PN-4521,4,ABC Automotive,John Smith,Casting Airfoil,45,2025-11-07,2025-10-22,RM-ST-420,RM Supplier 41,Y,Y,Good Commits,2025-11-05,NA,NA,No Action,
+Model S,CSN-2025-009,Premium,2025-12-22,PN-8899,5,Advanced Tech,Chris Lee,Plate,25,2025-11-27,2025-11-12,RM-PL-HDPE,RM Supplier 40,Y,N,Late Commits,2025-12-02,NA,NA,Improve commits,Y
+Model S,CSN-2025-009,Premium,2025-12-22,PN-3345,8,Quality Systems,Amy Johnson,Forging ring,38,2025-11-14,2025-10-29,RM-CU-150,RM Supplier 32,Y,Y,Good Commits,2025-11-12,NA,NA,No Action,
+Model S,CSN-2025-009,Premium,2025-12-22,PN-7743,3,Performance Parts,David Lee,Forging Closed Die,50,2025-11-02,2025-10-17,RM-CF-300,RM Supplier 37,Y,Y,Delivered On Time,2025-10-31,NA,NA,No Action,
+Model S,CSN-2025-010,Sport,2026-01-10,PN-5567,7,Quality Parts,Tom Wilson,Casting Structural,35,2025-12-06,2025-11-21,RM-AL-7075,RM Supplier 20,Y,N,Missing Commits,2025-12-15,NA,NA,Update commits,Y
+Model S,CSN-2025-010,Sport,2026-01-10,PN-9912,2,Tech Components,Emily Davis,Casting Airfoil,21,2025-12-20,2025-12-05,RM-ST-304,RM Supplier 35,Y,Y,Good Commits,2025-12-18,NA,NA,No Action,
+Model S,CSN-2025-010,Sport,2026-01-10,PN-1205,9,RM Supplier 35,Mike Chen,Plate,30,2025-12-11,2025-11-26,RM-PL-ABS,RM Supplier 18,Y,Y,Good Commits,2025-12-09,NA,NA,No Action,
+Model S,CSN-2025-010,Sport,2026-01-10,PN-6701,4,Elite Parts,Nancy White,Forging ring,27,2025-12-14,2025-11-29,RM-CU-220,RM Supplier 26,N,N,Forecasted,2025-12-20,NA,NA,Alert HWO,
+Model S,CSN-2025-011,Standard,2025-12-28,PN-4521,6,ABC Automotive,John Smith,Forging ring,45,2025-11-13,2025-10-28,RM-CU-110,RM Supplier 32,Y,Y,Late Commits,2025-11-18,NA,NA,Improve commits,Y
+Model S,CSN-2025-011,Standard,2025-12-28,PN-8834,3,XYZ Electronics,Sarah Johnson,Plate,60,2025-10-29,2025-10-13,RM-PL-PP,RM Supplier 18,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
+Model S,CSN-2025-011,Standard,2025-12-28,PN-7788,5,Mega Parts,Frank Miller,Casting Structural,40,2025-11-18,2025-11-03,RM-AL-6061,RM Supplier 42,Y,Y,Good Commits,2025-11-16,NA,NA,No Action,
+Model S,CSN-2025-011,Standard,2025-12-28,PN-3310,7,Pro Manufacturing,Sandra Kim,Casting Airfoil,32,2025-11-26,2025-11-11,RM-ST-316,RM Supplier 41,Y,Y,Delivered On Time,2025-11-24,NA,NA,No Action,
+Model S,CSN-2025-012,Premium,2026-01-15,PN-5521,5,Premium Auto,Lisa Wang,Forging Closed Die,35,2025-12-11,2025-11-26,RM-CF-T700,RM Supplier 45,Y,Y,Good Commits,2025-12-09,NA,NA,No Action,
+Model S,CSN-2025-012,Premium,2026-01-15,PN-9912,1,Tech Components,Emily Davis,Casting Structural,21,2025-12-25,2025-12-10,RM-AL-5052,RM Supplier 20,Y,N,Delivered Late,2025-12-30,Past Due,-5,Past Due Action,Y
+Model S,CSN-2025-012,Premium,2026-01-15,PN-2245,8,Supreme Quality,Brian Taylor,Casting Airfoil,48,2025-11-28,2025-11-13,RM-ST-420,RM Supplier 35,Y,Y,Good Commits,2025-11-26,NA,NA,No Action,
+Model S,CSN-2025-012,Premium,2026-01-15,PN-4521,4,ABC Automotive,John Smith,Plate,45,2025-12-01,2025-11-16,RM-PL-ABS,RM Supplier 40,Y,Y,Delivered On Time,2025-11-29,NA,NA,No Action,`;
+  
+  function parseCSV(csv){const lines=csv.trim().split('\n');const headers=lines[0].split(',');return lines.slice(1).map(line=>{const values=line.split(',');const obj={};headers.forEach((header,i)=>{obj[header]=values[i];});return obj;});}
+  const data=parseCSV(csvData);
+  let selectedMaterial=null,selectedSupplier=null,selectedPart=null,chart1,chart2,chart3;
+  
+  function getPriority(row) {
+      const pastDue = row['Past Due'];
+      const status = row['Status'];
+      const poAvailable = row['PO Available (Y/N)'];
+      
+      // P1: Past Due + High Importance
+      if (pastDue === 'Past Due') return 'P1';
+      
+      // P2: Due in next 3 weeks + High Importance OR Past Due
+      if (pastDue === 'Due in next 3 weeks') return 'P2';
+      
+      // Status-based priorities
+      if (status === 'Missing Commits') return 'P5';
+      if (status === 'Late Commits') return 'P6';
+      if (status === 'Good Commits') return 'P7';
+      if (status === 'No Forecast') {
+          if (poAvailable === 'N') return 'P2';
+          return 'P4';
+      }
+      if (status === 'Forecasted') {
+          if (pastDue === 'Not due in next 3') return 'P3';
+          return 'P4';
+      }
+      if (status === 'Delivered Late') return 'P2';
+      if (status === 'Delivered On Time') return 'P7';
+      
+      // Default
+      return 'P4';
+  }
+  
+  function updateKPIs(){const totalRecords=data.length;const uniqueCSNs=new Set(data.map(d=>d.CSN)).size;const gapRecords=data.filter(d=>d['Gap (Y/N)']==='Y').length;const gapPct=((gapRecords/totalRecords)*100).toFixed(1);document.getElementById('kpi-total').textContent=totalRecords;document.getElementById('kpi-csns').textContent=uniqueCSNs;document.getElementById('kpi-gaps').textContent=gapRecords;document.getElementById('kpi-gap-pct').textContent=gapPct+'%';}
+  
+  function createChart1(){const materialStats={};data.forEach(row=>{const material=row['Raw Material Type'];if(!materialStats[material]){materialStats[material]={total:0,gaps:0};}materialStats[material].total++;if(row['Gap (Y/N)']==='Y'){materialStats[material].gaps++;}});const chartData=Object.entries(materialStats).map(([material,stats])=>({material,gapPct:parseFloat(((stats.gaps/stats.total)*100).toFixed(1)),noGapPct:parseFloat((((stats.total-stats.gaps)/stats.total)*100).toFixed(1))})).sort((a,b)=>b.gapPct-a.gapPct);const ctx=document.getElementById('chart1').getContext('2d');chart1=new Chart(ctx,{type:'bar',data:{labels:chartData.map(d=>d.material),datasets:[{label:'No Gap %',data:chartData.map(d=>d.noGapPct),backgroundColor:'#27ae60'},{label:'Gap %',data:chartData.map(d=>d.gapPct),backgroundColor:'#e74c3c'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:(event,elements)=>{if(elements.length>0){const index=elements[0].index;selectedMaterial=chartData[index].material;selectedSupplier=null;selectedPart=null;updateCharts();document.getElementById('breadcrumb').classList.add('active');document.getElementById('breadcrumb-text').textContent=selectedMaterial;document.getElementById('status-cards-container').classList.remove('active');}},scales:{x:{stacked:true,max:100,title:{display:true,text:'Percentage (%)'}},y:{stacked:true}},plugins:{legend:{display:true,position:'top'}}}});}
+  
+  function createChart2(){const filteredData=selectedMaterial?data.filter(d=>d['Raw Material Type']===selectedMaterial):data;const supplierStats={};filteredData.forEach(row=>{const supplier=row['RM Supplier'];if(!supplierStats[supplier]){supplierStats[supplier]={total:0,gaps:0};}supplierStats[supplier].total++;if(row['Gap (Y/N)']==='Y'){supplierStats[supplier].gaps++;}});const chartData=Object.entries(supplierStats).map(([supplier,stats])=>({supplier,gapPct:parseFloat(((stats.gaps/stats.total)*100).toFixed(1)),noGapPct:parseFloat((((stats.total-stats.gaps)/stats.total)*100).toFixed(1))})).sort((a,b)=>b.gapPct-a.gapPct);if(chart2)chart2.destroy();const ctx=document.getElementById('chart2').getContext('2d');chart2=new Chart(ctx,{type:'bar',data:{labels:chartData.map(d=>d.supplier),datasets:[{label:'No Gap %',data:chartData.map(d=>d.noGapPct),backgroundColor:'#27ae60'},{label:'Gap %',data:chartData.map(d=>d.gapPct),backgroundColor:'#e74c3c'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:(event,elements)=>{if(elements.length>0){const index=elements[0].index;selectedSupplier=chartData[index].supplier;selectedPart=null;updateCharts();const breadcrumbText=selectedMaterial?`${selectedMaterial} / ${selectedSupplier}`:`All Materials / ${selectedSupplier}`;document.getElementById('breadcrumb-text').textContent=breadcrumbText;document.getElementById('breadcrumb').classList.add('active');document.getElementById('status-cards-container').classList.remove('active');}},scales:{x:{stacked:true,max:100,title:{display:true,text:'Percentage (%)'}},y:{stacked:true}},plugins:{legend:{display:true,position:'top'}}}});const subtitle=selectedMaterial?`Suppliers for: ${selectedMaterial} - Click to filter parts →`:`All suppliers shown - Click any bar to filter parts →`;document.getElementById('chart2-subtitle').textContent=subtitle;}
+  
+  function createChart3(){let filteredData=data;if(selectedMaterial&&selectedSupplier){filteredData=data.filter(d=>d['Raw Material Type']===selectedMaterial&&d['RM Supplier']===selectedSupplier);}else if(selectedMaterial){filteredData=data.filter(d=>d['Raw Material Type']===selectedMaterial);}else if(selectedSupplier){filteredData=data.filter(d=>d['RM Supplier']===selectedSupplier);}const partStats={};filteredData.forEach(row=>{const partNum=row['Part Number'];const pastDue=row['Past Due'];if(!partStats[partNum]){partStats[partNum]={pastDue:0,notPastDue:0};}if(pastDue==='Past Due'){partStats[partNum].pastDue++;}else{partStats[partNum].notPastDue++;}});const chartData=Object.entries(partStats).map(([part,stats])=>({part,pastDue:stats.pastDue,notPastDue:stats.notPastDue})).sort((a,b)=>b.pastDue-a.pastDue);if(chart3)chart3.destroy();const ctx=document.getElementById('chart3').getContext('2d');chart3=new Chart(ctx,{type:'bar',data:{labels:chartData.map(d=>d.part),datasets:[{label:'Not Past Due',data:chartData.map(d=>d.notPastDue),backgroundColor:'#27ae60'},{label:'Past Due',data:chartData.map(d=>d.pastDue),backgroundColor:'#e74c3c'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:(event,elements)=>{if(elements.length>0){const index=elements[0].index;selectedPart=chartData[index].part;showStatusCards(selectedPart);}},scales:{x:{stacked:true,title:{display:true,text:'Number of Records'}}},plugins:{legend:{display:true,position:'top'}}}});let subtitle='Click any bar to see detailed status & priority breakdown ↓';if(selectedMaterial&&selectedSupplier){subtitle=`Parts for: ${selectedSupplier} / ${selectedMaterial} - Click bar for details ↓`;}else if(selectedMaterial){subtitle=`Parts for: ${selectedMaterial} - Click bar for details ↓`;}else if(selectedSupplier){subtitle=`Parts for: ${selectedSupplier} - Click bar for details ↓`;}document.getElementById('chart3-subtitle').textContent=subtitle;}
+  
+  function showStatusCards(partNumber) {
+      let filteredData = data.filter(d => d['Part Number'] === partNumber);
+      if (selectedMaterial) filteredData = filteredData.filter(d => d['Raw Material Type'] === selectedMaterial);
+      if (selectedSupplier) filteredData = filteredData.filter(d => d['RM Supplier'] === selectedSupplier);
+      
+      const statusStats = {};
+      filteredData.forEach(row => {
+          const status = row['Status'];
+          const csn = row['CSN'];
+          const hasGap = row['Gap (Y/N)'] === 'Y';
+          const priority = getPriority(row);
+          const rmPn = row['RM PN'];
+          const rmSupplier = row['RM Supplier'];
+          const owner = row['Owner'];
+          
+          if (!statusStats[status]) {
+              statusStats[status] = {
+                  csns: new Set(),
+                  gapCSNs: new Set(),
+                  priorities: {P1:0, P2:0, P3:0, P4:0, P5:0, P6:0, P7:0, P8:0},
+                  gapRecords: []
+              };
+          }
+          
+          statusStats[status].csns.add(csn);
+          if (hasGap) {
+              statusStats[status].gapCSNs.add(csn);
+              statusStats[status].gapRecords.push({
+                  csn: csn,
+                  rmPn: rmPn,
+                  rmSupplier: rmSupplier,
+                  owner: owner,
+                  priority: priority
+              });
+          }
+          statusStats[status].priorities[priority]++;
+      });
+      
+      document.getElementById('selected-part-name').textContent = partNumber;
+      const cardsGrid = document.getElementById('status-cards-grid');
+      cardsGrid.innerHTML = '';
+      
+      Object.entries(statusStats).forEach(([status, stats]) => {
+          const csnCount = stats.csns.size;
+          const gapCount = stats.gapCSNs.size;
+          const hasGap = gapCount > 0;
+          
+          let cardClass = 'status-card';
+          if (gapCount > csnCount * 0.7) cardClass += ' critical';
+          else if (gapCount > csnCount * 0.3) cardClass += ' warning';
+          else cardClass += ' success';
+          
+          // Only show priorities with count > 0
+          const priorityBadges = Object.entries(stats.priorities)
+              .filter(([priority, count]) => count > 0)
+              .map(([priority, count]) => `
+                  <div class="priority-badge ${priority.toLowerCase()}">
+                      <span class="priority-badge-label">${priority}</span>
+                      <span class="priority-badge-count">${count}</span>
+                  </div>
+              `).join('');
+          
+          // Build gap details section
+          let gapDetailsHtml = '';
+          if (hasGap && stats.gapRecords.length > 0) {
+              gapDetailsHtml = stats.gapRecords.map(record => `
+                  <div class="gap-detail-item">
+                      <div class="gap-detail-row">
+                          <span class="gap-detail-label">CSN:</span>
+                          <span class="gap-detail-value">${record.csn}</span>
+                      </div>
+                      <div class="gap-detail-row">
+                          <span class="gap-detail-label">RM Part #:</span>
+                          <span class="gap-detail-value">${record.rmPn}</span>
+                      </div>
+                      <div class="gap-detail-row">
+                          <span class="gap-detail-label">Supplier:</span>
+                          <span class="gap-detail-value">${record.rmSupplier}</span>
+                      </div>
+                      <div class="gap-detail-row">
+                          <span class="gap-detail-label">Owner:</span>
+                          <span class="gap-detail-value">${record.owner}</span>
+                      </div>
+                  </div>
+              `).join('');
+          } else {
+              gapDetailsHtml = '<div class="no-gap-message">✅ No gaps detected for this status</div>';
+          }
+          
+          const card = document.createElement('div');
+          card.className = cardClass;
+          card.innerHTML = `
+              <div class="status-card-header">
+                  <div class="status-card-title">${status || 'NA'}</div>
+                  <div class="status-card-csn-badge">${csnCount}</div>
+              </div>
+              <div class="card-info-section">
+                  ${gapDetailsHtml}
+              </div>
+              <div class="priority-distribution">
+                  <div class="priority-distribution-title">Priority Distribution</div>
+                  <div class="priority-items">
+                      ${priorityBadges || '<span style="color: #999; font-size: 12px;">No priorities</span>'}
+                  </div>
+              </div>
+              <div class="gap-indicator ${hasGap ? 'has-gap' : 'no-gap'}">
+                  <div class="gap-indicator-text">
+                      ${hasGap ? `⚠️ ${gapCount} Gap${gapCount !== 1 ? 's' : ''} Detected` : '✅ All Clear'}
+                  </div>
+              </div>
+          `;
+          cardsGrid.appendChild(card);
+      });
+      
+      document.getElementById('status-cards-container').classList.add('active');
+  }
+  
+  function updateCharts(){createChart2();createChart3();}
+  
+  function resetDashboard(){selectedMaterial=null;selectedSupplier=null;selectedPart=null;document.getElementById('breadcrumb').classList.remove('active');document.getElementById('status-cards-container').classList.remove('active');document.getElementById('chart2-subtitle').textContent='All suppliers shown - Click any bar to filter parts →';document.getElementById('chart3-subtitle').textContent='Click any bar to see detailed status & priority breakdown ↓';updateCharts();}
+  
+  updateKPIs();createChart1();createChart2();createChart3();
+</script>
+
+<script>
+let currentFilter = null;
+
+function showModal(id) { 
+document.getElementById(id).style.display = 'flex'; 
+}
+
+function hideModal(id) { 
+document.getElementById(id).style.display = 'none'; 
+}
+
+function goToRow(rowId) {
+// Close the modal
+hideModal('alertModal');
+
+// Scroll to the row
+const row = document.getElementById(rowId);
+if (row) {
+    // Smooth scroll to the row
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Add highlight animation
+    row.classList.add('highlight');
+    
+    // Remove highlight after animation
+    setTimeout(() => {
+        row.classList.remove('highlight');
+    }, 2000);
+}
+}
+
+function filterByCar(carName, element) {
+document.querySelectorAll('.car-card').forEach(card => {
+    card.classList.remove('selected');
+});
+
+element.classList.add('selected');
+currentFilter = carName;
+
+document.getElementById('filterInfo').style.display = 'flex';
+document.getElementById('filterCarName').textContent = carName;
+
+const rows = document.querySelectorAll('tbody tr[data-car]');
+rows.forEach(row => {
+    if (row.getAttribute('data-car') === carName) {
+        row.style.display = '';
+        if (row.nextElementSibling) {
+            row.nextElementSibling.style.display = '';
+        }
+    } else {
+        row.style.display = 'none';
+        if (row.nextElementSibling) {
+            row.nextElementSibling.style.display = 'none';
+        }
+    }
+});
+}
+
+function clearFilter() {
+currentFilter = null;
+document.querySelectorAll('.car-card').forEach(card => {
+    card.classList.remove('selected');
+});
+document.getElementById('filterInfo').style.display = 'none';
+const rows = document.querySelectorAll('tbody tr');
+rows.forEach(row => {
+    row.style.display = '';
+});
+}
+
+function toggleComment(id) {
+const comment = document.getElementById('comment-' + id);
+comment.classList.toggle('show');
+}
+
+function submitComment(id) {
+const comment = document.getElementById('comment-' + id);
+const textarea = comment.querySelector('textarea');
+if (textarea.value.trim()) {
+    alert('✅ Comment Saved!\n\n"' + textarea.value + '"');
+    textarea.value = '';
+    comment.classList.remove('show');
+} else {
+    alert('⚠️ Please enter a comment.');
+}
+}
+
+function closeAction(id) {
+if (confirm('Close this action?\n\n')) {
+    alert('✅ Action Closed Successfully!');
+    document.getElementById('row-' + id).style.opacity = '0.5';
+    document.getElementById('row-' + id).style.pointerEvents = 'none';
+}
+}
+
+document.getElementById('alertModal').addEventListener('click', function(e) {
+if (e.target === this) hideModal('alertModal');
+});
+
+document.getElementById('emailModal').addEventListener('click', function(e) {
+if (e.target === this) hideModal('emailModal');
+});
+</script> 
+<!-- NEW -->
+<script>
+  [
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "NA",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "NA",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Delivered On Time",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Delivered On Time",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "NA",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "NA",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Delivered On Time",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Good Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "NA",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "NA",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Plate",
+    "Status": "Forecasted",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Missing Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Missing Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Forging Ring",
+    "Status": "Missing Commits",
+    "Part Number": "PN18"
+  },
+  {
+    "Raw Material": "Casting Structural",
+    "Status": "Missing Commits",
+    "Part Number": "PN18"
+  }
+]
+
+</script> 
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+<script defer src="src/part-walker-optimized.js?v=1"></script>
+
+<script defer src="src/utils.js?v=2"></script>
+<script defer src="src/filters.js?v=2"></script> 
+
+
+
+
+
+</body>
+</html>

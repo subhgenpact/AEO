@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demand</title>
+</head>
+<!-- Bootstrap 5 CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+        
+/* Engine Program Overview active tab styling */
+#engine-program-overview .btn-group .btn-check:checked + .btn {
+    background-color: var(--secondary) !important;
+    border-color: var(--secondary) !important;
+    color: white !important;
+}
+
+#engine-program-overview .btn-group .btn-check:checked + .btn:hover {
+    background-color: var(--secondary) !important;
+    border-color: var(--secondary) !important;
+    color: white !important;
+}
+      </style>
+</head>
+
+<body>
+
+  <div class="container-fluid p-0 w-100">
+
+    <!-- Header -->
+    <header class="header d-flex align-items-center justify-content-between px-4 fixed-top">
+      <!-- Logo and Title (left) -->
+      <div class="d-flex align-items-center">
+        <div class="logo me-3">
+          <a href="index.html">
+            <svg width="120" height="48" viewBox="0 0 167 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="genpact-logo">
+              <g id="Group 1597881160">
+                <g id="Group">
+                  <path id="Vector" d="M70.6328 37.8217C71.2676 39.0041 72.5372 39.8266 73.9823 39.8266C76.0893 39.8266 77.7776 38.1044 77.7776 35.9967V35.8554L77.7236 35.8297C76.5485 36.9349 75.0358 37.6032 73.3476 37.6032C69.7279 37.6032 66.8105 34.4674 66.8105 30.6375C66.8105 26.8077 69.7414 23.6719 73.3476 23.6719C75.0358 23.6719 76.5485 24.353 77.7236 25.484L77.7776 25.4583V24.0446H81.1541V35.9967C81.1541 39.7752 78.1693 42.821 74.1309 42.821C71.4162 42.821 69.0661 41.4716 67.7965 39.4153L70.6328 37.8346V37.8217ZM74.0634 34.6345C76.1974 34.6345 77.9802 32.8609 77.9802 30.6375C77.9802 28.4142 76.1974 26.6406 74.0634 26.6406C71.9294 26.6406 70.1736 28.4142 70.1736 30.6375C70.1736 32.8609 71.9564 34.6345 74.0634 34.6345Z" fill="black"></path>
+                  <path id="Vector_2" d="M92.9314 33.3366L95.2814 35.5085C93.9173 36.8066 92.0264 37.5905 89.9465 37.5905C85.7866 37.5905 82.4775 34.4932 82.4775 30.6249C82.4775 26.7565 85.7055 23.6592 89.7439 23.6592C93.7822 23.6592 96.9697 26.7565 96.9697 30.6249C96.9697 31.2417 96.9157 31.4088 96.9157 31.4088H85.8541C85.8541 32.8739 87.6909 34.5961 89.7979 34.5961C91.0405 34.5961 92.121 34.082 92.9314 33.3237M93.323 28.7999L93.35 28.7485C92.5937 27.4505 91.2701 26.5765 89.7304 26.5765C88.1907 26.5765 86.8941 27.3991 86.0837 28.7485L86.1107 28.7999H93.3095H93.323Z" fill="black"></path>
+                  <path id="Vector_3" d="M101.764 30.6377V37.2307H98.3877V24.0319H101.764V25.6384L101.818 25.6641C102.966 24.3403 104.506 23.6592 106.1 23.6592C112.124 23.6592 112.272 28.787 112.272 30.3678V37.2178H108.896V30.6249C108.896 29.0441 108.869 26.6279 105.37 26.6279C103.385 26.6279 101.751 28.4015 101.751 30.6249" fill="black"></path>
+                  <path id="Vector_4" d="M121.74 37.6034C120.025 37.6034 118.539 36.9608 117.337 35.8041L117.283 35.8298V42.4485H113.906V24.0319H117.283V25.407L117.337 25.4327C118.539 24.3275 120.025 23.6592 121.74 23.6592C125.36 23.6592 128.277 26.7565 128.277 30.6249C128.277 34.4932 125.346 37.5905 121.74 37.5905M121.011 26.6279C118.836 26.6279 117.094 28.4015 117.094 30.5991C117.094 32.7968 118.85 34.6089 121.011 34.6089C123.117 34.6089 124.9 32.8354 124.9 30.5991C124.9 28.3629 123.117 26.6279 121.011 26.6279Z" fill="black"></path>
+                  <path id="Vector_5" d="M135.963 23.6719C137.651 23.6719 139.15 24.353 140.325 25.484L140.393 25.4583V24.0446H143.769V37.2434H140.393V35.8939L140.325 35.8425C139.15 36.9349 137.638 37.6161 135.963 37.6161C132.343 37.6161 129.426 34.5188 129.426 30.6504C129.426 26.782 132.357 23.6847 135.963 23.6847M136.692 34.6087C138.84 34.6087 140.582 32.8609 140.582 30.6375C140.582 28.4142 138.84 26.6278 136.692 26.6278C134.545 26.6278 132.802 28.4013 132.802 30.6375C132.802 32.8738 134.585 34.6087 136.692 34.6087Z" fill="black"></path>
+                  <path id="Vector_6" d="M157.869 35.5085C156.519 36.8066 154.614 37.5905 152.534 37.5905C148.374 37.5905 145.065 34.4932 145.065 30.6249C145.065 26.7565 148.388 23.6592 152.534 23.6592C154.614 23.6592 156.519 24.4431 157.869 25.7412L155.492 27.8232C154.736 27.0649 153.709 26.6151 152.534 26.6151C150.238 26.6151 148.442 28.4143 148.442 30.6249C148.442 32.8354 150.252 34.5961 152.534 34.5961C153.709 34.5961 154.79 34.1205 155.546 33.3494L157.869 35.4957V35.5085Z" fill="black"></path>
+                  <path id="Vector_7" d="M164.663 27.0907V37.2307H161.287V27.0907H158.95V24.0448H161.287V18.1201H164.663V24.0448H167V27.0907H164.663Z" fill="black"></path>
+                </g>
+                <path id="Vector_8" d="M48.9177 31.2892C48.9177 31.2892 48.8707 31.2445 48.8472 31.2222C48.8119 31.1775 48.7766 31.1329 48.7296 31.0994L37.3848 23.8548L48.7296 16.5097C48.8942 16.4092 48.9882 16.2306 48.9882 16.052C48.9882 15.8734 48.8942 15.6948 48.7296 15.5943L24.8292 0.100465C24.6293 -0.0334882 24.3707 -0.0334882 24.1708 0.100465L0.258637 15.5943C0.258637 15.5943 0.164587 15.6837 0.117562 15.7395C0.117562 15.7506 0.0940499 15.7618 0.0822937 15.7841C0.0352687 15.8623 0 15.9627 0 16.0632V47.0621C0 47.2519 0.0940499 47.4193 0.258637 47.5198L24.1708 63.0248C24.1708 63.0248 24.1943 63.0248 24.2061 63.0248C24.2061 63.0248 24.2178 63.036 24.2296 63.0472C24.3001 63.0807 24.3824 63.0918 24.453 63.103C24.4647 63.103 24.4882 63.1141 24.5 63.1141C24.594 63.1141 24.6881 63.0918 24.7704 63.0472C24.7821 63.0472 24.7939 63.0248 24.8057 63.0248H24.8292L48.7414 47.5198C48.9059 47.4193 49 47.2407 49 47.0621V31.5682C49 31.4678 48.9647 31.3785 48.9177 31.3003V31.2892ZM13.2258 24.1673L24.5 16.8557L35.304 23.8659L24.1708 31.0994C24.1708 31.0994 24.112 31.1664 24.0885 31.1887C24.0533 31.2222 24.018 31.2445 23.9945 31.2892C23.971 31.3338 23.971 31.3785 23.9592 31.4343C23.9592 31.4789 23.9239 31.5124 23.9239 31.5571V45.89L13.2375 38.958V24.1673H13.2258ZM35.3628 39.2817L25.0878 45.89V32.6175L35.3628 39.2929V39.2817ZM36.4091 38.6119L25.5463 31.5571L36.3503 24.5357L47.3659 31.5682L36.4091 38.6119ZM24.5 1.23906L47.3659 16.0632L36.3385 23.1962L24.8174 15.7283C24.6176 15.5943 24.3589 15.5943 24.1591 15.7283L12.6262 23.2073L1.63412 16.0632L24.5 1.23906ZM1.17562 17.1236L12.0501 24.1673V39.2482C12.0501 39.438 12.1442 39.6054 12.3088 39.7059L23.9122 47.2296V61.5067L1.17562 46.7719V17.1236ZM47.8244 46.7719L25.0878 61.5067V47.2407L25.4875 46.984L47.8244 32.6175V46.7719Z" fill="black"></path>
+              </g>
+            </svg>
+          </a>
+        </div>
+        <div class="navbar-title">
+          <span style="font-size: 16px; font-weight: 600; color: var(--gray-800);">AEO – Material Management Tool</span>
+        </div>
+      </div>
+    
+      <!-- Navigation Menu (right) -->
+      <nav class="navbar-nav">
+        <ul class="nav-menu d-flex list-unstyled mb-0">
+          <li class="nav-item me-3 dropdown">
+            <a href="index.html" class="nav-link">
+              Home
+            </a>
+          </li>
+          <li class="nav-item me-3 dropdown">
+            <a href="#engine-delivery" class="nav-link dropdown-toggle active" data-bs-toggle="dropdown">
+              Engine Delivery <i class="fas fa-chevron-down ms-1"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="demand.html">Demand</a></li>
+              <li><a class="dropdown-item" href="BOMexplosion.html">BOM Explosion</a></li>
+              <li><a class="dropdown-item" href="GapAnalysis.html">GAP Analysis</a></li>
+            </ul>
+          </li>
+          <li class="nav-item me-3 dropdown">
+            <a href="#fulfillment-expediting" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+              Fulfillment <i class="fas fa-chevron-down ms-1"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">Buyback</a></li>
+              <li><a class="dropdown-item" href="#">Line up change actions</a></li>
+              <li><a class="dropdown-item" href="#">Part Escalation actions</a></li>
+            </ul>
+          </li>
+          <li class="nav-item me-3 dropdown">
+            <a href="#sourcing" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+              Sourcing <i class="fas fa-chevron-down ms-1"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">Say do-ratio</a></li>
+              <li><a class="dropdown-item" href="#">Quality instances</a></li>
+              <li><a class="dropdown-item" href="#">L/T management / Costing</a></li>
+              <li><a class="dropdown-item" href="#">Alternate sources / escalation</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a href="#critical-order" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+              Critical Order <i class="fas fa-chevron-down ms-1"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="4critical_demand.html">Demand</a></li>
+              <li><a class="dropdown-item" href="4critical_gapAnalysis.html">GAP Analysis</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+  </div>
+
+  <!-- Engine Delivery Dashboard Content -->
+  <div class="container dashboard-mode" style="padding-top: 80px;">
+    
+    <!-- Filter Section -->
+    <div class="d-flex gap-2 mb-3 justify-content-between align-items-center">
+      <div class="filters-inline" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <!-- 0: Product Line -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="productLineDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Product Line
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="productLineSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllProductLines"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearProductLines" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyProductLines">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 1: Year -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="yearDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Year
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="yearSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllYears"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearYears" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyYears">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 2: Eng Config -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="engConfigDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Engine Config
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="engConfigSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllConfigs"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearConfigs" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyConfigs">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 3: Supplier -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="supplierDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Supplier
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="supplierSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllSuppliers"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearSuppliers"
+                    title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applySuppliers">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+           <!-- 4: RM Supplier (subset of Supplier) -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="rmSupplierDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                RM Supplier
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="rmSupplierSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllRmSuppliers"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearRmSuppliers" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyRmSuppliers">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 5: HW Owner -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="hwOwnerDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                HW Owner
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="hwOwnerSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllHwOwners"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearHwOwners" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyHwOwners">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 6: Module (placeholder) -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="moduleDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Module
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="moduleSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllModules"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearModules" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyModules">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 7: Part No -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="partNoDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Part No
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="partNoSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllPartNos"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearPartNos" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyPartNos">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+         
+        </div>
+        
+        <!-- Clear All Button (Extreme Right) -->
+        <button class="btn btn-sm" id="clearAllFilters" style="background-color: #ff6600; color: white; border: none; white-space: nowrap;">
+          <i class="fas fa-times-circle me-1"></i>Clear All
+        </button>
+    </div>
+    
+    <!-- Engine Program Overview Chart -->
+    <div class="card chart-card mb-3" id="engine-program-overview">
+      <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <div>
+          <h6 class="mb-0">Engine Program Overview</h6>
+          <small class="text-dark opacity-75">Distinct ESN Counts by Program and Year</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-outline-secondary" id="engineProgramBackBtn" style="display:none;">Back</button>
+          <div class="text-warning" style="color: #198754 !important;">
+            <i class="fas fa-info-circle me-1"></i>Note: 2025 contains only Q4 data
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body py-2">
+        <div class="row g-2">
+          <div class="col-12 d-flex">
+            <div class="flex-fill me-2" style="width: 65%; display: flex; flex-direction: column;">
+              <!-- Legend and Controls on top row -->
+              <div class="d-flex gap-2 mb-2 justify-content-between align-items-center flex-wrap" style="flex-shrink: 0; z-index: 10; position: relative;">
+                <!-- Legend will be injected here by JavaScript -->
+                <div class="engine-program-legend" style="flex: 1; display: flex; flex-wrap: wrap; gap: 15px;"></div>
+                
+                <!-- View Toggle Buttons -->
+                <div class="btn-group btn-group-sm" role="group" aria-label="View filter">
+                  <input type="radio" class="btn-check" name="engineProgramView" id="viewYear" value="year">
+                  <label class="btn btn-outline-primary" for="viewYear">Year </label>
+                  <input type="radio" class="btn-check" name="engineProgramView" id="viewQuarter" value="quarter" checked>
+                  <label class="btn btn-outline-primary" for="viewQuarter">Quarter </label>
+                  <input type="radio" class="btn-check" name="engineProgramView" id="viewMonth" value="month">
+                  <label class="btn btn-outline-primary" for="viewMonth">Month </label>
+                </div>
+
+                <!-- Zoom Controls -->
+                <div class="btn-group btn-group-sm" role="group" aria-label="Zoom controls">
+                  <button class="btn btn-outline-secondary" id="zoomInEngineProgram" title="Zoom In">
+                    <i class="fas fa-search-plus"></i>
+                  </button>
+                  <button class="btn btn-outline-secondary" id="resetEngineProgramZoom" title="Reset Zoom">
+                    <i class="fas fa-search-minus"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Chart -->
+              <div class="chart-container" style="height: 150px; flex-shrink: 0; position: relative; z-index: 1;">
+                <canvas id="engineProgramChart"></canvas>
+              </div>
+            </div>
+            <div class="flex-fill" style="width: 35%;">
+              <div class="card h-100">
+                <!-- <div class="card-header py-2">
+                  <h6 class="card-title mb-0">Program Summary</h6>
+                </div> -->
+                <div class="card-body p-1">
+                  <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-bordered mb-0" id="engineProgramSummaryTable">
+                      <thead class="table-light">
+                        <tr>
+                          <th rowspan="2" class="text-center align-middle">Year</th>
+                          <th colspan="3" class="text-center">Distinct ESN Count</th>
+                          <th rowspan="2" class="text-center align-middle">Total</th>
+                        </tr>
+                        <tr>
+                          <th class="text-center">LM2500</th>
+                          <th class="text-center">LM6000</th>
+                          <th class="text-center">LMS100</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <!-- Data will be populated by JavaScript -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section navigation -->
+    <div class="section-bar">
+        <div class="section-pills" id="sectionPills">
+          <span class="section-pill active" data-target="section-supplier">Supplier</span>
+          <span class="section-pill" data-target="section-rm-supplier">RM Supplier</span>
+          <span class="section-pill" data-target="section-hw-owner">HW Owner</span>
+        </div>
+        <!-- Active filter chips -->
+        <div class="filter-chips" id="filterChips" aria-live="polite"></div>
+      </div>
+
+      <!-- Charts left + Summary right -->
+      <div class="row g-3 mb-3 align-items-stretch row-cols-1 row-cols-lg-2" style="display: flex;">
+        <div class="col d-flex flex-column" id="chartsPanel" style="min-height:1px; flex: 1 1 65%;">
+          <div class="card chart-card mb-3 d-none" id="chart-program">
+            <div class="card-header d-flex justify-content-between align-items-center py-2 px-3" style="min-height:40px;">
+              <h6 class="mb-0 small fw-semibold">Engine Program Demand (2025-2027)</h6>
+              <div class="d-flex gap-1">
+                <button id="btnViewDetailsPrg" class="btn btn-xs btn-outline-primary px-2 py-1 d-flex align-items-center" aria-label="View details" style="font-size:0.82rem;">
+                  <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                      <line x1="20" y1="20" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <span>Details</span>
+                </button>
+                <button id="btnDownloadPrg" class="btn btn-xs btn-outline-secondary px-2 py-1 d-flex align-items-center" aria-label="Download" style="font-size:0.82rem;">
+                  <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <rect x="4" y="19" width="16" height="2" rx="0" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <span>Download</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body"><canvas id="programChart" height="200"></canvas>
+            </div>
+          </div>
+          <div class="card chart-card same-height d-none" id="chart-supplier">
+            <div class="card-header d-flex justify-content-between align-items-center py-2 px-3" style="min-height:40px;">
+              <h6 class="mb-0 small fw-semibold">Supplier Distribution per Engine Program</h6>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-secondary" id="supplierBackBtn" style="display:none;">Back</button>
+                <button id="btnViewDetailsSup" class="btn btn-xs btn-outline-primary px-2 py-1 d-flex align-items-center" aria-label="View details" style="font-size:0.82rem;">
+                  <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                      <line x1="20" y1="20" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <span>Details</span>
+                </button>
+                <button id="btnDownloadSup" class="btn btn-xs btn-outline-secondary px-2 py-1 d-flex align-items-center" aria-label="Download" style="font-size:0.82rem;">
+                  <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <rect x="4" y="19" width="16" height="2" rx="0" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <span>Download</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <canvas id="supplierChart" height="250"></canvas>
+            </div>
+          </div>
+          <div class="card chart-card same-height d-none" id="chart-rm-level">
+            <div class="card-header d-flex justify-content-between align-items-center py-2 px-3" style="min-height:40px;">
+              <h6 class="mb-0 small fw-semibold">RM Details</h6>
+              <div class="d-flex align-items-center gap-2">
+                <small class="text-muted">Click a bar above to see details</small>
+                <button class="btn btn-sm btn-outline-secondary" id="rmLevelBackBtn" style="display:none;">Back</button>
+                <div class="d-flex gap-1">
+                  <button id="btnViewDetailsRM" class="btn btn-xs btn-outline-primary px-2 py-1 d-flex align-items-center" aria-label="View details" style="font-size:0.82rem;">
+                    <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                        <line x1="20" y1="20" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                    <span>Details</span>
+                  </button>
+                  <button id="btnDownloadRM" class="btn btn-xs btn-outline-secondary px-2 py-1 d-flex align-items-center" aria-label="Download" style="font-size:0.82rem;">
+                    <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <rect x="4" y="19" width="16" height="2" rx="0" fill="currentColor" />
+                      </svg>
+                    </span>
+                    <span>Download</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row g-3 align-items-stretch">
+                <div class="col-12 col-lg-12">
+                  <canvas id="rmDetailChart" height="250"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card chart-card same-height d-none" id="chart-hwowner">
+            <div class="card-header d-flex justify-content-between align-items-center py-2 px-3" style="min-height:40px;">
+              <h6 class="mb-0 small fw-semibold">HW Owner Total Demand</h6>
+              <div class="d-flex gap-1">
+                <button id="btnViewDetailsHW" class="btn btn-xs btn-outline-primary px-2 py-1 d-flex align-items-center" aria-label="View details" style="font-size:0.82rem;">
+                  <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                      <line x1="20" y1="20" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <span>Details</span>
+                </button>
+                <button id="btnDownloadHW" class="btn btn-xs btn-outline-secondary px-2 py-1 d-flex align-items-center" aria-label="Download" style="font-size:0.82rem;">
+                  <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <rect x="4" y="19" width="16" height="2" rx="0" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <span>Download</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body"><canvas id="hwOwnerChart" height="250"></canvas>
+            </div>
+          </div>
+          <div class="card chart-card mb-3 same-height d-none" id="chart-partnumber">
+            <div class="card-header d-flex justify-content-between align-items-center py-2 px-3" style="min-height:40px;">
+              <h6 class="mb-0 small fw-semibold">Part Number Distribution</h6>
+              <div class="d-flex gap-1">
+                <button id="btnViewDetailsPN" class="btn btn-xs btn-outline-primary px-2 py-1 d-flex align-items-center" aria-label="View details" style="font-size:0.82rem;">
+                  <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                      <line x1="20" y1="20" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  <span>Details</span>
+                </button>
+                <button id="btnDownloadPN" class="btn btn-xs btn-outline-secondary px-2 py-1 d-flex align-items-center" aria-label="Download" style="font-size:0.82rem;">
+                  <span class="icon me-1" aria-hidden="true" style="width:14px;height:14px;display:inline-block;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <rect x="4" y="19" width="16" height="2" rx="0" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <span>Download</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body"><canvas id="partNumberChart" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col d-flex flex-column" id="summaryPanel" style="flex: 0 0 35%;">
+          <div class="card chart-card same-height">
+            <div class="card-header">
+              <h6 class="mb-0">Summary</h6>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-between">
+              <ul id="summaryList" style="margin:0; padding-left:18px;">
+                <li>LM2500-6000-PC-NDWG23 config shows an upward trend in demand</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data tables below (shown by default, contains section pills and tables) -->
+      <div id="dataPanel" class="d-none">
+
+        <!-- Engine Program Section -->
+        <div id="section-engine-program" class="row table-section d-none">
+          <div class="col-md-12">
+            <h6>Engine Program</h6>
+            <div class="table-wrapper">
+              <table class="table table-bordered table-sm">
+                <thead class="table-light">
+                  <tr>
+                    <th>Engine Program</th>
+                    <th>2025</th>
+                    <th>2026</th>
+                    <th>2027</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Data populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            <div id="epPagination" class="table-pagination mt-2"></div>
+          </div>
+        </div>
+
+        <!-- Supplier Section -->
+        <div id="section-supplier" class="mb-3 d-none">
+          <!-- <div class="filter-level mb-2">Filter - Level</div> -->
+          <h6>Supplier</h6>
+          <div class="table-wrapper">
+            <table class="table table-bordered table-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>Suppliers</th>
+                  <th>Level 1 PN</th>
+                  <th>Description</th>
+                  <th>2025</th>
+                  <th>2026</th>
+                  <th>2027</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Data populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+          <div id="supplierPagination" class="table-pagination mt-2"></div>
+        </div>
+
+        <!-- RM Supplier Section (subset of Supplier) -->
+        <div id="section-rm-supplier" class="row table-section d-none">
+          <div class="col-md-12">
+            <h6>RM Supplier</h6>
+            <div class="table-wrapper">
+              <table class="table table-bordered table-sm">
+                <thead class="table-light">
+                  <tr>
+                    <th>RM Supplier</th>
+                    <th>Level 1 PN</th>
+                    <th>Description</th>
+                    <th>2025</th>
+                    <th>2026</th>
+                    <th>2027</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div id="rmSupplierPagination" class="table-pagination mt-2"></div>
+          </div>
+        </div>
+
+        <!-- HW Owner Section (aggregated from Supplier table) -->
+        <div id="section-hw-owner" class="row table-section d-none">
+          <div class="col-md-12">
+            <h6>HW Owner</h6>
+            <div class="table-wrapper">
+              <table class="table table-bordered table-sm">
+                <thead class="table-light">
+                  <tr>
+                    <th>HWO</th>
+                    <th>Level 1 PN</th>
+                    <th>Description</th>
+                    <th>Supplier</th>
+                    <th>2025</th>
+                    <th>2026</th>
+                    <th>2027</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div id="hwOwnerPagination" class="table-pagination mt-2"></div>
+          </div>
+        </div>
+
+      </div> <!-- /#dataPanel -->
+
+  </div>
+
+  <!-- Bootstrap 5 JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <!-- Chunk Loader for efficient data loading -->
+  <script defer src="src/chunk-loader.js?v=1"></script>
+  <!-- OPTIMIZATION #2: Iterative Part Walker (load before other scripts) -->
+  <script defer src="src/part-walker-optimized.js?v=1"></script>
+  <!-- Removed embedded-data.js - using 100% dynamic data from backend -->
+  <script defer src="src/charts.js?v=3"></script>
+  <script defer src="src/utils.js?v=2"></script>
+  <script defer src="src/filters.js?v=2"></script>
+  <script defer src="src/demand.js?v=26"></script>
+  <script defer src="src/dropdowns.js?v=2"></script>
+
+  <!-- Chatbot Icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <div class="chatbot-icon">
+    <i class="fas fa-robot"></i>
+  </div>
+
+  <!-- Raw Material Details Modal -->
+  <div class="modal fade" id="rawMaterialModal" tabindex="-1" aria-labelledby="rawMaterialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="rawMaterialModalLabel" style="color: #000000 !important;">Raw Material Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Search Filters -->
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label for="modalSupplierSearch" class="form-label">Search Supplier</label>
+                  <input type="text" class="form-control form-control-sm" id="modalSupplierSearch" placeholder="Filter by supplier...">
+                </div>
+                <div class="col-md-4">
+                  <label for="modalPartNumberSearch" class="form-label">Search Part Number</label>
+                  <input type="text" class="form-control form-control-sm" id="modalPartNumberSearch" placeholder="Filter by part number...">
+                </div>
+                <div class="col-md-4">
+                  <label for="modalHWOSearch" class="form-label">Search HWO</label>
+                  <input type="text" class="form-control form-control-sm" id="modalHWOSearch" placeholder="Filter by HWO...">
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Demand Chart -->
+          <div class="card chart-card mb-4">
+            <div class="card-header">
+              <h6 class="mb-0" id="modalChartTitle">Raw Material Demand per Supplier</h6>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height: 300px;">
+                <canvas id="modalRawMaterialChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details Table -->
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Details</h6>
+              <div id="modalTablePaginationInfo" class="small text-muted"></div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm" id="modalDetailsTable">
+                  <thead>
+                    <tr>
+                      <th>Supplier</th>
+                      <th>Part Number</th>
+                      <th>Parent Part No</th>
+                      <th>Description</th>
+                      <th>HWO</th>
+                      <th>Level</th>
+                      <th>QPE</th>
+                      <th>MFG LT (Start-CTB)</th>
+                      <th colspan="4" class="text-center">2025</th>
+                      <th colspan="4" class="text-center">2026</th>
+                      <th colspan="4" class="text-center">2027</th>
+                    </tr>
+                    <tr>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                    </tr>
+                  </thead>
+                  <tbody id="modalDetailsTableBody">
+                    <!-- Data will be populated by JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+              <!-- Pagination Controls for Supplier Details -->
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted small">
+                  <span id="supplierDetailsRecordInfo">Showing 0-0 of 0 records</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <select class="form-select form-select-sm" style="width: auto;" id="supplierDetailsPageSize">
+                    <option value="10" selected>10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                  </select>
+                  <button class="btn btn-sm btn-outline-secondary" id="supplierDetailsPrevBtn" disabled>← Prev</button>
+                  <span id="supplierDetailsPageInfo" class="mx-2">Page 1</span>
+                  <button class="btn btn-sm btn-outline-secondary" id="supplierDetailsNextBtn">Next →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="exportModalData">Export Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- DuckDB Integration - Ultra-Fast Filtering -->
+<script src="/src/duckdb-integration.js"></script>
+
+</body>
+
+
+</html>

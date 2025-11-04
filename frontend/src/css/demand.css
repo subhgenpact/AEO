@@ -1,0 +1,1394 @@
+/* Compact Engine Config Trend header and buttons */
+#chart-config .card-header {
+    min-height: 40px;
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+#chart-config .btn-xs {
+    --bs-btn-padding-y: 0.15rem;
+    --bs-btn-padding-x: 0.45rem;
+    --bs-btn-font-size: 0.82rem;
+    --bs-btn-border-radius: 0.2rem;
+    line-height: 1.1;
+    height: 26px;
+    min-width: 0;
+}
+/* Make all main chart cards and summary panel the same fixed height */
+.same-height {
+    height: 400px;
+    min-height: 400px;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+#summaryPanel, #chartsPanel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+#summaryPanel .card.chart-card,
+#chartsPanel .card.chart-card {
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 400px;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+.same-height .card-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+/* Improve chart legibility */
+/* .chart-card .card-body {
+    background: rgba(161, 190, 227, 0.22) !important;
+} */
+
+/* Make Engine Config Trend background lighter for better content visibility */
+
+#chart-config .card-body {
+    /* background: rgb(125 162 208 / 22%) !important; */
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem !important;
+}
+
+#chart-config .row.g-3 {
+    --bs-gutter-x: 0.5rem;
+    --bs-gutter-y: 0.5rem;
+}
+
+#chart-config .config-info.card {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+canvas#configChart,
+canvas#programChart,
+canvas#supplierChart {
+    background: transparent !important;
+}
+
+/* Config info side panel */
+.config-info {
+    background: antiquewhite !important;
+    border: 1px solid #2b4a6a !important;
+    color: #2c3e50;
+}
+
+.config-info .card-body {
+    /* background: transparent !important; */
+    color: #2c3e50;
+}
+
+/* Ensure muted text inside config-info is dark */
+.config-info .text-muted {
+    color: #5a6c7d !important;
+    opacity: .95;
+}
+
+#configInfoList li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 8px;
+    border-top: 1px solid rgba(44, 62, 80, 0.2);
+}
+
+#configInfoTitle {
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: .2px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 10px 0;
+    border-bottom: 2px solid rgba(44, 62, 80, 0.25);
+    position: relative;
+}
+
+/* subtle accent bar at the left */
+#configInfoTitle::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 18px;
+    background: linear-gradient(180deg, #4AABCA, #1E345C);
+    border-radius: 2px;
+    margin-right: 10px;
+}
+
+/* Most-share badge in header */
+#configInfoMostPct {
+    background: #2c3e50 !important;
+    border: 1px solid #1e2a36;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-left: 12px;
+}
+
+#configInfoList li:first-child {
+    border-top: 0;
+}
+
+#configInfoList li>div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#configInfoList .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+}
+
+/* Right column stacked value + percent for product lines list */
+#configInfoList .right-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.1;
+}
+
+#configInfoList .right-stack .val {
+    font-weight: 800;
+    color: #2c3e50;
+}
+
+#configInfoList .right-stack .pct {
+    font-size: 12px;
+    color: #5a6c7d;
+}
+
+/* Engine Config right panel extras */
+.config-meta .text-muted {
+    color: #5a6c7d !important;
+    opacity: .95;
+}
+
+.config-year-chip {
+    background: rgba(44, 62, 80, 0.1);
+    border: 1px solid rgba(44, 62, 80, 0.3);
+    color: #2c3e50;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.config-year-chip .yr {
+    font-weight: 700;
+    opacity: .95;
+}
+
+.config-year-chip .val {
+    font-weight: 700;
+}
+
+.config-year-chip .delta {
+    font-weight: 700;
+    font-size: 11px;
+}
+
+.config-year-chip .delta.up {
+    color: #27ae60;
+}
+
+.config-year-chip .delta.down {
+    color: #e74c3c;
+}
+
+.config-year-chip .delta.flat {
+    color: #5a6c7d;
+}
+
+#configTopConfigs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#configTopConfigs .config-top-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    gap: 10px;
+}
+
+#configTopConfigs .config-top-item .label {
+    color: #2c3e50;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#configTopConfigs .config-top-item .bar-wrap {
+    background: rgba(44, 62, 80, 0.2);
+    border-radius: 999px;
+    height: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+#configTopConfigs .config-top-item .bar {
+    height: 100%;
+    border-radius: 999px;
+}
+
+#configTopConfigs .config-top-item .value {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* ✅ Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+/* 🌍 Global Styles */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #001933;
+    color: #f5f7fa;
+    font-size: 15px;
+    /* increased from 14px */
+    line-height: 1.4;
+}
+
+/* 📦 Container */
+.container-fluid {
+    width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.dashboard-mode {
+    /* background-color: #001933; */
+}
+
+/* 🔷 Header */
+.header {
+    background-color: #003366;
+    height: 60px;
+    /* Fix header height (adjust as needed) */
+    padding: 0 20px;
+    /* Remove vertical padding so height stays fixed */
+    font-size: 23px;
+    font-weight: 600;
+    color: #ffffff;
+    border-bottom: 2px solid #007acc;
+    box-shadow: 0 8px 24px rgba(0, 123, 255, 0.3);
+    display: flex;
+    align-items: center;
+    /* Vertically center content */
+    justify-content: space-between;
+    flex-wrap: wrap;
+    overflow: hidden;
+    /* Prevent content overflow */
+}
+
+.logo img {
+    height: 58px;
+    /* Increase logo height (was 41px) */
+    width: auto;
+    max-width: 100%;
+    filter: brightness(0) invert(1);
+    user-select: none;
+    object-fit: contain;
+}
+
+
+/* 🧠 Scrolling Insights */
+.scrolling-text {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    height: 23px;
+    /* increased from 32px */
+    background: linear-gradient(to right, #004080, #005b99);
+    color: #f5f7fa;
+    font-size: 15px;
+    /* increased from 14px */
+}
+
+.scrolling-content {
+    position: absolute;
+    display: inline-block;
+    white-space: nowrap;
+    animation: scroll-left 25s linear infinite;
+}
+
+@keyframes scroll-left {
+    from {
+        left: 100%;
+    }
+
+    to {
+        left: -100%;
+    }
+}
+
+.scrolling-text:hover .scrolling-content {
+    animation-play-state: paused;
+}
+
+/* 🧭 Breadcrumb */
+.breadcrumb-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.custom-breadcrumb {
+    background: linear-gradient(135deg, #004080, #006699);
+    color: white;
+    border-radius: 20px 0 20px 0;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0, 91, 153, 0.4);
+    font-size: 13px;
+    /* increased from 12px */
+    padding: 4px 10px;
+    display: inline-block;
+    margin-bottom: 10px;
+    user-select: none;
+    line-height: 1.2;
+}
+
+.engine-link {
+    color: #fbdc8f;
+    text-decoration: none;
+    font-size: 13px;
+    /* increased from 12px */
+}
+
+.engine-link:hover {
+    color: #ffd580;
+    text-decoration: underline;
+}
+
+.number-circle {
+    background: #ff6600;
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: inline-block;
+    text-align: center;
+    line-height: 22px;
+    font-size: 14px;
+    /* increased from 13px */
+    font-weight: bold;
+    margin-right: 6px;
+}
+
+.separator {
+    color: #ffffffb3;
+    margin: 0 8px;
+    font-size: 13px;
+    /* increased from 12px */
+}
+
+.demand-text {
+    color: #cceeff;
+    font-weight: 500;
+    font-size: 13px;
+    /* increased from 12px */
+}
+
+/* ===== Overview KPIs and Nav ===== */
+.overview-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.overview-card {
+    border: 1px solid #336699;
+    background: linear-gradient(135deg, #004080, #006699);
+    border-radius: 0;
+    padding: 10px 12px;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 91, 153, 0.25);
+}
+
+.overview-card .label {
+    font-size: 12px;
+    opacity: .9;
+}
+
+.overview-card .value {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.section-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin: 6px 0 16px 0;
+}
+
+.section-pill {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 1.5px solid #cccccc !important;
+    border-radius: 0 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease !important;
+}
+
+.section-pill:hover {
+    background-color: #f0f0f0 !important;
+    border-color: #999999 !important;
+}
+
+.section-pill.active {
+    background-color: #007acc !important;
+    color: #ffffff !important;
+    border-color: #007acc !important;
+}
+
+/* ===== Top Tabs (Product Line / Year) - Genpact Brand Colors ===== */
+.top-tabs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.top-tabs-left {
+    display: flex;
+    gap: 8px;
+}
+
+.top-tab {
+    color: #fff;
+    border: 4px solid transparent;
+    border-radius: 0; /* Square corners */
+    padding: 8px 16px;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: .3px;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
+}
+
+/* Product Line tab: Blue default, Red active */
+.top-tab[data-panel="panel-product"] {
+    background: #4AABCA;
+    border-color: #2A7B9A;
+}
+
+.top-tab[data-panel="panel-product"]:hover {
+    background: #3A9BB8;
+    border-color: #1A6B88;
+    box-shadow: 0 4px 10px rgba(74, 171, 202, 0.35);
+}
+
+.top-tab.active[data-panel="panel-product"] {
+    background: #ef4444;
+    border-color: #BF4243;
+    box-shadow: 0 6px 14px rgba(239, 68, 68, 0.35);
+}
+
+/* Year tab: Genpact Rainbow Indigo */
+.top-tab[data-panel="panel-year"] {
+    background: #1E345C;
+    border-color: #0E244C;
+}
+
+.top-tab[data-panel="panel-year"]:hover {
+    background: #DF6263;
+    border-color: #BF4243;
+    box-shadow: 0 4px 10px rgba(223, 98, 99, 0.35);
+}
+
+.top-tab.active[data-panel="panel-year"] {
+    background: #DF6263;
+    border-color: #BF4243;
+    box-shadow: 0 6px 14px rgba(223, 98, 99, 0.35);
+}
+
+/* Minor press feedback */
+.top-tab:active { transform: translateY(1px); }
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Compact Year Overview Layout */
+.compact-year-body {
+    padding: 12px !important;
+}
+
+.year-summary-stats {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.summary-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 16px;
+    color: #eee;
+    font-weight: 800;
+}
+
+.year-row-compact { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 12px; 
+    align-items: stretch; 
+    margin-bottom: 12px;
+}
+
+.year-donut-compact { 
+    flex: 1 1 200px; 
+    min-width: 180px; 
+    background: rgba(44, 62, 80, 0.1);
+    border: 1px solid rgba(44, 62, 80, 0.2);
+    border-radius: 0;
+    padding: 8px;
+}
+
+.year-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.year-title-compact {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    color: #2c3e50;
+    background: #fff;
+    border: 1px solid rgba(44, 62, 80, 0.3);
+    border-radius: 0;
+    padding: 3px 8px;
+}
+
+.year-total {
+    font-size: 14px;
+    font-weight: 800;
+    color: #2c3e50;
+}
+
+.year-delta {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 0;
+    background: #fff;
+    border: 1px solid rgba(44, 62, 80, 0.3);
+}
+
+.year-delta.up { 
+    color: #27ae60; 
+    border-color: rgba(39, 174, 96, 0.4); 
+}
+
+.year-delta.down { 
+    color: #e74c3c; 
+    border-color: rgba(231, 76, 60, 0.4); 
+}
+
+.year-canvas-wrap-compact { 
+    height: 140px; 
+    position: relative; 
+    margin-bottom: 6px;
+}
+
+.year-canvas-wrap-compact canvas { 
+    width: 100% !important; 
+    height: 100% !important; 
+    display: block; 
+}
+
+.year-meta-compact { 
+    display: flex;
+    flex-direction: revert;
+    gap: 4px;
+    /* background-color: #fff; */
+    padding: 10px;
+    /* max-width: fit-content; */
+    align-items: center;
+    justify-content: center;
+}
+
+.meta-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+
+.meta-label {
+    color: #5a6c7d;
+    font-weight: 600;
+}
+
+.meta-value {
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.year-footer {
+    border-top: 1px solid rgba(44, 62, 80, 0.2);
+    padding-top: 8px;
+}
+
+.legend-compact {
+    display: flex;
+    justify-content: space-around;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.legend-item-compact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.legend-label {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.legend-value {
+    color: #2c3e50;
+    font-weight: 700;
+    background: rgba(44, 62, 80, 0.1);
+    padding: 2px 6px;
+    border-radius: 0;
+    font-size: 11px;
+}
+
+/* Product Line KPI cards */
+.kpi-programs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.kpi-program {
+    padding: 10px 12px;
+    border-radius: 0;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+    border: none;
+    transition: transform .2s ease, box-shadow .2s ease;
+    color: #fff;
+    position: relative;
+}
+
+.kpi-program:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
+}
+
+.kpi-program .title {
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: .2px;
+    color: #fff;
+}
+
+.kpi-program .mini-note {
+    font-size: 11px;
+    font-weight: 800;
+    opacity: 0.95;
+    color: #e6f2ff;
+}
+
+.kpi-program .kpi-main {
+    margin-top: 2px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.kpi-program .big {
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1;
+    color: #fff;
+}
+
+.kpi-program .sub {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .3px;
+    opacity: .95;
+    color: #e6f2ff;
+}
+
+.kpi-program .kpi-footer {
+    margin-top: 2px;
+    color: #e6f2ff;
+}
+
+.kpi-program .avg {
+    font-size: 12px;
+    text-align: center;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    margin-top: 30px;
+}
+
+.kpi-program .avg-badge {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    min-width: 44px;
+    text-align: center;
+}
+
+.kpi-program .avg-label {
+    font-size: 10px;
+    opacity: .9;
+    letter-spacing: .3px;
+}
+
+.kpi-program .trend-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.kpi-program .trend-up {
+    background: rgba(255, 255, 255, 0.15);
+    color: #9ef0ae;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.kpi-program .trend-down {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffb3b3;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.kpi-program .trend-flat {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.kpi-program .year-badges {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.kpi-program .badge-year {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.kpi-program .badge-year .yr {
+    opacity: .85;
+}
+
+/* Sparkline container in KPI cards */
+.kpi-program .sparkline-container {
+    position: absolute;
+    bottom: 42px;
+    right: 8px;
+    width: 100%;
+    height: 30px;
+    max-width: 200px;
+}
+
+.kpi-program .sparkline-container canvas {
+    width: 100% !important;
+    height: 30px !important;
+}
+
+/* Align KPI card colors with Year Overview palette */
+.bg-pl-red { background: #ef4444; color: #001933; }
+.bg-pl-yellow { background: #f59e0b; color: #001933; }
+.bg-pl-green { background: #34d399; color: #001933; }
+
+/* Filter chips */
+.filter-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.chip {
+    background: rgba(0, 122, 204, 0.15);
+    border: 1px solid #007acc;
+    color: #cceeff;
+    padding: 4px 8px;
+    border-radius: 0;
+    font-size: 12px;
+}
+
+.chip button {
+    background: transparent;
+    border: 0;
+    color: #ffd580;
+    margin-left: 6px;
+    cursor: pointer;
+}
+
+.clear-all {
+    margin-left: auto;
+    font-size: 12px;
+    color: #ffd580;
+    cursor: pointer;
+}
+
+/* Compact section bar (section pills only) */
+.section-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.filters-inline {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.filters-inline .form-select-sm {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 12px;
+    min-width: 120px;
+    background-position: right 6px center;
+    background-size: 12px 12px;
+}
+
+/* Search inputs styled like dark filter fields, square-cornered */
+.search-input {
+    height: 28px;
+    background-color: #004a80;
+    color: #f5f7fa;
+    border: 1.5px solid #0066cc;
+    border-radius: 0;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 8px;
+}
+.search-input::placeholder {
+    color: #cceeff;
+    opacity: .7;
+}
+.search-input:focus {
+    outline: none;
+    background-color: #0066cc;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+    border-color: #0099ff;
+}
+
+.filters-inline .filter-item {
+    min-width: auto;
+    max-width: none;
+}
+
+/* 📊 KPI Boxes */
+
+.kpi-container {
+    margin-bottom: 30px;
+}
+
+.kpi-box-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.kpi-box {
+    border: 1px solid #336699;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 8px 26px;
+    border-radius: 0;
+    flex: 1;
+    min-width: 220px;
+    max-width: 300px;
+    box-shadow: 0 2px 8px rgba(0, 91, 153, 0.25);
+    transition: transform 0.3s ease, opacity 0.4s ease;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.kpi-box.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.kpi-box:hover {
+    transform: translateY(-4px);
+    border-color: #0099ff;
+}
+
+.kpi-box h4 {
+    font-size: 17px;
+    margin-bottom: 8px;
+    color: #fbdc8f;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* 🟡 KPI Data Layout */
+.kpi-data {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #cceeff;
+}
+
+.kpi-data span {
+    font-weight: 500;
+}
+
+.kpi-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.kpi-row span {
+    font-weight: 500;
+    color: #ffffff;
+}
+
+/* 🟡 Optional Script: Animate Boxes on Load */
+.kpi-box-wrapper .visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ===== Engine Delivery metrics grid (reused) ===== */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #004080, #006699);
+    border-radius: 0;
+    padding: 12px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 91, 153, 0.3);
+}
+
+.metric-card.primary {
+    background: linear-gradient(135deg, #004080, #006699);
+}
+
+.metric-card.success {
+    background: linear-gradient(135deg, #2d5a27, #4a7c59);
+}
+
+.metric-card.warning {
+    background: linear-gradient(135deg, #8b5a00, #b8860b);
+}
+
+.metric-card.danger {
+    background: linear-gradient(135deg, #8b0000, #dc143c);
+}
+
+.metric-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.metric-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 3px;
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: 12px;
+    opacity: 0.9;
+    line-height: 1.2;
+}
+
+/* 🔽 Dropdown Filters */
+.list-group-item {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 16px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid #336699;
+    border-radius: 0;
+    box-shadow: 0 2px 8px rgba(0, 91, 153, 0.2);
+    padding: 10px 18px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #007acc transparent;
+}
+
+.list-group-item::-webkit-scrollbar {
+    height: 6px;
+}
+
+.list-group-item::-webkit-scrollbar-thumb {
+    background-color: #007acc;
+    border-radius: 3px;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    max-width: 220px;
+    flex-shrink: 0;
+}
+
+.filter-item span {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 15px;
+    /* increased from 14px */
+    color: #ffffff;
+    user-select: none;
+}
+
+.form-select {
+    width: 100%;
+    height: 34px;
+    background-color: #004a80;
+    color: #f5f7fa;
+    border: 1.5px solid #0066cc;
+    border-radius: 0;
+    font-size: 15px;
+    /* increased from 14px */
+    font-weight: 600;
+    appearance: none;
+    padding: 0 12px;
+    background-image: url("data:image/svg+xml,%3Csvg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.form-select:hover {
+    background-color: #0059b3;
+    border-color: #0080ff;
+}
+
+.form-select:focus {
+    outline: none;
+    background-color: #0066cc;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.6);
+    border-color: #0099ff;
+}
+
+.form-select option {
+    background-color: #003366;
+    color: #f5f7fa;
+    font-weight: 500;
+    font-size: 12px;
+    /* increased from 14px */
+}
+
+.form-select option:disabled {
+    background-color: #1c2b3a;
+    color: #999999;
+    font-style: italic;
+}
+
+/* 📑 Tables */
+.table-section h6 {
+    font-weight: 600;
+    color: #f5f7fa;
+    margin-bottom: 12px;
+    font-size: 16px;
+    /* increased from 15px */
+}
+
+.table {
+    background-color: transparent;
+    color: #ffffff;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    max-width: 100%;
+    border: 1px solid #005f8f;
+    border-radius: 0;
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* Dark chart cards */
+.chart-card {
+    background: antiquewhite;
+    border: 1px solid #336699;
+    color: #2c3e50;
+}
+
+.chart-card .card-header {
+    background: linear-gradient(135deg, #00264d, #003b73);
+    border-bottom: 1px solid #336699;
+    color: #fff;
+}
+
+.chart-card .card-body {
+    background: #fff;
+    color: #2c3e50;
+}
+
+/* Ensure summary text visible */
+#summaryPanel .card,
+#summaryPanel .card * {
+    color: #2c3e50;
+}
+
+#summaryPanel .card-header h6 {
+    color: #fff;
+}
+
+/* Action bar under Summary */
+.summary-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid rgba(44, 62, 80, 0.2);
+    padding-top: 10px;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 0;
+    font-weight: 800;
+    letter-spacing: .3px;
+    border: 1px solid transparent;
+    color: #ffffff;
+}
+
+.action-btn .icon { display: inline-flex; }
+
+.action-btn.primary {
+    background: #007acc;
+    border-color: #39b6ff;
+    box-shadow: 0 2px 8px rgba(0, 123, 204, 0.25);
+}
+
+.action-btn.primary:hover {
+    background: #0088e0;
+    border-color: #5cc7ff;
+}
+
+.action-btn.secondary {
+    background: #27ae60; /* green */
+    border-color: #2ecc71;
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.25);
+}
+
+.action-btn.secondary:hover {
+    background: #2ecc71;
+    border-color: #58d68d;
+}
+
+.action-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(57, 182, 255, 0.35);
+}
+
+/* Equal height helper removed to prevent runaway height */
+
+.layout-panels {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+#chartsPanel {
+    flex: 2;
+    /* min-width: 320px; */
+}
+
+#summaryPanel {
+    flex: 1;
+    /* min-width: 320px; */
+}
+
+#dataPanel {
+    flex: 1;
+    min-width: 320px;
+}
+
+.table-sm th,
+.table-sm td {
+    padding: 4px 8px;
+    /* was 4px 8px */
+    font-size: 13px;
+    /* increased from 12px */
+    text-align: center;
+    vertical-align: middle;
+    background-color: antiquewhite;
+}
+
+.table-bordered {
+    border: 2px solid #005f8f;
+    border-radius: 0;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #005f8f;
+}
+
+.table-light th {
+    background: linear-gradient(135deg, #007acc, #005f8f);
+    color: white;
+    font-weight: 600;
+}
+
+/* Simple pagination styles */
+.table-pagination { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+.table-pagination .page-btn {
+  background: rgba(0,0,0,0.2);
+  color: #e6f2ff;
+  border: 1px solid #336699;
+  border-radius: 0;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.table-pagination .page-btn.active { background: #007acc; border-color: #39b6ff; }
+.table-pagination .page-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .kpi-box-wrapper {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .list-group-item {
+        flex-direction: column;
+        overflow-x: visible;
+    }
+
+    .filter-item {
+        width: 100%;
+        max-width: none;
+    }
+
+    .top-tabs {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .top-tabs-left {
+        justify-content: center;
+    }
+
+    .filters-inline {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* Single square element - now removed but keeping CSS to prevent errors */
+.single-square {
+    display: none;
+}
+
+/* Modal title styling */
+.modal-title {
+    color: #333333 !important;
+    font-weight: 600;
+}
+/* 
+#modalChartTitle {
+    color: #333333 !important;
+    font-weight: 500;
+} */
+
