@@ -1036,70 +1036,92 @@ function renderSupplierTable(data) {
     return;
   }
 
-  // Collect all years and suppliers dynamically
+  console.log('📊 Supplier Table - Using aggregation logic: Group by [Supplier, Part Number, ESN], MAX(QPE), then SUM');
+
+  // Step 1: Group by [Supplier, Part Number, ESN, Year] and track MAX(QPE)
+  const groupedData = new Map(); // Key: "Supplier|PartNumber|ESN|Year"
   const years = new Set();
-  const supplierData = new Map();
 
   data.forEach(program => {
     program.configs.forEach(cfg => {
-      (cfg.esns || []).forEach(esn => {
-        const y = getYearFromDate(esn.targetShipDate);
-        if (y) {
-          // Only include years that match the year filter (if active)
-          if (window.dataFilterManager.filters.years.size > 0) {
-            if (window.dataFilterManager.filters.years.has(y)) {
-              years.add(y);
-            }
-          } else {
-            years.add(y);
-          }
-        }
-      });
+      // Get all ESNs for this config
+      const esns = cfg.esns || [];
 
       // Extract suppliers from level1Parts
       (cfg.level1Parts || []).forEach(l1 => {
         if (l1.supplier) {
-          const key = l1.supplier;
+          const supplier = l1.supplier;
           
           // Apply supplier filter at item level if active
           if (window.dataFilterManager.filters.suppliers.size > 0) {
-            if (!window.dataFilterManager.filters.suppliers.has(key)) {
+            if (!window.dataFilterManager.filters.suppliers.has(supplier)) {
               return; // Skip this supplier if it doesn't match the filter
             }
           }
-          
-          if (!supplierData.has(key)) {
-            // Generate sample Level 1 PN and Description if not available
-            const samplePN = l1.partNumber || `PN-${l1.supplier.substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-            const sampleDesc = l1.description || `${l1.supplier} Component Assembly`;
-            supplierData.set(key, { supplier: l1.supplier, level1PN: samplePN, description: sampleDesc, yearCounts: {} });
-          }
-          const supplierInfo = supplierData.get(key);
 
-          // Count ESNs by year for this supplier part
-          const esnCountsByYear = {};
-          (cfg.esns || []).forEach(esn => {
-            const y = getYearFromDate(esn.targetShipDate);
-            if (y) {
-              // Only count years that match the year filter (if active)
+          const partNumber = l1.pn || l1.partNumber || 'Unknown';
+          const qpe = Number(l1.qpe || 1);
+
+          // For each ESN, create a unique group key and track max QPE
+          esns.forEach(esn => {
+            const esnId = esn.esn || esn.ESN;
+            const year = getYearFromDate(esn.targetShipDate);
+            
+            if (year && esnId) {
+              // Only include years that match the year filter (if active)
               const shouldIncludeYear = window.dataFilterManager.filters.years.size === 0 || 
-                                       window.dataFilterManager.filters.years.has(y);
+                                       window.dataFilterManager.filters.years.has(year);
+              
               if (shouldIncludeYear) {
-                if (!esnCountsByYear[y]) esnCountsByYear[y] = 0;
-                esnCountsByYear[y]++;
+                years.add(year);
+                
+                const groupKey = `${supplier}|${partNumber}|${esnId}|${year}`;
+                
+                // Track max QPE for this combination
+                if (!groupedData.has(groupKey)) {
+                  groupedData.set(groupKey, {
+                    supplier,
+                    partNumber,
+                    esn: esnId,
+                    year,
+                    qpe: qpe,
+                    description: l1.description || `${supplier} Component Assembly`
+                  });
+                } else {
+                  // Update to max QPE if current is higher
+                  const existing = groupedData.get(groupKey);
+                  existing.qpe = Math.max(existing.qpe, qpe);
+                }
               }
             }
-          });
-          
-          // Add this part's demand (ESN count * QPE) to the supplier's year totals
-          Object.keys(esnCountsByYear).forEach(y => {
-            if (!supplierInfo.yearCounts[y]) supplierInfo.yearCounts[y] = 0;
-            supplierInfo.yearCounts[y] += esnCountsByYear[y] * (l1.qpe || 1);
           });
         }
       });
     });
   });
+
+  console.log(`📊 Supplier Table - Grouped data: ${groupedData.size} unique [Supplier, PN, ESN, Year] combinations`);
+
+  // Step 2: Aggregate by Supplier (sum all QPE values per year)
+  const supplierData = new Map();
+  
+  groupedData.forEach(({ supplier, partNumber, year, qpe, description }) => {
+    if (!supplierData.has(supplier)) {
+      supplierData.set(supplier, {
+        supplier: supplier,
+        level1PN: partNumber,
+        description: description,
+        yearCounts: {}
+      });
+    }
+    const supplierInfo = supplierData.get(supplier);
+    
+    // Sum QPE for this year
+    if (!supplierInfo.yearCounts[year]) supplierInfo.yearCounts[year] = 0;
+    supplierInfo.yearCounts[year] += qpe;
+  });
+
+  console.log(`📊 Supplier Table - Aggregated ${supplierData.size} Suppliers`);
 
   // Convert map to array for pagination
   const supplierArray = Array.from(supplierData.values());
@@ -1150,7 +1172,7 @@ function renderSupplierTableContent(data, allData, supplierSection, yearList) {
 
 // Render RM Supplier Table (dynamic)
 function renderRMSupplierTable(data) {
-  console.log('renderRMSupplierTable called with data length:', data?.length);
+  console.log('📊 RM Supplier Table - Using aggregation logic: Group by [RM Supplier, RM PN, ESN], MAX(QPE), then SUM');
   const rmSection = document.getElementById('section-rm-supplier');
   if (!rmSection || !Array.isArray(data)) return;
   let tbody = rmSection.querySelector('tbody');
@@ -1164,60 +1186,104 @@ function renderRMSupplierTable(data) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // Collect all years and RM suppliers from the provided data
+  // Step 1: Group by [RM Supplier, RM PN, ESN, Year] and track MAX(QPE)
+  const groupedData = new Map(); // Key: "RMSupplier|RMPN|ESN|Year"
   const years = new Set();
-  const rmSupplierData = new Map();
 
-  function extractRMSuppliers(parts, esns, level1PN, description) {
+  function extractRMSuppliersGrouped(parts, esns, level1PN, description, level1QPE = 1) {
     parts.forEach(part => {
       if (part.rmSupplier) {
-        const key = part.rmSupplier;
+        const rmSupplier = part.rmSupplier;
         
         // Apply RM supplier filter at item level if active
         if (window.dataFilterManager.filters.rmSuppliers.size > 0) {
-          if (!window.dataFilterManager.filters.rmSuppliers.has(key)) {
+          if (!window.dataFilterManager.filters.rmSuppliers.has(rmSupplier)) {
             return; // Skip this RM supplier if it doesn't match the filter
           }
         }
 
-        if (!rmSupplierData.has(key)) {
-          // Generate sample Level 1 PN and Description if not available
-          const samplePN = level1PN || `RM-${key.substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-          const sampleDesc = description || `${key} Raw Material Component`;
-          rmSupplierData.set(key, { rmSupplier: key, level1PN: samplePN, description: sampleDesc, yearCounts: {} });
-        }
-        const rmInfo = rmSupplierData.get(key);
+        const rmPN = part.pn || part.partNumber || 'Unknown';
+        const partQPE = Number(part.qpe || 1);
+        const totalQPE = level1QPE * partQPE;
 
+        // For each ESN, create a unique group key and track max QPE
         esns.forEach(esn => {
-          const y = getYearFromDate(esn.targetShipDate);
-          if (y) {
+          const esnId = esn.esn || esn.ESN;
+          const year = getYearFromDate(esn.targetShipDate);
+          
+          if (year && esnId) {
             // Only include years that match the year filter (if active)
             const shouldIncludeYear = window.dataFilterManager.filters.years.size === 0 || 
-                                     window.dataFilterManager.filters.years.has(y);
+                                     window.dataFilterManager.filters.years.has(year);
+            
             if (shouldIncludeYear) {
-              years.add(y);
-              if (!rmInfo.yearCounts[y]) rmInfo.yearCounts[y] = 0;
-              rmInfo.yearCounts[y]++;
+              years.add(year);
+              
+              const groupKey = `${rmSupplier}|${rmPN}|${esnId}|${year}`;
+              
+              // Track max QPE for this combination
+              if (!groupedData.has(groupKey)) {
+                groupedData.set(groupKey, {
+                  rmSupplier,
+                  rmPN,
+                  esn: esnId,
+                  year,
+                  qpe: totalQPE,
+                  level1PN: level1PN || rmPN,
+                  description: description || `${rmSupplier} Raw Material Component`
+                });
+              } else {
+                // Update to max QPE if current is higher
+                const existing = groupedData.get(groupKey);
+                existing.qpe = Math.max(existing.qpe, totalQPE);
+              }
             }
           }
         });
       }
 
       // Recursively check nested parts
-      if (part.level2Parts) extractRMSuppliers(part.level2Parts, esns, level1PN, description);
-      if (part.level3Parts) extractRMSuppliers(part.level3Parts, esns, level1PN, description);
-      if (part.level4Parts) extractRMSuppliers(part.level4Parts, esns, level1PN, description);
-      if (part.level5Parts) extractRMSuppliers(part.level5Parts, esns, level1PN, description);
+      const currentQPE = Number(part.qpe || 1);
+      const combinedQPE = level1QPE * currentQPE;
+      
+      if (part.level2Parts) extractRMSuppliersGrouped(part.level2Parts, esns, level1PN, description, combinedQPE);
+      if (part.level3Parts) extractRMSuppliersGrouped(part.level3Parts, esns, level1PN, description, combinedQPE);
+      if (part.level4Parts) extractRMSuppliersGrouped(part.level4Parts, esns, level1PN, description, combinedQPE);
+      if (part.level5Parts) extractRMSuppliersGrouped(part.level5Parts, esns, level1PN, description, combinedQPE);
     });
   }
 
   data.forEach(program => {
     program.configs.forEach(cfg => {
       (cfg.level1Parts || []).forEach(l1 => {
-        extractRMSuppliers([l1], cfg.esns || [], l1.partNumber, l1.description);
+        const l1QPE = Number(l1.qpe || 1);
+        extractRMSuppliersGrouped([l1], cfg.esns || [], l1.partNumber, l1.description, l1QPE);
       });
     });
   });
+
+  console.log(`📊 RM Supplier Table - Grouped data: ${groupedData.size} unique [RM Supplier, RM PN, ESN, Year] combinations`);
+
+  // Step 2: Aggregate by RM Supplier (sum all QPE values per year)
+  const rmSupplierData = new Map();
+  
+  groupedData.forEach(({ rmSupplier, year, qpe, level1PN, description }) => {
+    if (!rmSupplierData.has(rmSupplier)) {
+      rmSupplierData.set(rmSupplier, {
+        rmSupplier: rmSupplier,
+        level1PN: level1PN,
+        description: description,
+        yearCounts: {}
+      });
+    }
+    const rmInfo = rmSupplierData.get(rmSupplier);
+    
+    // Sum QPE for this year
+    if (!rmInfo.yearCounts[year]) rmInfo.yearCounts[year] = 0;
+    rmInfo.yearCounts[year] += qpe;
+  });
+
+  console.log(`📊 RM Supplier Table - Aggregated ${rmSupplierData.size} RM Suppliers`);
 
   const yearList = Array.from(years).sort();
 
@@ -1296,30 +1362,24 @@ function renderHWOwnerTable(data) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // Collect HW Owner data from the actual hwo field
+  console.log('📊 HW Owner Table - Using aggregation logic: Group by [HW OWNER, Part Number, ESN], MAX(QPE), then SUM');
+
+  // Step 1: Group by [HW OWNER, Part Number, ESN] and track MAX(QPE)
+  const groupedData = new Map(); // Key: "HWO|PartNumber|ESN|Year"
   const years = new Set();
-  const hwOwnerData = new Map();
 
   data.forEach(program => {
     program.configs.forEach(cfg => {
-      (cfg.esns || []).forEach(esn => {
-        const y = getYearFromDate(esn.targetShipDate);
-        if (y) {
-          // Only include years that match the year filter (if active)
-          if (window.dataFilterManager.filters.years.size > 0) {
-            if (window.dataFilterManager.filters.years.has(y)) {
-              years.add(y);
-            }
-          } else {
-            years.add(y);
-          }
-        }
-      });
-
+      // Get all ESNs for this config
+      const esns = cfg.esns || [];
+      
+      // Process level1Parts
       (cfg.level1Parts || []).forEach(l1 => {
         if (l1.hwo) {
           // Handle both array and string formats for backward compatibility
           const hwos = Array.isArray(l1.hwo) ? l1.hwo : [l1.hwo];
+          const partNumber = l1.pn || l1.partNumber || '-';
+          const qpe = Number(l1.qpe || 1);
 
           hwos.forEach(hwo => {
             // Apply HW owner filter at item level if active
@@ -1328,27 +1388,38 @@ function renderHWOwnerTable(data) {
                 return; // Skip this HW owner if it doesn't match the filter
               }
             }
-            
-            if (!hwOwnerData.has(hwo)) {
-              hwOwnerData.set(hwo, {
-                hwOwner: hwo,
-                level1Pn: l1.pn || l1.partNumber || '-',
-                description: l1.description || 'Component',
-                supplier: l1.supplier || '-',
-                yearCounts: {}
-              });
-            }
-            const hwInfo = hwOwnerData.get(hwo);
 
-            (cfg.esns || []).forEach(esn => {
-              const y = getYearFromDate(esn.targetShipDate);
-              if (y) {
-                // Only count years that match the year filter (if active)
+            // For each ESN, create a unique group key and track max QPE
+            esns.forEach(esn => {
+              const esnId = esn.esn || esn.ESN;
+              const year = getYearFromDate(esn.targetShipDate);
+              
+              if (year && esnId) {
+                // Only include years that match the year filter (if active)
                 const shouldIncludeYear = window.dataFilterManager.filters.years.size === 0 || 
-                                         window.dataFilterManager.filters.years.has(y);
+                                         window.dataFilterManager.filters.years.has(year);
+                
                 if (shouldIncludeYear) {
-                  if (!hwInfo.yearCounts[y]) hwInfo.yearCounts[y] = 0;
-                  hwInfo.yearCounts[y] += (l1.qpe || 1);
+                  years.add(year);
+                  
+                  const groupKey = `${hwo}|${partNumber}|${esnId}|${year}`;
+                  
+                  // Track max QPE for this combination
+                  if (!groupedData.has(groupKey)) {
+                    groupedData.set(groupKey, {
+                      hwo,
+                      partNumber,
+                      esn: esnId,
+                      year,
+                      qpe: qpe,
+                      description: l1.description || 'Component',
+                      supplier: l1.supplier || '-'
+                    });
+                  } else {
+                    // Update to max QPE if current is higher
+                    const existing = groupedData.get(groupKey);
+                    existing.qpe = Math.max(existing.qpe, qpe);
+                  }
                 }
               }
             });
@@ -1357,6 +1428,34 @@ function renderHWOwnerTable(data) {
       });
     });
   });
+
+  console.log(`📊 HW Owner Table - Grouped data: ${groupedData.size} unique [HWO, PN, ESN, Year] combinations`);
+
+  // Step 2: Aggregate by HW Owner AND Part Number (sum all QPE values per year)
+  // This keeps the part number granularity in the final table
+  const hwOwnerData = new Map();
+  
+  groupedData.forEach(({ hwo, partNumber, year, qpe, description, supplier }) => {
+    // Key by both HWO and Part Number to maintain part-level detail
+    const key = `${hwo}|${partNumber}`;
+    
+    if (!hwOwnerData.has(key)) {
+      hwOwnerData.set(key, {
+        hwOwner: hwo,
+        level1Pn: partNumber,
+        description: description,
+        supplier: supplier,
+        yearCounts: {}
+      });
+    }
+    const hwInfo = hwOwnerData.get(key);
+    
+    // Sum QPE for this year
+    if (!hwInfo.yearCounts[year]) hwInfo.yearCounts[year] = 0;
+    hwInfo.yearCounts[year] += qpe;
+  });
+
+  console.log(`📊 HW Owner Table - Aggregated ${hwOwnerData.size} HW Owner + Part Number combinations`);
 
   const yearList = Array.from(years).sort();
 
@@ -6455,7 +6554,7 @@ function showSupplierDetailsModal(supplierName) {
 
   // Update modal title
   document.getElementById('rawMaterialModalLabel').textContent = `${supplierName} Details`;
-  document.getElementById('modalChartTitle').textContent = `${supplierName} Demand by Part Number`;
+  document.getElementById('modalChartTitle').textContent = `${supplierName} Total Demand by Year`;
 
   // Show the modal
   const modal = new bootstrap.Modal(document.getElementById('rawMaterialModal'));
@@ -6567,7 +6666,7 @@ function renderModalSupplierChart(data, supplierName) {
         y: {
           title: {
             display: true,
-            text: 'Part Numbers'
+            text: 'Supplier'
           }
         }
       }
@@ -6595,7 +6694,7 @@ function resetModalChartZoom() {
 
 function buildModalSupplierData(data, supplierName) {
   // Using aggregation logic: Group by [Supplier, Part Number, ESN], MAX(QPE), then SUM
-  // This ensures each unique combination of Supplier-PartNumber-ESN contributes only once (max QPE)
+  // Then aggregate all part numbers for the supplier to show supplier-level total
   
   const groupedData = new Map(); // Key: "PartNumber|ESN|Year"
   
@@ -6638,43 +6737,35 @@ function buildModalSupplierData(data, supplierName) {
     });
   });
   
-  // Now aggregate by Part Number and Year (sum all QPE values)
-  const partNumberYearMap = new Map();
+  // Aggregate all part numbers into supplier-level totals by year
+  const supplierYearTotals = {
+    '2025': 0,
+    '2026': 0,
+    '2027': 0,
+    '2028': 0
+  };
   
-  groupedData.forEach(({ partNumber, year, qpe }) => {
-    if (!partNumberYearMap.has(partNumber)) {
-      partNumberYearMap.set(partNumber, {
-        '2025': 0,
-        '2026': 0,
-        '2027': 0,
-        '2028': 0
-      });
-    }
-    
-    const yearData = partNumberYearMap.get(partNumber);
-    if (yearData[year] !== undefined) {
-      yearData[year] += qpe;
+  groupedData.forEach(({ year, qpe }) => {
+    if (supplierYearTotals[year] !== undefined) {
+      supplierYearTotals[year] += qpe;
     }
   });
   
-  // Convert to array format for chart
-  const partNumbers = Array.from(partNumberYearMap.keys());
-  const data2025 = partNumbers.map(pn => partNumberYearMap.get(pn)['2025'] || 0);
-  const data2026 = partNumbers.map(pn => partNumberYearMap.get(pn)['2026'] || 0);
-  const data2027 = partNumbers.map(pn => partNumberYearMap.get(pn)['2027'] || 0);
-  const data2028 = partNumbers.map(pn => partNumberYearMap.get(pn)['2028'] || 0);
+  // Return supplier name as single label with aggregated totals
+  const partNumbers = [supplierName];
+  const data2025 = [supplierYearTotals['2025']];
+  const data2026 = [supplierYearTotals['2026']];
+  const data2027 = [supplierYearTotals['2027']];
+  const data2028 = [supplierYearTotals['2028']];
   
   console.log(`📊 Supplier popup chart for ${supplierName}:`, {
     totalGroups: groupedData.size,
-    uniquePartNumbers: partNumbers.length,
-    partNumbers: partNumbers,
-    sampleData: partNumbers.slice(0, 3).map(pn => ({
-      partNumber: pn,
-      '2025': partNumberYearMap.get(pn)['2025'],
-      '2026': partNumberYearMap.get(pn)['2026'],
-      '2027': partNumberYearMap.get(pn)['2027'],
-      '2028': partNumberYearMap.get(pn)['2028']
-    }))
+    aggregationMethod: 'Group by [Supplier, Part Number, ESN], MAX(QPE), then SUM at Supplier level',
+    supplierTotals: supplierYearTotals,
+    '2025': supplierYearTotals['2025'],
+    '2026': supplierYearTotals['2026'],
+    '2027': supplierYearTotals['2027'],
+    '2028': supplierYearTotals['2028']
   });
 
   return { partNumbers, data2025, data2026, data2027, data2028 };
@@ -7255,6 +7346,10 @@ function renderModalTablePage(pageData) {
       <td>${supplier.quarters['2027-Q2'] || '-'}</td>
       <td>${supplier.quarters['2027-Q3'] || '-'}</td>
       <td>${supplier.quarters['2027-Q4'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q1'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q2'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q3'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q4'] || '-'}</td>
     `;
     tableBody.appendChild(row);
   });
@@ -7361,24 +7456,110 @@ function updateModalTablePaginationUI() {
 }
 
 function buildModalSupplierDetailsData(data, rawType) {
-  const supplierDetails = [];
-  const supplierMap = new Map();
-
+  console.log('📊 Supplier Popup Table - Using aggregation logic: Group by [RM Supplier, RM PN, ESN], MAX(QPE), then SUM');
+  
+  // Step 1: Group by [RM Supplier, RM PN, ESN, Year, Quarter] and track MAX(QPE)
+  const groupedData = new Map(); // Key: "RMSupplier|RMPN|ESN|Year|Quarter"
+  
   data.forEach(program => {
     program.configs.forEach(config => {
-      (config.esns || []).forEach(esn => {
+      // Get all ESNs for this config
+      const esns = config.esns || [];
+      
+      // For each ESN, extract year and quarter
+      esns.forEach(esn => {
         const year = getYearFromDate(esn.targetShipDate);
         const quarter = getQuarterFromDate(esn.targetShipDate);
-        if (year && quarter) {
-          extractModalSupplierDetails(config.level1Parts || [], rawType, year, quarter, supplierMap);
+        const esnId = esn.esn || esn.ESN;
+        
+        if (year && quarter && esnId) {
+          // Extract supplier details from level1Parts and nested parts
+          extractModalSupplierDetailsGrouped(config.level1Parts || [], rawType, year, quarter, esnId, groupedData);
         }
       });
     });
   });
 
+  console.log(`📊 Supplier Popup Table - Grouped data: ${groupedData.size} unique [RM Supplier, RM PN, ESN, Year, Quarter] combinations`);
+
+  // Step 2: Aggregate by RM Supplier and RM PN (sum all MAX QPE values per quarter)
+  const supplierMap = new Map();
+  
+  groupedData.forEach(({ rmSupplier, rmPN, year, quarter, qpe, description, hwo, parentPartNo, level, mfgLT }) => {
+    const key = `${rmSupplier}-${rmPN}`;
+    
+    if (!supplierMap.has(key)) {
+      supplierMap.set(key, {
+        name: rmSupplier,
+        partNumber: rmPN,
+        parentPartNo: parentPartNo || '-',
+        description: description || 'Raw Material Component',
+        hwo: hwo || 'HWO1',
+        level: level || 'L2',
+        qpe: qpe,
+        mfgLT: mfgLT || '-',
+        quarters: {}
+      });
+    }
+    
+    const supplier = supplierMap.get(key);
+    const quarterKey = `${year}-Q${quarter}`;
+    
+    // Sum QPE for this quarter
+    if (!supplier.quarters[quarterKey]) supplier.quarters[quarterKey] = 0;
+    supplier.quarters[quarterKey] += qpe;
+  });
+
+  console.log(`📊 Supplier Popup Table - Aggregated ${supplierMap.size} RM Suppliers`);
+  
   return Array.from(supplierMap.values());
 }
 
+function extractModalSupplierDetailsGrouped(parts, targetRawType, year, quarter, esnId, groupedData, parentPartNo = null, currentLevel = 'L1') {
+  parts.forEach(part => {
+    const partNumber = part.pn || part.partNumber;
+    const level1PartNo = currentLevel === 'L1' ? partNumber : parentPartNo;
+
+    (part.level2Parts || []).forEach(l2 => {
+      if (l2.rawType === targetRawType && l2.rmSupplier) {
+        const rmSupplier = l2.rmSupplier;
+        const rmPN = l2.pn || l2.partNumber || 'Unknown';
+        const qpe = Number(l2.qpe || l2.qtyPerEngine || 1);
+        
+        const groupKey = `${rmSupplier}|${rmPN}|${esnId}|${year}|${quarter}`;
+        
+        // Track max QPE for this combination
+        if (!groupedData.has(groupKey)) {
+          groupedData.set(groupKey, {
+            rmSupplier,
+            rmPN,
+            esn: esnId,
+            year,
+            quarter,
+            qpe: qpe,
+            description: l2.description,
+            hwo: l2.hwo || part.hwo,
+            parentPartNo: level1PartNo || partNumber,
+            level: 'L2',
+            mfgLT: l2.mfgLT
+          });
+        } else {
+          // Update to max QPE if current is higher
+          const existing = groupedData.get(groupKey);
+          existing.qpe = Math.max(existing.qpe, qpe);
+        }
+      }
+
+      if (l2.level3Parts) extractModalSupplierDetailsGrouped(l2.level3Parts, targetRawType, year, quarter, esnId, groupedData, level1PartNo, 'L3');
+    });
+
+    if (part.level3Parts) extractModalSupplierDetailsGrouped(part.level3Parts, targetRawType, year, quarter, esnId, groupedData, level1PartNo, 'L3');
+    if (part.level4Parts) extractModalSupplierDetailsGrouped(part.level4Parts, targetRawType, year, quarter, esnId, groupedData, level1PartNo, 'L4');
+    if (part.level5Parts) extractModalSupplierDetailsGrouped(part.level5Parts, targetRawType, year, quarter, esnId, groupedData, level1PartNo, 'L5');
+  });
+}
+
+// DEPRECATED: Old extraction logic - replaced with proper aggregation
 function extractModalSupplierDetails(parts, targetRawType, year, quarter, supplierMap, parentPartNo = null, currentLevel = 'L1') {
   parts.forEach(part => {
     const partNumber = part.pn || part.partNumber;
