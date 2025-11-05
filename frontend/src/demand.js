@@ -6463,6 +6463,13 @@ function renderModalSupplierChart(data, supplierName) {
           backgroundColor: 'rgba(16, 185, 129, 0.8)',
           borderColor: '#10b981',
           borderWidth: 1
+        },
+        {
+          label: '2028',
+          data: supplierData.data2028,
+          backgroundColor: 'rgba(139, 92, 246, 0.8)',
+          borderColor: '#8b5cf6',
+          borderWidth: 1
         }
       ]
     },
@@ -6476,12 +6483,33 @@ function renderModalSupplierChart(data, supplierName) {
         },
         title: {
           display: true,
-          text: `${supplierName} - Demand by Part Number`,
-          font: { size: 14, weight: 'bold' }
+          text: `${supplierName} - Demand by Part Number (Group by: Supplier, Part Number, ESN | Aggregation: MAX(QPE) then SUM)`,
+          font: { size: 12, weight: 'bold' }
         },
         tooltip: {
           callbacks: {
             label: (context) => `${context.dataset.label}: ${context.parsed.x} units`
+          }
+        },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'xy',
+            modifierKey: 'ctrl'
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+              speed: 0.1
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'xy'
+          },
+          limits: {
+            x: { min: 'original', max: 'original' },
+            y: { min: 'original', max: 'original' }
           }
         }
       },
@@ -6505,51 +6533,141 @@ function renderModalSupplierChart(data, supplierName) {
       }
     }
   });
+  
+  console.log(`📊 Supplier popup chart rendered for "${supplierName}":`, {
+    totalPartNumbers: supplierData.partNumbers.length,
+    partNumbers: supplierData.partNumbers,
+    aggregationMethod: 'Group by [Supplier, Part Number, ESN], MAX(QPE), then SUM',
+    data2025: supplierData.data2025,
+    data2026: supplierData.data2026,
+    data2027: supplierData.data2027,
+    data2028: supplierData.data2028
+  });
+}
+
+// Reset zoom for modal chart
+function resetModalChartZoom() {
+  if (modalChart) {
+    modalChart.resetZoom();
+    console.log('✅ Modal chart zoom reset');
+  }
 }
 
 function buildModalSupplierData(data, supplierName) {
-  const partNumberMap = new Map();
-
+  // Using aggregation logic: Group by [Supplier, Part Number, ESN], MAX(QPE), then SUM
+  // This ensures each unique combination of Supplier-PartNumber-ESN contributes only once (max QPE)
+  
+  const groupedData = new Map(); // Key: "PartNumber|ESN|Year"
+  
   data.forEach(program => {
     program.configs.forEach(config => {
-      extractSupplierModalData(config.level1Parts || [], supplierName, partNumberMap);
+      // Get all ESNs for this config
+      const esns = config.esns || [];
+      
+      // Process level1Parts to find supplier parts
+      (config.level1Parts || []).forEach(part => {
+        if (part.supplier === supplierName) {
+          const partNumber = part.pn || part.partNumber || 'Unknown';
+          const qpe = Number(part.qpe || part.qtyPerEngine || 1);
+          
+          // For each ESN, create a unique group key and track max QPE
+          esns.forEach(esn => {
+            const esnId = esn.esn || esn.ESN;
+            const year = getYearFromDate(esn.targetShipDate);
+            
+            if (year && esnId) {
+              const groupKey = `${partNumber}|${esnId}|${year}`;
+              
+              // Track max QPE for this combination
+              if (!groupedData.has(groupKey)) {
+                groupedData.set(groupKey, {
+                  partNumber,
+                  esn: esnId,
+                  year,
+                  qpe: qpe
+                });
+              } else {
+                // Update to max QPE if current is higher
+                const existing = groupedData.get(groupKey);
+                existing.qpe = Math.max(existing.qpe, qpe);
+              }
+            }
+          });
+        }
+      });
     });
   });
-
-  const partNumbers = Array.from(partNumberMap.keys());
-  const data2025 = partNumbers.map(pn => partNumberMap.get(pn).data2025 || 0);
-  const data2026 = partNumbers.map(pn => partNumberMap.get(pn).data2026 || 0);
-  const data2027 = partNumbers.map(pn => partNumberMap.get(pn).data2027 || 0);
-
-  return { partNumbers, data2025, data2026, data2027 };
-}
-
-function extractSupplierModalData(parts, targetSupplier, partNumberMap) {
-  parts.forEach(part => {
-    // Check if this part has the target supplier
-    if (part.supplier === targetSupplier) {
-      const partNumber = part.pn || part.partNumber;
-      if (!partNumberMap.has(partNumber)) {
-        partNumberMap.set(partNumber, {
-          data2025: 0,
-          data2026: 0,
-          data2027: 0
-        });
-      }
-
-      // Add demand data for each year
-      if (part.demand2025) partNumberMap.get(partNumber).data2025 += part.demand2025;
-      if (part.demand2026) partNumberMap.get(partNumber).data2026 += part.demand2026;
-      if (part.demand2027) partNumberMap.get(partNumber).data2027 += part.demand2027;
+  
+  // Now aggregate by Part Number and Year (sum all QPE values)
+  const partNumberYearMap = new Map();
+  
+  groupedData.forEach(({ partNumber, year, qpe }) => {
+    if (!partNumberYearMap.has(partNumber)) {
+      partNumberYearMap.set(partNumber, {
+        '2025': 0,
+        '2026': 0,
+        '2027': 0,
+        '2028': 0
+      });
     }
-
-    // Recursively check child parts
-    if (part.level2Parts) extractSupplierModalData(part.level2Parts, targetSupplier, partNumberMap);
-    if (part.level3Parts) extractSupplierModalData(part.level3Parts, targetSupplier, partNumberMap);
-    if (part.level4Parts) extractSupplierModalData(part.level4Parts, targetSupplier, partNumberMap);
-    if (part.level5Parts) extractSupplierModalData(part.level5Parts, targetSupplier, partNumberMap);
+    
+    const yearData = partNumberYearMap.get(partNumber);
+    if (yearData[year] !== undefined) {
+      yearData[year] += qpe;
+    }
   });
+  
+  // Convert to array format for chart
+  const partNumbers = Array.from(partNumberYearMap.keys());
+  const data2025 = partNumbers.map(pn => partNumberYearMap.get(pn)['2025'] || 0);
+  const data2026 = partNumbers.map(pn => partNumberYearMap.get(pn)['2026'] || 0);
+  const data2027 = partNumbers.map(pn => partNumberYearMap.get(pn)['2027'] || 0);
+  const data2028 = partNumbers.map(pn => partNumberYearMap.get(pn)['2028'] || 0);
+  
+  console.log(`📊 Supplier popup chart for ${supplierName}:`, {
+    totalGroups: groupedData.size,
+    uniquePartNumbers: partNumbers.length,
+    partNumbers: partNumbers,
+    sampleData: partNumbers.slice(0, 3).map(pn => ({
+      partNumber: pn,
+      '2025': partNumberYearMap.get(pn)['2025'],
+      '2026': partNumberYearMap.get(pn)['2026'],
+      '2027': partNumberYearMap.get(pn)['2027'],
+      '2028': partNumberYearMap.get(pn)['2028']
+    }))
+  });
+
+  return { partNumbers, data2025, data2026, data2027, data2028 };
 }
+
+// DEPRECATED: Old extraction logic - replaced with proper aggregation
+// function extractSupplierModalData(parts, targetSupplier, partNumberMap) {
+//   parts.forEach(part => {
+//     // Check if this part has the target supplier
+//     if (part.supplier === targetSupplier) {
+//       const partNumber = part.pn || part.partNumber;
+//       if (!partNumberMap.has(partNumber)) {
+//         partNumberMap.set(partNumber, {
+//           data2025: 0,
+//           data2026: 0,
+//           data2027: 0
+//         });
+//       }
+//
+//       // Add demand data for each year
+//       if (part.demand2025) partNumberMap.get(partNumber).data2025 += part.demand2025;
+//       if (part.demand2026) partNumberMap.get(partNumber).data2026 += part.demand2026;
+//       if (part.demand2027) partNumberMap.get(partNumber).data2027 += part.demand2027;
+//     }
+//
+//     // Recursively check child parts
+//     if (part.level2Parts) extractSupplierModalData(part.level2Parts, targetSupplier, partNumberMap);
+//     if (part.level3Parts) extractSupplierModalData(part.level3Parts, targetSupplier, partNumberMap);
+//     if (part.level4Parts) extractSupplierModalData(part.level4Parts, targetSupplier, partNumberMap);
+//     if (part.level5Parts) extractSupplierModalData(part.level5Parts, targetSupplier, partNumberMap);
+//   });
+// }
+
 
 function renderModalSupplierDetailsTable(data, supplierName) {
   console.log('🔍 renderModalSupplierDetailsTable called for supplier:', supplierName);
@@ -6850,6 +6968,27 @@ function renderModalRawMaterialChart(data, rawType) {
             // Hide labels for zero values
             return context.dataset.data[context.dataIndex] !== 0;
           }
+        },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'xy',
+            modifierKey: 'ctrl'
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+              speed: 0.1
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'xy'
+          },
+          limits: {
+            x: { min: 'original', max: 'original' },
+            y: { min: 'original', max: 'original' }
+          }
         }
       },
       scales: {
@@ -6871,60 +7010,155 @@ function renderModalRawMaterialChart(data, rawType) {
       }
     }
   });
+  
+  console.log(`📊 Raw Material chart rendered for "${rawType}":`, {
+    totalSuppliers: supplierData.suppliers.length,
+    suppliers: supplierData.suppliers,
+    data2025: supplierData.data2025,
+    data2026: supplierData.data2026,
+    data2027: supplierData.data2027,
+    data2028: supplierData.data2028
+  });
 }
 
 function buildModalRawMaterialSupplierData(data, rawType) {
-  const supplierMap = new Map();
+  // Using aggregation logic: Group by [RM Supplier, RM PN, ESN], MAX(QPE), then SUM
+  // This ensures each unique combination of RM Supplier-RM PN-ESN contributes only once (max QPE)
+  
+  const groupedData = new Map(); // Key: "RMSupplier|RMPN|ESN|Year"
 
   data.forEach(program => {
     program.configs.forEach(config => {
-      (config.esns || []).forEach(esn => {
-        const year = getYearFromDate(esn.targetShipDate);
-        if (year) {
-          extractModalRawMaterialData(config.level1Parts || [], rawType, year, supplierMap);
-        }
-      });
+      const esns = config.esns || [];
+      
+      // Process all levels to find RM parts with matching raw type
+      const processPartsForRM = (parts, level1QPE = 1) => {
+        parts.forEach(part => {
+          // Check level 2 parts for RM data
+          (part.level2Parts || []).forEach(l2 => {
+            if (l2.rawType === rawType && l2.rmSupplier) {
+              const rmSupplier = l2.rmSupplier;
+              const rmPN = l2.pn || 'Unknown';
+              // QPE should be level1 QPE * level2 QPE if available
+              const level1Qpe = Number(part.qpe || part.qtyPerEngine || 1);
+              const level2Qpe = Number(l2.qpe || 1);
+              const totalQpe = level1Qpe * level2Qpe;
+              
+              // For each ESN, create a unique group key and track max QPE
+              esns.forEach(esn => {
+                const esnId = esn.esn || esn.ESN;
+                const year = getYearFromDate(esn.targetShipDate);
+                
+                if (year && esnId) {
+                  const groupKey = `${rmSupplier}|${rmPN}|${esnId}|${year}`;
+                  
+                  // Track max QPE for this combination
+                  if (!groupedData.has(groupKey)) {
+                    groupedData.set(groupKey, {
+                      rmSupplier,
+                      rmPN,
+                      esn: esnId,
+                      year,
+                      qpe: totalQpe
+                    });
+                  } else {
+                    // Update to max QPE if current is higher
+                    const existing = groupedData.get(groupKey);
+                    existing.qpe = Math.max(existing.qpe, totalQpe);
+                  }
+                }
+              });
+            }
+            
+            // Recursively check deeper levels
+            if (l2.level3Parts) processPartsForRM(l2.level3Parts, level1Qpe);
+          });
+          
+          // Check level 3+ parts directly
+          if (part.level3Parts) processPartsForRM(part.level3Parts, level1QPE);
+          if (part.level4Parts) processPartsForRM(part.level4Parts, level1QPE);
+          if (part.level5Parts) processPartsForRM(part.level5Parts, level1QPE);
+        });
+      };
+      
+      processPartsForRM(config.level1Parts || []);
     });
+  });
+  
+  // Now aggregate by RM Supplier and Year (sum all QPE values)
+  const supplierYearMap = new Map();
+  
+  groupedData.forEach(({ rmSupplier, year, qpe }) => {
+    if (!supplierYearMap.has(rmSupplier)) {
+      supplierYearMap.set(rmSupplier, {
+        '2025': 0,
+        '2026': 0,
+        '2027': 0,
+        '2028': 0
+      });
+    }
+    
+    const yearData = supplierYearMap.get(rmSupplier);
+    if (yearData[year] !== undefined) {
+      yearData[year] += qpe;
+    }
   });
 
   // Sort suppliers by total demand in descending order
-  const suppliers = Array.from(supplierMap.keys()).sort((a, b) => {
-    const totalA = (supplierMap.get(a)['2025'] || 0) + (supplierMap.get(a)['2026'] || 0) +
-      (supplierMap.get(a)['2027'] || 0) + (supplierMap.get(a)['2028'] || 0);
-    const totalB = (supplierMap.get(b)['2025'] || 0) + (supplierMap.get(b)['2026'] || 0) +
-      (supplierMap.get(b)['2027'] || 0) + (supplierMap.get(b)['2028'] || 0);
+  const suppliers = Array.from(supplierYearMap.keys()).sort((a, b) => {
+    const totalA = (supplierYearMap.get(a)['2025'] || 0) + (supplierYearMap.get(a)['2026'] || 0) +
+      (supplierYearMap.get(a)['2027'] || 0) + (supplierYearMap.get(a)['2028'] || 0);
+    const totalB = (supplierYearMap.get(b)['2025'] || 0) + (supplierYearMap.get(b)['2026'] || 0) +
+      (supplierYearMap.get(b)['2027'] || 0) + (supplierYearMap.get(b)['2028'] || 0);
     return totalB - totalA; // Descending order
   });
-  const data2025 = suppliers.map(s => supplierMap.get(s)['2025'] || 0);
-  const data2026 = suppliers.map(s => supplierMap.get(s)['2026'] || 0);
-  const data2027 = suppliers.map(s => supplierMap.get(s)['2027'] || 0);
-  const data2028 = suppliers.map(s => supplierMap.get(s)['2028'] || 0);
+  
+  const data2025 = suppliers.map(s => supplierYearMap.get(s)['2025'] || 0);
+  const data2026 = suppliers.map(s => supplierYearMap.get(s)['2026'] || 0);
+  const data2027 = suppliers.map(s => supplierYearMap.get(s)['2027'] || 0);
+  const data2028 = suppliers.map(s => supplierYearMap.get(s)['2028'] || 0);
+  
+  console.log(`📊 RM Material popup chart for "${rawType}":`, {
+    totalGroups: groupedData.size,
+    uniqueSuppliers: suppliers.length,
+    suppliers: suppliers,
+    aggregationMethod: 'Group by [RM Supplier, RM PN, ESN], MAX(QPE), then SUM',
+    sampleData: suppliers.slice(0, 3).map(s => ({
+      supplier: s,
+      '2025': supplierYearMap.get(s)['2025'],
+      '2026': supplierYearMap.get(s)['2026'],
+      '2027': supplierYearMap.get(s)['2027'],
+      '2028': supplierYearMap.get(s)['2028']
+    }))
+  });
 
   return { suppliers, data2025, data2026, data2027, data2028 };
 }
 
-function extractModalRawMaterialData(parts, targetRawType, year, supplierMap) {
-  parts.forEach(part => {
-    // Check level 2 parts
-    (part.level2Parts || []).forEach(l2 => {
-      if (l2.rawType === targetRawType && l2.rmSupplier) {
-        if (!supplierMap.has(l2.rmSupplier)) {
-          supplierMap.set(l2.rmSupplier, {});
-        }
-        const supplier = supplierMap.get(l2.rmSupplier);
-        supplier[year] = (supplier[year] || 0) + 1;
-      }
+// DEPRECATED: Old extraction logic - replaced with proper aggregation
+// function extractModalRawMaterialData(parts, targetRawType, year, supplierMap) {
+//   parts.forEach(part => {
+//     // Check level 2 parts
+//     (part.level2Parts || []).forEach(l2 => {
+//       if (l2.rawType === targetRawType && l2.rmSupplier) {
+//         if (!supplierMap.has(l2.rmSupplier)) {
+//           supplierMap.set(l2.rmSupplier, {});
+//         }
+//         const supplier = supplierMap.get(l2.rmSupplier);
+//         supplier[year] = (supplier[year] || 0) + 1;
+//       }
+//
+//       // Check deeper levels
+//       if (l2.level3Parts) extractModalRawMaterialData(l2.level3Parts, targetRawType, year, supplierMap);
+//     });
+//
+//     // Check level 3 parts directly
+//     if (part.level3Parts) extractModalRawMaterialData(part.level3Parts, targetRawType, year, supplierMap);
+//     if (part.level4Parts) extractModalRawMaterialData(part.level4Parts, targetRawType, year, supplierMap);
+//     if (part.level5Parts) extractModalRawMaterialData(part.level5Parts, targetRawType, year, supplierMap);
+//   });
+// }
 
-      // Check deeper levels
-      if (l2.level3Parts) extractModalRawMaterialData(l2.level3Parts, targetRawType, year, supplierMap);
-    });
-
-    // Check level 3 parts directly
-    if (part.level3Parts) extractModalRawMaterialData(part.level3Parts, targetRawType, year, supplierMap);
-    if (part.level4Parts) extractModalRawMaterialData(part.level4Parts, targetRawType, year, supplierMap);
-    if (part.level5Parts) extractModalRawMaterialData(part.level5Parts, targetRawType, year, supplierMap);
-  });
-}
 
 function renderModalDetailsTable(data, rawType) {
   console.log('📋 renderModalDetailsTable called for rawType:', rawType);

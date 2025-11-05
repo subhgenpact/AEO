@@ -781,7 +781,9 @@ class DuckDBService:
                     "{self.part_col}" as pn,
                     "{self.hw_owner_col}" as hw_owner,
                     "{self.supplier_col}" as supplier,
-                    CAST("QPE" AS INTEGER) as qpe
+                    CAST("QPE" AS INTEGER) as qpe,
+                    "Total LT" as mfg_lt,
+                    "Part Description" as description
                 FROM {main_table}
                 WHERE "{self.program_col}" = '{program}'
                 AND "{self.config_col}" = '{config}'
@@ -806,6 +808,8 @@ class DuckDBService:
                     "hwo": hwo_list,
                     "supplier": str(part.get('supplier', '')),
                     "qpe": int(part.get('qpe', 1)) if part.get('qpe') else 1,
+                    "mfgLT": part.get('mfg_lt', 50),  # MFG LT from database
+                    "description": part.get('description', 'Component'),  # Part Description from database
                     "level2Parts": level2_parts
                 })
             
