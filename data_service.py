@@ -39,3 +39,48 @@ class DataService:
                 print(f"[ERROR] Fallback also failed: {e2}")
                 # Create an empty DataFrame as fallback
                 self.df = pl.DataFrame()
+    
+    def get_filter_options(self):
+        """Get all unique filter options from DuckDB service"""
+        if not self.duckdb_service:
+            return {
+                "status": "error",
+                "message": "DuckDB service not available"
+            }
+        
+        try:
+            # Get unique values for each filter from DuckDB service
+            # These column names will be mapped in duckdb_service.get_unique_values()
+            product_lines = self.duckdb_service.get_unique_values("ENGINE_PROGRAM")
+            years = self.duckdb_service.get_years_from_date("Target_Ship_Date")
+            configs = self.duckdb_service.get_unique_values("Configuration")
+            suppliers = self.duckdb_service.get_unique_values("Parent_Part_Supplier")
+            rm_suppliers = self.duckdb_service.get_unique_values("Level_2_Raw_Material_Supplier")
+            hw_owners = self.duckdb_service.get_unique_values("HW_OWNER")
+            modules = self.duckdb_service.get_unique_values("Level_2_Raw_Type")
+            part_numbers = self.duckdb_service.get_unique_values("Part_Number")
+            
+            return {
+                "productLines": sorted(product_lines) if product_lines else [],
+                "years": sorted(years) if years else [],
+                "configs": sorted(configs) if configs else [],
+                "suppliers": sorted(suppliers) if suppliers else [],
+                "rmSuppliers": sorted(rm_suppliers) if rm_suppliers else [],
+                "hwOwners": sorted(hw_owners) if hw_owners else [],
+                "modules": sorted(modules) if modules else [],
+                "partNumbers": sorted(part_numbers) if part_numbers else []
+            }
+        except Exception as e:
+            print(f"[ERROR] Error getting filter options: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "productLines": [],
+                "years": [],
+                "configs": [],
+                "suppliers": [],
+                "rmSuppliers": [],
+                "hwOwners": [],
+                "modules": [],
+                "partNumbers": []
+            }
