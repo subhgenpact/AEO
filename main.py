@@ -356,5 +356,42 @@ async def get_demand_chart_data(chart_type: str = "all"):
         raise HTTPException(status_code=500, detail=f"Failed to load chart data: {str(e)}")
 
 
+@app.get("/api/filter-options")
+async def get_filter_options():
+    """
+    Get all unique filter values for dropdowns
+    Returns all possible values for each filter category
+    """
+    try:
+        print(f"[FILTER] /api/filter-options endpoint called")
+        import time
+        start_time = time.time()
+        
+        # Get filter options from data service
+        filter_options = data_service.get_filter_options()
+        
+        elapsed = time.time() - start_time
+        print(f"[FILTER] Returned filter options in {elapsed*1000:.1f}ms")
+        print(f"[FILTER] Filter counts: PL={len(filter_options['productLines'])}, "
+              f"Years={len(filter_options['years'])}, "
+              f"Configs={len(filter_options['configs'])}, "
+              f"Suppliers={len(filter_options['suppliers'])}, "
+              f"RM Suppliers={len(filter_options['rmSuppliers'])}, "
+              f"HW Owners={len(filter_options['hwOwners'])}, "
+              f"Modules={len(filter_options['modules'])}, "
+              f"Part Numbers={len(filter_options['partNumbers'])}")
+        
+        return JSONResponse(content={
+            "status": "success",
+            "data": filter_options,
+            "execution_time_ms": f"{elapsed*1000:.1f}"
+        })
+    except Exception as e:
+        print(f"[ERROR] Error serving filter options: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to load filter options: {str(e)}")
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

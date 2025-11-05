@@ -526,10 +526,70 @@ window.paginationManagers = {};
 // Fetch and initialize dashboard
 async function initializeDynamicFilters(data) {
   console.log('Initializing dynamic filters...');
+  console.log('📊 Input data:', data ? `${data.length} programs` : 'No data');
+  if (data && data.length > 0) {
+    console.log('📊 Sample program:', data[0]);
+    if (data[0].configs && data[0].configs.length > 0) {
+      console.log('📊 Sample config:', data[0].configs[0]);
+    }
+  }
 
   try {
-    // Check if DuckDB integration is available for ultra-fast filter population
-    if (typeof getDuckDBFilterOptions === 'function') {
+    // First, try to fetch filter options from backend API
+    console.log('🚀 Fetching filter options from backend API...');
+    try {
+      const response = await fetch('/api/filter-options');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.status === 'success' && result.data) {
+          console.log('✅ Filter options received from backend:', result.data);
+          
+          // Populate dropdowns with backend data
+          const filterOptions = result.data;
+          
+          // Helper function to populate dropdown
+          const populateDropdown = (dropdownId, values, prefix) => {
+            const dropdown = document.querySelector(`#${dropdownId} + .dropdown-menu .dropdown-options`);
+            if (!dropdown) {
+              console.warn(`⚠️ Dropdown container not found for ${dropdownId}`);
+              return;
+            }
+            
+            if (values && values.length > 0) {
+              dropdown.innerHTML = values.map((value, index) => `
+                <div class="form-check py-1">
+                  <input class="form-check-input" type="checkbox" value="${value}" id="${prefix}${index + 1}">
+                  <label class="form-check-label small" for="${prefix}${index + 1}">${value}</label>
+                </div>
+              `).join('');
+              console.log(`✅ Populated ${dropdownId} with ${values.length} options`);
+            } else {
+              console.warn(`⚠️ No values for ${dropdownId}`);
+            }
+          };
+          
+          // Populate all dropdowns
+          populateDropdown('productLineDropdown', filterOptions.productLines, 'productLine');
+          populateDropdown('yearDropdown', filterOptions.years, 'year');
+          populateDropdown('engConfigDropdown', filterOptions.configs, 'config');
+          populateDropdown('supplierDropdown', filterOptions.suppliers, 'supplier');
+          populateDropdown('rmSupplierDropdown', filterOptions.rmSuppliers, 'rmSupplier');
+          populateDropdown('hwOwnerDropdown', filterOptions.hwOwners, 'hwOwner');
+          populateDropdown('partNoDropdown', filterOptions.partNumbers, 'partNumber');
+          populateDropdown('moduleDropdown', filterOptions.modules, 'module');
+          
+          console.log('✅ All filter dropdowns populated from backend');
+          return; // Exit early, we're done
+        }
+      }
+      console.warn('⚠️ Backend filter options not available, falling back to client-side extraction');
+    } catch (error) {
+      console.warn('⚠️ Error fetching filter options from backend:', error);
+      console.warn('⚠️ Falling back to client-side extraction');
+    }
+    
+    // Fallback: Check if DuckDB integration is available for ultra-fast filter population
+    if (typeof getDuckDBFilterOptions === 'function' && false) { // Temporarily disable DuckDB to force fallback
       console.log('🚀 Using DuckDB for ultra-fast filter population...');
       
       // Populate all filter dropdowns using DuckDB (0.5-1ms each vs 200ms+ client-side)
@@ -588,6 +648,7 @@ async function initializeDynamicFilters(data) {
     } else {
       // Fallback to old client-side method (SLOW - 200ms+)
       console.warn('⚠️ DuckDB not available, using slow client-side filter population...');
+      console.log('📊 Data available for filter population:', data ? data.length : 0, 'programs');
       
       // Extract all filter values from data
       if (data && data.length > 0) {
@@ -661,6 +722,17 @@ async function initializeDynamicFilters(data) {
             console.warn(`⚠️ Could not populate ${filterId}. Dropdown: ${!!dropdown}, Values: ${values?.size || 0}`);
           }
         };
+
+        console.log('📊 Filter data extracted:', {
+          productLines: filterData.productLines.size,
+          years: filterData.years.size,
+          configs: filterData.configs.size,
+          suppliers: filterData.suppliers.size,
+          rmSuppliers: filterData.rmSuppliers.size,
+          hwOwners: filterData.hwOwners.size,
+          partNumbers: filterData.partNumbers.size,
+          modules: filterData.modules.size
+        });
 
         populateDropdown('productLineDropdown', filterData.productLines, 'productLine');
         populateDropdown('yearDropdown', filterData.years, 'year');
