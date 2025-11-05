@@ -384,33 +384,42 @@ class DuckDBService:
         try:
             main_table = self._get_main_table()
             
-            # Special case: Module maps to Level_2_Raw_Type
-            if column == "Module":
-                column = self.level2_raw_type_col
+            # Map underscored column names to spaced column names (actual database schema)
+            column_map = {
+                "ENGINE_PROGRAM": "ENGINE PROGRAM",
+                "Configuration": "Configuration",
+                "Parent_Part_Supplier": "Parent Part Supplier",
+                "Level_2_Raw_Material_Supplier": "Level 2 Raw Material Supplier",
+                "HW_OWNER": "HW OWNER",
+                "Part_Number": "Part Number",
+                "Level_2_Raw_Type": "Level 2 Raw Type",
+                "Level_2_PN": "Level 2 PN",
+                "Module": "Level 2 Raw Type",  # Module maps to Level 2 Raw Type
+                "Target_Ship_Date": "Target Ship Date",
+                "ESN": "ESN",
+                "Engine_Demand_Family": "Engine Demand Family"
+            }
             
-            # Special case: Configuration - just get from main table, not from separate Config table
-            if column == "Configuration":
-                # Try different possible column names
-                if "Configuration" in [self.config_col]:
-                    result = self.conn.execute(f"""
-                        SELECT DISTINCT "{self.config_col}" as value
-                        FROM {main_table}
-                        WHERE "{self.config_col}" IS NOT NULL AND "{self.config_col}" != ''
-                        ORDER BY value
-                    """).fetchall()
-                else:
-                    # Fallback to empty list if column doesn't exist
-                    return []
-            else:
-                result = self.conn.execute(f"""
-                    SELECT DISTINCT "{column}" as value
-                    FROM {main_table}
-                    WHERE "{column}" IS NOT NULL AND "{column}" != ''
-                    ORDER BY value
-                """).fetchall()
-            return [row[0] for row in result]
+            # Get the actual column name from the map
+            actual_column = column_map.get(column, column)
+            print(f"[DEBUG] Getting unique values for column '{column}' -> '{actual_column}'")
+            
+            query = f"""
+                SELECT DISTINCT "{actual_column}" as value
+                FROM {main_table}
+                WHERE "{actual_column}" IS NOT NULL AND "{actual_column}" != ''
+                ORDER BY value
+            """
+            print(f"[DEBUG] Executing query: {query[:200]}...")
+            
+            result = self.conn.execute(query).fetchall()
+            values = [row[0] for row in result]
+            print(f"[DEBUG] Found {len(values)} unique values for {column}")
+            return values
         except Exception as e:
             print(f"✗ Error getting unique values for {column}: {e}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def get_years_from_date(self, column: str) -> List[str]:
@@ -418,21 +427,24 @@ class DuckDBService:
         try:
             main_table = self._get_main_table()
             
-            # Map to actual column name if needed
-            if column == "Target_Ship_Date" or column == "Target Ship Date":
-                column = self.target_date_col
+            # Map to actual column name (spaced version)
+            column_map = {
+                "Target_Ship_Date": "Target Ship Date",
+                "Target Ship Date": "Target Ship Date"
+            }
+            actual_column = column_map.get(column, column)
             
-            print(f"[DEBUG] Extracting years from column: {column}, table: {main_table}")
+            print(f"[DEBUG] Extracting years from column: {actual_column}, table: {main_table}")
             
-            # Target_Ship_Date is stored as VARCHAR, so we need to parse it first
+            # Target Ship Date is stored as VARCHAR, so we need to parse it first
             # Try multiple date parsing strategies
             result = self.conn.execute(f"""
                 SELECT DISTINCT 
-                    CAST(YEAR(TRY_CAST("{column}" AS DATE)) AS VARCHAR) as year
+                    CAST(YEAR(TRY_CAST("{actual_column}" AS DATE)) AS VARCHAR) as year
                 FROM {main_table}
-                WHERE "{column}" IS NOT NULL 
-                    AND "{column}" != ''
-                    AND TRY_CAST("{column}" AS DATE) IS NOT NULL
+                WHERE "{actual_column}" IS NOT NULL 
+                    AND "{actual_column}" != ''
+                    AND TRY_CAST("{actual_column}" AS DATE) IS NOT NULL
                 ORDER BY year DESC
             """).fetchall()
             
@@ -444,11 +456,11 @@ class DuckDBService:
                 print(f"[DEBUG] Trying fallback method to extract years from string format")
                 result = self.conn.execute(f"""
                     SELECT DISTINCT 
-                        SUBSTRING("{column}", LENGTH("{column}") - 3, 4) as year
+                        SUBSTRING("{actual_column}", LENGTH("{actual_column}") - 3, 4) as year
                     FROM {main_table}
-                    WHERE "{column}" IS NOT NULL 
-                        AND "{column}" != ''
-                        AND LENGTH("{column}") >= 4
+                    WHERE "{actual_column}" IS NOT NULL 
+                        AND "{actual_column}" != ''
+                        AND LENGTH("{actual_column}") >= 4
                     ORDER BY year DESC
                 """).fetchall()
                 years = [str(row[0]) for row in result if row[0] and row[0].isdigit()]
@@ -457,6 +469,8 @@ class DuckDBService:
             return years if years else ['2025', '2026', '2027', '2028']
         except Exception as e:
             print(f"✗ Error extracting years from {column}: {e}")
+            import traceback
+            traceback.print_exc()
             # Fallback to standard years
             return ['2025', '2026', '2027', '2028']
     

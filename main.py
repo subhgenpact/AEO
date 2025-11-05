@@ -70,6 +70,10 @@ def get_cached_cdata():
     return _cached_cdata
 
 
+# ============================================
+# STATIC FILE SERVING
+# ============================================
+
 @app.get("/")
 async def read_root():
     """Serve the frontend"""
@@ -109,9 +113,6 @@ async def serve_css(filename: str):
     raise HTTPException(status_code=404, detail="CSS file not found")
 
 
-# Serve JavaScript files
-# Note: /scripts.js endpoint removed - not needed, using src/* endpoints instead
-
 @app.get("/src/{filename}")
 async def serve_js(filename: str):
     """Serve JavaScript files from src"""
@@ -131,53 +132,47 @@ async def serve_images(filename: str):
     raise HTTPException(status_code=404, detail="Image not found")
 
 
-# API Endpoints for demand dashboard (DEPRECATED - use /api/demand/* instead)
-# Keeping for backward compatibility
-@app.get("/data/demand-data.json")
-async def get_demand_data_legacy(skip: int = 0, limit: int = 50):
+# ============================================
+# API ENDPOINTS
+# ============================================
+
+@app.get("/api/filter-options")
+async def get_filter_options():
     """
-    DEPRECATED: Use /api/demand/programs instead
-    Serve demand data in chunks - redirects to new API
+    Get all unique filter values for dropdowns
+    Returns all possible values for each filter category
     """
     try:
-        print(f"[LEGACY] /data/demand-data.json called - redirecting to /api/demand/programs")
-        data = get_cached_demand_data()
-        total = len(data)
+        print(f"[FILTER] /api/filter-options endpoint called")
+        import time
+        start_time = time.time()
         
-        # Return paginated data
-        chunked_data = data[skip:skip + limit]
-        has_more = (skip + limit) < total
+        # Get filter options from data service
+        filter_options = data_service.get_filter_options()
+        
+        elapsed = time.time() - start_time
+        print(f"[FILTER] Returned filter options in {elapsed*1000:.1f}ms")
+        print(f"[FILTER] Filter counts: PL={len(filter_options['productLines'])}, "
+              f"Years={len(filter_options['years'])}, "
+              f"Configs={len(filter_options['configs'])}, "
+              f"Suppliers={len(filter_options['suppliers'])}, "
+              f"RM Suppliers={len(filter_options['rmSuppliers'])}, "
+              f"HW Owners={len(filter_options['hwOwners'])}, "
+              f"Modules={len(filter_options['modules'])}, "
+              f"Part Numbers={len(filter_options['partNumbers'])}")
         
         return JSONResponse(content={
-            "data": chunked_data,
-            "total": total,
-            "skip": skip,
-            "limit": limit,
-            "hasMore": has_more
+            "status": "success",
+            "data": filter_options,
+            "execution_time_ms": f"{elapsed*1000:.1f}"
         })
     except Exception as e:
-        print(f"[ERROR] Error serving legacy demand data: {e}")
+        print(f"[ERROR] Error serving filter options: {e}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Failed to load demand data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to load filter options: {str(e)}")
 
 
-@app.get("/data/cdata.json")
-async def get_cdata_legacy():
-    """
-    DEPRECATED: Use /api/demand/chart-data instead
-    Serve cdata for Engine Program Overview - redirects to new API
-    """
-    try:
-        print(f"[LEGACY] /data/cdata.json called - redirecting to /api/demand/chart-data")
-        data = get_cached_cdata()
-        return JSONResponse(content=data)
-    except Exception as e:
-        print(f"[ERROR] Error serving legacy cdata: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to load cdata: {str(e)}")
-
-
-# API Endpoint for datatable - returns all records from data-aeo.duckdb with pagination
 @app.get("/api/datatable/all")
 async def get_datatable_all(skip: int = 0, limit: int = 1000):
     """Serve data from data-aeo.duckdb for the datatable page with pagination"""
@@ -208,19 +203,13 @@ async def get_datatable_all(skip: int = 0, limit: int = 1000):
         raise HTTPException(status_code=500, detail=f"Failed to load datatable data: {str(e)}")
 
 
-# ============================================
-# CRITICAL OPTIMIZATION #1: Server-Side Pagination
-# ============================================
 @app.get("/api/demand/programs")
 async def get_demand_programs(skip: int = 0, limit: int = 1000):
     """
-    OPTIMIZATION #1: True server-side pagination for demand programs
+    Server-side pagination for demand programs
     
     Uses DuckDB's native LIMIT/OFFSET for true pagination instead of 
     loading all data then slicing. Dramatically reduces memory usage.
-    
-    Impact: 18-30s load time → 3-5s (80% improvement)
-    Memory: 15-20MB → 1-2MB (90% reduction)
     """
     try:
         print(f"[DEMAND] /api/demand/programs called - skip={skip}, limit={limit}")
@@ -242,8 +231,7 @@ async def get_demand_programs(skip: int = 0, limit: int = 1000):
             "skip": skip,
             "limit": limit,
             "hasMore": has_more,
-            "execution_time_ms": f"{elapsed*1000:.1f}",
-            "optimization": "true_server_side_pagination"
+            "execution_time_ms": f"{elapsed*1000:.1f}"
         })
     except Exception as e:
         print(f"[ERROR] Error serving demand programs: {e}")
@@ -252,92 +240,20 @@ async def get_demand_programs(skip: int = 0, limit: int = 1000):
         raise HTTPException(status_code=500, detail=f"Failed to load demand programs: {str(e)}")
 
 
-# ============================================
-# CRITICAL OPTIMIZATION #2: Move Data Transformation to Server
-# ============================================
-_cached_chart_data = {}
-
-def get_cached_chart_data(chart_type: str = "all"):
-    """
-    CRITICAL OPTIMIZATION #2: Pre-aggregate chart data on server
-    
-    Instead of sending 134,944 raw rows to client for transformation,
-    send pre-aggregated structures optimized for each chart.
-    
-    Impact: 25-30s transform time → 0ms (client-side)
-    Payload: 15-20MB → 1-2MB (80% reduction)
-    """
-    global _cached_chart_data
-    
-    if chart_type not in _cached_chart_data:
-        print(f"First request - transforming {chart_type} chart data using DuckDB...")
-        import time
-        start_time = time.time()
-        
-        try:
-            data = get_cached_demand_data()
-            
-            if chart_type == "all" or chart_type == "supplier":
-                # Aggregate by supplier
-                supplier_data = {}
-                for program in data:
-                    for config in program.get("configs", []):
-                        for part in config.get("level1Parts", []):
-                            supplier = part.get("supplier", "Unknown")
-                            if supplier not in supplier_data:
-                                supplier_data[supplier] = {"count": 0, "parts": 0}
-                            supplier_data[supplier]["count"] += len(config.get("esns", []))
-                            supplier_data[supplier]["parts"] += 1
-                
-                _cached_chart_data["supplier"] = {
-                    "labels": sorted(supplier_data.keys()),
-                    "data": [supplier_data[s]["count"] for s in sorted(supplier_data.keys())]
-                }
-            
-            if chart_type == "all" or chart_type == "rm_supplier":
-                # Aggregate by RM supplier
-                rm_supplier_data = {}
-                for program in data:
-                    for config in program.get("configs", []):
-                        for part in config.get("level1Parts", []):
-                            for part2 in part.get("level2Parts", []):
-                                rm_supplier = part2.get("rmSupplier", "Unknown")
-                                if rm_supplier not in rm_supplier_data:
-                                    rm_supplier_data[rm_supplier] = 0
-                                rm_supplier_data[rm_supplier] += 1
-                
-                _cached_chart_data["rm_supplier"] = {
-                    "labels": sorted(rm_supplier_data.keys()),
-                    "data": [rm_supplier_data[s] for s in sorted(rm_supplier_data.keys())]
-                }
-            
-            elapsed = time.time() - start_time
-            print(f"✓ Chart data ({chart_type}) aggregated in {elapsed:.2f}s")
-        except Exception as e:
-            print(f"⚠ Error aggregating chart data: {e}")
-            _cached_chart_data[chart_type] = {"labels": [], "data": []}
-    
-    return _cached_chart_data.get(chart_type, {})
-
-
 @app.get("/api/demand/chart-data")
 async def get_demand_chart_data(chart_type: str = "all"):
     """
-    CRITICAL OPTIMIZATION #2: Return pre-aggregated chart data
-    
-    Supports: all, supplier, rm_supplier, hw_owner, part_number, engine_config, engine_program
+    Return pre-aggregated chart data for Engine Program Overview
     
     Returns pre-calculated aggregations instead of raw data for transformation.
     Dramatically reduces payload size and client-side processing.
-    
-    Impact: 25-30s client transform → 0ms
     """
     try:
         print(f"[DEMAND] /api/demand/chart-data called - chart_type={chart_type}")
         import time
         start_time = time.time()
         
-        # For now, return the structured cdata which is similar
+        # Get cached cdata from DuckDB service
         cdata = get_cached_cdata()
         
         elapsed = time.time() - start_time
@@ -357,4 +273,13 @@ async def get_demand_chart_data(chart_type: str = "all"):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+    import asyncio
+    import sys
+    
+    # Fix for Windows asyncio ProactorEventLoop issue
+    if sys.platform == 'win32':
+        # Set the event loop policy to use SelectorEventLoop instead of ProactorEventLoop
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False, log_level="info")
+
