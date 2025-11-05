@@ -178,7 +178,7 @@ function walkPartsForRawTypeIterative(parts, esns, supplierHint) {
  */
 function extractRMDataIterative(parts, esns, supplier) {
   const rmSupplierData = new Map();
-  const yearsToShow = window.yearsToShow || ['2025', '2026', '2027'];
+  const yearsToShow = window.yearsToShow || ['2025', '2026', '2027', '2028'];
   
   const stack = [{
     parts: parts || [],

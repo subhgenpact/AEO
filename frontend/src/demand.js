@@ -14,7 +14,7 @@ try {
 let DEMAND_DATA = null;
 let RAW_DATA = null; // keep original array shape for renderers
 let BASE_METRICS = null;
-let TOTALS_BY_YEAR = { '2025': 0, '2026': 0, '2027': 0 };
+let TOTALS_BY_YEAR = { '2025': 0, '2026': 0, '2027': 0, '2028': 0 };
 
 // ========================================
 // CENTRALIZED FILTER AND DATA MANAGEMENT SYSTEM
@@ -758,7 +758,8 @@ const initializeDashboard = (data) => {
         // Calculate yearly quantities from ESN data
         qty2025: 0,
         qty2026: 0,
-        qty2027: 0
+        qty2027: 0,
+        qty2028: 0
       }))
     };
 
@@ -770,6 +771,7 @@ const initializeDashboard = (data) => {
           if (year === '2025') program.qty2025++;
           else if (year === '2026') program.qty2026++;
           else if (year === '2027') program.qty2027++;
+          else if (year === '2028') program.qty2028++;
         });
       });
     });
@@ -778,6 +780,7 @@ const initializeDashboard = (data) => {
     TOTALS_BY_YEAR['2025'] = DEMAND_DATA.enginePrograms.reduce((sum, p) => sum + p.qty2025, 0);
     TOTALS_BY_YEAR['2026'] = DEMAND_DATA.enginePrograms.reduce((sum, p) => sum + p.qty2026, 0);
     TOTALS_BY_YEAR['2027'] = DEMAND_DATA.enginePrograms.reduce((sum, p) => sum + p.qty2027, 0);
+    TOTALS_BY_YEAR['2028'] = DEMAND_DATA.enginePrograms.reduce((sum, p) => sum + p.qty2028, 0);
 
     console.log('Data loaded successfully:', RAW_DATA ? RAW_DATA.length : 0, 'programs');
 
@@ -3445,7 +3448,7 @@ function renderConfigChart() {
     if (!infoList || !infoTitle) return;
     const items = innerLabels.map((pl, i) => ({ label: pl, total: innerTotals[i] || 0, color: innerColors[i] }));
     const total = items.reduce((s, x) => s + Number(x.total || 0), 0) || 0;
-    infoTitle.textContent = `Totals (25–27): ${Number(total).toLocaleString()}`;
+    infoTitle.textContent = `Totals (25–28): ${Number(total).toLocaleString()}`;
     infoList.innerHTML = '';
     items.forEach(it => {
       const li = document.createElement('li');
@@ -3519,12 +3522,21 @@ function renderConfigChart() {
       });
     }
 
-    // Top configs list with mini bars (across 25–27)
+    // Top configs list with mini bars (across all years)
     if (topConfigsList) {
+      // Find year column indices
+      const y2025 = headers.indexOf('2025');
+      const y2026 = headers.indexOf('2026');
+      const y2027 = headers.indexOf('2027');
+      const y2028 = headers.indexOf('2028');
+      
       const configTotals = rows.map(r => ({
         program: r[programIdx],
         config: r[configIdx],
-        total: Number(r[y2025] || 0) + Number(r[y2026] || 0) + Number(r[y2027] || 0)
+        total: (y2025 >= 0 ? Number(r[y2025] || 0) : 0) + 
+               (y2026 >= 0 ? Number(r[y2026] || 0) : 0) + 
+               (y2027 >= 0 ? Number(r[y2027] || 0) : 0) + 
+               (y2028 >= 0 ? Number(r[y2028] || 0) : 0)
       })).filter(x => x.total > 0).sort((a, b) => b.total - a.total).slice(0, 5);
       const maxTotal = configTotals.reduce((m, x) => Math.max(m, x.total), 0) || 1;
       topConfigsList.innerHTML = '';
@@ -4164,11 +4176,13 @@ function renderSupplierChart(sectionId = 'section-supplier') {
               const yearly2025 = cfg.esns ? cfg.esns.reduce((sum, esn) => sum + (esn.qty2025Q1 || 0) + (esn.qty2025Q2 || 0) + (esn.qty2025Q3 || 0) + (esn.qty2025Q4 || 0), 0) : Math.floor(Math.random() * 50) + 10;
               const yearly2026 = cfg.esns ? cfg.esns.reduce((sum, esn) => sum + (esn.qty2026Q1 || 0) + (esn.qty2026Q2 || 0) + (esn.qty2026Q3 || 0) + (esn.qty2026Q4 || 0), 0) : Math.floor(Math.random() * 50) + 10;
               const yearly2027 = cfg.esns ? cfg.esns.reduce((sum, esn) => sum + (esn.qty2027Q1 || 0) + (esn.qty2027Q2 || 0) + (esn.qty2027Q3 || 0) + (esn.qty2027Q4 || 0), 0) : Math.floor(Math.random() * 50) + 10;
+              const yearly2028 = cfg.esns ? cfg.esns.reduce((sum, esn) => sum + (esn.qty2028Q1 || 0) + (esn.qty2028Q2 || 0) + (esn.qty2028Q3 || 0) + (esn.qty2028Q4 || 0), 0) : Math.floor(Math.random() * 50) + 10;
 
               // Generate random data if yearly totals are 0
               const final2025 = yearly2025 || Math.floor(Math.random() * 50) + 10;
               const final2026 = yearly2026 || Math.floor(Math.random() * 50) + 10;
               const final2027 = yearly2027 || Math.floor(Math.random() * 50) + 10;
+              const final2028 = yearly2028 || Math.floor(Math.random() * 50) + 10;
 
               programData[programName].details.push({
                 supplier: supplierName,
@@ -4181,7 +4195,8 @@ function renderSupplierChart(sectionId = 'section-supplier') {
                 mfgLt: mfgLtVal,
                 data2025: final2025,
                 data2026: final2026,
-                data2027: final2027
+                data2027: final2027,
+                data2028: final2028
               });
             }
           });
@@ -4504,6 +4519,7 @@ function showProgramSuppliersModal(programName, suppliers, details) {
                         <th colspan="4" class="text-center">2025</th>
                         <th colspan="4" class="text-center">2026</th>
                         <th colspan="4" class="text-center">2027</th>
+                        <th colspan="4" class="text-center">2028</th>
                       </tr>
                       <tr>
                         <th></th>
@@ -4514,6 +4530,10 @@ function showProgramSuppliersModal(programName, suppliers, details) {
                         <th></th>
                         <th></th>
                         <th></th>
+                        <th>Q1</th>
+                        <th>Q2</th>
+                        <th>Q3</th>
+                        <th>Q4</th>
                         <th>Q1</th>
                         <th>Q2</th>
                         <th>Q3</th>
@@ -4612,17 +4632,19 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
       supplierData[detail.supplier] = {
         '2025': 0,
         '2026': 0,
-        '2027': 0
+        '2027': 0,
+        '2028': 0
       };
     }
     supplierData[detail.supplier]['2025'] += detail.data2025 || 0;
     supplierData[detail.supplier]['2026'] += detail.data2026 || 0;
     supplierData[detail.supplier]['2027'] += detail.data2027 || 0;
+    supplierData[detail.supplier]['2028'] += detail.data2028 || 0;
   });
 
   const labels = Object.keys(supplierData).sort((a, b) => {
-    const totalA = supplierData[a]['2025'] + supplierData[a]['2026'] + supplierData[a]['2027'];
-    const totalB = supplierData[b]['2025'] + supplierData[b]['2026'] + supplierData[b]['2027'];
+    const totalA = supplierData[a]['2025'] + supplierData[a]['2026'] + supplierData[a]['2027'] + supplierData[a]['2028'];
+    const totalB = supplierData[b]['2025'] + supplierData[b]['2026'] + supplierData[b]['2027'] + supplierData[b]['2028'];
     return totalB - totalA; // Descending order
   });
 
@@ -4647,6 +4669,13 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
       data: labels.map(supplier => supplierData[supplier]['2027']),
       backgroundColor: 'rgba(16, 185, 129, 0.8)',
       borderColor: '#10b981',
+      borderWidth: 1
+    },
+    {
+      label: '2028',
+      data: labels.map(supplier => supplierData[supplier]['2028']),
+      backgroundColor: 'rgba(139, 92, 246, 0.8)',
+      borderColor: '#8b5cf6',
       borderWidth: 1
     }
   ];
@@ -4765,6 +4794,13 @@ function renderProgramSuppliersPage() {
     const q3_2027 = Math.floor(total2027 * (0.15 + Math.random() * 0.25));
     const q4_2027 = total2027 - q1_2027 - q2_2027 - q3_2027;
 
+    // Generate quarterly distribution for 2028
+    const total2028 = detail.data2028 || 0;
+    const q1_2028 = Math.floor(total2028 * (0.2 + Math.random() * 0.3));
+    const q2_2028 = Math.floor(total2028 * (0.15 + Math.random() * 0.25));
+    const q3_2028 = Math.floor(total2028 * (0.15 + Math.random() * 0.25));
+    const q4_2028 = total2028 - q1_2028 - q2_2028 - q3_2028;
+
     return `
     <tr>
       <td>${detail.supplier || ''}</td>
@@ -4787,6 +4823,10 @@ function renderProgramSuppliersPage() {
       <td>${q2_2027}</td>
       <td>${q3_2027}</td>
       <td>${q4_2027}</td>
+      <td>${q1_2028}</td>
+      <td>${q2_2028}</td>
+      <td>${q3_2028}</td>
+      <td>${q4_2028}</td>
     </tr>
   `}).join('');
   

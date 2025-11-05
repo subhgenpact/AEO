@@ -113,7 +113,7 @@ async function initializeYearFilterOptions_DuckDB() {
     const yearDropdown = document.querySelector('#yearDropdown + .dropdown-menu .dropdown-options');
     if (yearDropdown) {
       yearDropdown.innerHTML = '';
-      ['2025', '2026', '2027'].forEach(year => {
+      ['2025', '2026', '2027', '2028'].forEach(year => {
         const optionDiv = document.createElement('div');
         optionDiv.className = 'form-check';
         optionDiv.innerHTML = `
