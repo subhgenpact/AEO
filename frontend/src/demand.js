@@ -3745,6 +3745,16 @@ function renderConfigChart() {
 }
 
 function renderSupplierChart(sectionId = 'section-supplier') {
+  // For regular supplier section, use the new supplier type chart
+  if (sectionId === 'section-supplier') {
+    if (typeof window.renderSupplierTypeChart === 'function') {
+      window.renderSupplierTypeChart();
+      return;
+    } else {
+      console.warn('⚠️ renderSupplierTypeChart not loaded yet');
+    }
+  }
+  
   // Don't use cache - always re-render to respect filter changes
   // The cache check was preventing charts from updating when filters changed
   const cacheKey = sectionId === 'section-rm-supplier' ? 'rmSupplier' : 'supplier';

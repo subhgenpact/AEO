@@ -653,3 +653,44 @@ async def get_supplier_details(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/supplier-type-distribution")
+async def get_supplier_type_distribution():
+    """
+    Get supplier distribution grouped by Supplier_Type (Internal, AEO, External)
+    Returns count and percentage for each supplier type
+    
+    Example response:
+    {
+      "status": "success",
+      "data": [
+        {"supplier_type": "Internal", "count": 193, "percentage": 86.55},
+        {"supplier_type": "AEO", "count": 18, "percentage": 8.07},
+        {"supplier_type": "External", "count": 12, "percentage": 5.38}
+      ]
+    }
+    """
+    try:
+        if not duckdb_service:
+            raise HTTPException(status_code=500, detail="DuckDB service not initialized")
+        
+        start_time = time.time()
+        
+        distribution = duckdb_service.get_supplier_type_distribution()
+        
+        elapsed = time.time() - start_time
+        
+        return {
+            "status": "success",
+            "data": distribution,
+            "execution_time_ms": f"{elapsed*1000:.2f}"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] Supplier type distribution endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

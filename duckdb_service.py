@@ -930,6 +930,62 @@ class DuckDBService:
             traceback.print_exc()
             return []
     
+    def get_supplier_type_distribution(self) -> List[Dict[str, Any]]:
+        """
+        Get supplier distribution grouped by Supplier_Type (Internal, AEO, External)
+        Returns count and percentage for each supplier type
+        """
+        try:
+            main_table = self._get_main_table()
+            
+            # Check if Supplier_Type column exists
+            columns_result = self.conn.execute(f"SELECT * FROM {main_table} LIMIT 0").description
+            column_names = [col[0] for col in columns_result]
+            
+            supplier_type_col = "Supplier_Type" if "Supplier_Type" in column_names else None
+            
+            if not supplier_type_col:
+                print("[WARN] Supplier_Type column not found in database")
+                return []
+            
+            # Get distinct parent part suppliers grouped by supplier type
+            query = f"""
+                SELECT 
+                    "{supplier_type_col}" as supplier_type,
+                    COUNT(DISTINCT "{self.supplier_col}") as count
+                FROM {main_table}
+                WHERE "{supplier_type_col}" IS NOT NULL 
+                    AND "{supplier_type_col}" != ''
+                    AND "{self.supplier_col}" IS NOT NULL
+                    AND "{self.supplier_col}" != ''
+                GROUP BY "{supplier_type_col}"
+                ORDER BY count DESC
+            """
+            
+            result = self.conn.execute(query).fetchall()
+            
+            # Calculate total and percentages
+            total = sum(row[1] for row in result)
+            
+            distribution = [
+                {
+                    "supplier_type": row[0],
+                    "count": row[1],
+                    "percentage": round((row[1] / total * 100), 2) if total > 0 else 0
+                }
+                for row in result
+            ]
+            
+            print(f"[DUCKDB] ✓ Supplier type distribution: {distribution}")
+            
+            return distribution
+            
+        except Exception as e:
+            print(f"[ERROR] Error getting supplier type distribution: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
     def close(self):
         """Close DuckDB connection"""
         if self.conn:
