@@ -93,6 +93,17 @@ function renderSupplierTypeChart() {
             animateScale: true,
             duration: 1000
           },
+          onClick: (event, activeElements) => {
+            if (activeElements.length > 0) {
+              const index = activeElements[0].index;
+              const supplierType = labels[index];
+              console.log('Clicked on supplier type:', supplierType);
+              // Call the modal function
+              if (typeof window.showSupplierTypeDetailsModal === 'function') {
+                window.showSupplierTypeDetailsModal(supplierType);
+              }
+            }
+          },
           plugins: {
             legend: {
               display: true,

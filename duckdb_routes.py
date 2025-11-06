@@ -841,3 +841,61 @@ async def get_rm_supplier_details(raw_material_type: str):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/supplier-details/{supplier_type}")
+async def get_supplier_details(supplier_type: str):
+    """
+    Get detailed supplier information with quarterly demand for a specific supplier type
+    
+    Args:
+        supplier_type: The supplier type (e.g., "Internal", "AEO", "External")
+    
+    Example response:
+    {
+      "status": "success",
+      "data": [
+        {
+          "name": "Supplier 5",
+          "partNumber": "PN18",
+          "description": "Part Desc16",
+          "hwo": "HW1",
+          "level": "L1",
+          "qpe": "2",
+          "mfgLT": "-",
+          "quarters": {
+            "2025-Q1": 5,
+            "2025-Q2": 3,
+            "2026-Q1": 8
+          }
+        },
+        ...
+      ]
+    }
+    """
+    try:
+        if not duckdb_service:
+            raise HTTPException(status_code=500, detail="DuckDB service not initialized")
+        
+        start_time = time.time()
+        
+        details = duckdb_service.get_supplier_details_by_type(supplier_type)
+        
+        elapsed = time.time() - start_time
+        
+        print(f"[API] Supplier details for '{supplier_type}': {len(details)} records in {elapsed*1000:.2f}ms")
+        
+        return {
+            "status": "success",
+            "data": details,
+            "supplier_type": supplier_type,
+            "execution_time_ms": f"{elapsed*1000:.2f}"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] Supplier details endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

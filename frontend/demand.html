@@ -693,10 +693,10 @@
   <script defer src="src/charts.js?v=3"></script>
   <script defer src="src/utils.js?v=2"></script>
   <script defer src="src/filters.js?v=2"></script>
-  <script defer src="src/supplier-type-chart.js?v=3"></script>
+  <script defer src="src/supplier-type-chart.js?v=4"></script>
   <script defer src="src/rm-supplier-raw-material-chart.js?v=4"></script>
   <script defer src="src/hw-owner-complexity-chart.js?v=1"></script>
-  <script defer src="src/demand.js?v=31"></script>
+  <script defer src="src/demand.js?v=32"></script>
   <script defer src="src/dropdowns.js?v=2"></script>
 
   <!-- Chatbot Icon -->
@@ -704,6 +704,129 @@
 
   <div class="chatbot-icon">
     <i class="fas fa-robot"></i>
+  </div>
+
+  <!-- Raw Material Details Modal -->
+  <!-- Supplier Type Details Modal -->
+  <div class="modal fade" id="supplierTypeModal" tabindex="-1" aria-labelledby="supplierTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="supplierTypeModalLabel" style="color: #000000 !important;">Supplier Type Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Search Filters -->
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label for="modalSupplierTypeSupplierSearch" class="form-label">Search Supplier</label>
+                  <input type="text" class="form-control form-control-sm" id="modalSupplierTypeSupplierSearch" placeholder="Filter by supplier...">
+                </div>
+                <div class="col-md-4">
+                  <label for="modalSupplierTypePartNumberSearch" class="form-label">Search Part Number</label>
+                  <input type="text" class="form-control form-control-sm" id="modalSupplierTypePartNumberSearch" placeholder="Filter by part number...">
+                </div>
+                <div class="col-md-4">
+                  <label for="modalSupplierTypeHWOSearch" class="form-label">Search HWO</label>
+                  <input type="text" class="form-control form-control-sm" id="modalSupplierTypeHWOSearch" placeholder="Filter by HWO...">
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Demand Chart -->
+          <div class="card chart-card mb-4">
+            <div class="card-header">
+              <h6 class="mb-0" id="modalSupplierTypeChartTitle">Supplier Demand per Part</h6>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height: 300px;">
+                <canvas id="modalSupplierTypeChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details Table -->
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Details</h6>
+              <div id="modalSupplierTypeTablePaginationInfo" class="small text-muted"></div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm" id="modalSupplierTypeDetailsTable">
+                  <thead>
+                    <tr>
+                      <th>Supplier</th>
+                      <th>Part Number</th>
+                      <th>Part Description</th>
+                      <th>HWO</th>
+                      <th>Level</th>
+                      <th>QPE</th>
+                      <th>MFG LT (Start-CTB)</th>
+                      <th colspan="4" class="text-center">2025</th>
+                      <th colspan="4" class="text-center">2026</th>
+                      <th colspan="4" class="text-center">2027</th>
+                      <th colspan="4" class="text-center">2028</th>
+                    </tr>
+                    <tr>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                    </tr>
+                  </thead>
+                  <tbody id="modalSupplierTypeDetailsTableBody">
+                    <!-- Data will be populated by JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+              <!-- Pagination Controls -->
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted small">
+                  <span id="supplierTypeDetailsRecordInfo">Showing 0-0 of 0 records</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <select class="form-select form-select-sm" style="width: auto;" id="supplierTypeDetailsPageSize">
+                    <option value="10" selected>10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                  </select>
+                  <button class="btn btn-sm btn-outline-secondary" id="supplierTypeDetailsPrevBtn" disabled>← Prev</button>
+                  <span id="supplierTypeDetailsPageInfo" class="mx-2">Page 1</span>
+                  <button class="btn btn-sm btn-outline-secondary" id="supplierTypeDetailsNextBtn">Next →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="exportSupplierTypeModalData">Export Data</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Raw Material Details Modal -->

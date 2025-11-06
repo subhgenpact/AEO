@@ -6792,6 +6792,293 @@ function extractSupplierDetailData(parts, targetSupplier, details) {
 let modalChart = null;
 let programModalChart = null;
 
+// ===== SUPPLIER TYPE DETAILS MODAL FUNCTIONS =====
+function showSupplierTypeDetailsModal(supplierType) {
+  console.log('Showing modal for supplier type:', supplierType);
+
+  // Update modal title
+  document.getElementById('supplierTypeModalLabel').textContent = `${supplierType} Supplier Details`;
+  document.getElementById('modalSupplierTypeChartTitle').textContent = `${supplierType} Supplier Demand per Part`;
+
+  // Show the modal
+  const modal = new bootstrap.Modal(document.getElementById('supplierTypeModal'));
+  modal.show();
+
+  // Load data after modal is shown to ensure proper rendering
+  document.getElementById('supplierTypeModal').addEventListener('shown.bs.modal', function () {
+    renderSupplierTypeDetailsTable(supplierType);
+    renderModalSupplierTypeChart(supplierType);
+  }, { once: true });
+}
+
+window.showSupplierTypeDetailsModal = showSupplierTypeDetailsModal;
+
+function renderModalSupplierTypeChart(supplierType) {
+  console.log('📊 Rendering supplier type modal chart for:', supplierType);
+  
+  // Fetch data from API
+  fetch(`/api/supplier-details/${encodeURIComponent(supplierType)}`)
+    .then(response => response.json())
+    .then(result => {
+      if (result.status !== 'success' || !result.data || result.data.length === 0) {
+        console.log('No data for supplier type chart');
+        return;
+      }
+      
+      const supplierDetails = result.data;
+      
+      // Aggregate by supplier
+      const supplierMap = new Map();
+      supplierDetails.forEach(item => {
+        if (!supplierMap.has(item.name)) {
+          supplierMap.set(item.name, { '2025': 0, '2026': 0, '2027': 0, '2028': 0 });
+        }
+        const supplier = supplierMap.get(item.name);
+        Object.keys(item.quarters).forEach(qKey => {
+          const year = qKey.split('-')[0];
+          supplier[year] = (supplier[year] || 0) + item.quarters[qKey];
+        });
+      });
+      
+      // Sort by total demand
+      const suppliers = Array.from(supplierMap.keys()).sort((a, b) => {
+        const totalA = (supplierMap.get(a)['2025'] || 0) + (supplierMap.get(a)['2026'] || 0) +
+          (supplierMap.get(a)['2027'] || 0) + (supplierMap.get(a)['2028'] || 0);
+        const totalB = (supplierMap.get(b)['2025'] || 0) + (supplierMap.get(b)['2026'] || 0) +
+          (supplierMap.get(b)['2027'] || 0) + (supplierMap.get(b)['2028'] || 0);
+        return totalB - totalA;
+      });
+      
+      const data2025 = suppliers.map(s => supplierMap.get(s)['2025'] || 0);
+      const data2026 = suppliers.map(s => supplierMap.get(s)['2026'] || 0);
+      const data2027 = suppliers.map(s => supplierMap.get(s)['2027'] || 0);
+      const data2028 = suppliers.map(s => supplierMap.get(s)['2028'] || 0);
+      
+      // Destroy existing chart
+      if (window.modalSupplierTypeChart) {
+        window.modalSupplierTypeChart.destroy();
+      }
+      
+      const ctx = document.getElementById('modalSupplierTypeChart');
+      window.modalSupplierTypeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: suppliers,
+          datasets: [
+            {
+              label: '2025',
+              data: data2025,
+              backgroundColor: 'rgba(59, 130, 246, 0.8)',
+              borderColor: '#3b82f6',
+              borderWidth: 1
+            },
+            {
+              label: '2026',
+              data: data2026,
+              backgroundColor: 'rgba(245, 158, 11, 0.8)',
+              borderColor: '#f59e0b',
+              borderWidth: 1
+            },
+            {
+              label: '2027',
+              data: data2027,
+              backgroundColor: 'rgba(16, 185, 129, 0.8)',
+              borderColor: '#10b981',
+              borderWidth: 1
+            },
+            {
+              label: '2028',
+              data: data2028,
+              backgroundColor: 'rgba(132, 204, 22, 0.8)',
+              borderColor: '#84cc16',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  if (context.parsed.x === 0) return null;
+                  return `${context.dataset.label}: ${context.parsed.x}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              stacked: true,
+              title: { display: true, text: 'Demand' }
+            },
+            y: {
+              stacked: true,
+              title: { display: true, text: 'Supplier' }
+            }
+          }
+        }
+      });
+    })
+    .catch(error => {
+      console.error('Error loading supplier type chart:', error);
+    });
+}
+
+function renderSupplierTypeDetailsTable(supplierType) {
+  console.log('📋 renderSupplierTypeDetailsTable called for:', supplierType);
+  const tableBody = document.getElementById('modalSupplierTypeDetailsTableBody');
+  
+  // Show loading state
+  tableBody.innerHTML = '<tr><td colspan="24" class="text-center">Loading data...</td></tr>';
+  
+  // Fetch data from backend API
+  fetch(`/api/supplier-details/${encodeURIComponent(supplierType)}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(result => {
+      console.log('📦 Fetched supplier details from API:', {
+        count: result.data.length,
+        sample: result.data[0]
+      });
+      
+      const supplierDetails = result.data;
+      
+      // Initialize pagination manager for supplier type modal table
+      if (!window.modalSupplierTypeTablePagination) {
+        console.log('🆕 Creating new TablePaginationManager for supplier type');
+        window.modalSupplierTypeTablePagination = new TablePaginationManager('modalSupplierTypeDetailsTable', (pageData) => {
+          renderSupplierTypeModalTablePage(pageData);
+        });
+      }
+
+      // Set the data and render first page
+      window.modalSupplierTypeTablePagination.setData(supplierDetails);
+      window.modalSupplierTypeTablePagination.pageSize = parseInt(document.getElementById('supplierTypeDetailsPageSize')?.value || 10);
+      console.log('📄 Rendering table with pageSize:', window.modalSupplierTypeTablePagination.pageSize);
+      window.modalSupplierTypeTablePagination.renderTable();
+
+      // Setup pagination controls
+      setupSupplierTypeModalTablePaginationControls();
+    })
+    .catch(error => {
+      console.error('Error fetching supplier details:', error);
+      tableBody.innerHTML = `<tr><td colspan="24" class="text-center text-danger">Error loading data: ${error.message}</td></tr>`;
+    });
+}
+
+function renderSupplierTypeModalTablePage(pageData) {
+  const tableBody = document.getElementById('modalSupplierTypeDetailsTableBody');
+  tableBody.innerHTML = '';
+
+  pageData.forEach(supplier => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${supplier.name}</td>
+      <td>${supplier.partNumber}</td>
+      <td>${supplier.description}</td>
+      <td>${supplier.hwo}</td>
+      <td>${supplier.level || '-'}</td>
+      <td>${supplier.qpe || '-'}</td>
+      <td>${supplier.mfgLT}</td>
+      <td>${supplier.quarters['2025-Q1'] || '-'}</td>
+      <td>${supplier.quarters['2025-Q2'] || '-'}</td>
+      <td>${supplier.quarters['2025-Q3'] || '-'}</td>
+      <td>${supplier.quarters['2025-Q4'] || '-'}</td>
+      <td>${supplier.quarters['2026-Q1'] || '-'}</td>
+      <td>${supplier.quarters['2026-Q2'] || '-'}</td>
+      <td>${supplier.quarters['2026-Q3'] || '-'}</td>
+      <td>${supplier.quarters['2026-Q4'] || '-'}</td>
+      <td>${supplier.quarters['2027-Q1'] || '-'}</td>
+      <td>${supplier.quarters['2027-Q2'] || '-'}</td>
+      <td>${supplier.quarters['2027-Q3'] || '-'}</td>
+      <td>${supplier.quarters['2027-Q4'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q1'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q2'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q3'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q4'] || '-'}</td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+function setupSupplierTypeModalTablePaginationControls() {
+  if (window.supplierTypeModalTablePaginationSetup) {
+    updateSupplierTypeModalTablePaginationUI();
+    return;
+  }
+  
+  window.supplierTypeModalTablePaginationSetup = true;
+  
+  const pageSizeSelect = document.getElementById('supplierTypeDetailsPageSize');
+  const prevBtn = document.getElementById('supplierTypeDetailsPrevBtn');
+  const nextBtn = document.getElementById('supplierTypeDetailsNextBtn');
+  const pageInfo = document.getElementById('supplierTypeDetailsPageInfo');
+  const recordInfo = document.getElementById('supplierTypeDetailsRecordInfo');
+
+  if (pageSizeSelect) {
+    pageSizeSelect.addEventListener('change', (e) => {
+      window.modalSupplierTypeTablePagination.pageSize = parseInt(e.target.value);
+      window.modalSupplierTypeTablePagination.currentPage = 1;
+      window.modalSupplierTypeTablePagination.renderTable();
+      updateSupplierTypeModalTablePaginationUI();
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (window.modalSupplierTypeTablePagination.currentPage > 1) {
+        window.modalSupplierTypeTablePagination.currentPage--;
+        window.modalSupplierTypeTablePagination.renderTable();
+        updateSupplierTypeModalTablePaginationUI();
+      }
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const totalPages = window.modalSupplierTypeTablePagination.getTotalPages();
+      if (window.modalSupplierTypeTablePagination.currentPage < totalPages) {
+        window.modalSupplierTypeTablePagination.currentPage++;
+        window.modalSupplierTypeTablePagination.renderTable();
+        updateSupplierTypeModalTablePaginationUI();
+      }
+    });
+  }
+
+  updateSupplierTypeModalTablePaginationUI();
+}
+
+function updateSupplierTypeModalTablePaginationUI() {
+  const pageInfo = document.getElementById('supplierTypeDetailsPageInfo');
+  const recordInfo = document.getElementById('supplierTypeDetailsRecordInfo');
+  const prevBtn = document.getElementById('supplierTypeDetailsPrevBtn');
+  const nextBtn = document.getElementById('supplierTypeDetailsNextBtn');
+
+  if (!window.modalSupplierTypeTablePagination) return;
+
+  const totalPages = window.modalSupplierTypeTablePagination.getTotalPages();
+  const startRecord = (window.modalSupplierTypeTablePagination.currentPage - 1) * window.modalSupplierTypeTablePagination.pageSize + 1;
+  const endRecord = Math.min(
+    window.modalSupplierTypeTablePagination.currentPage * window.modalSupplierTypeTablePagination.pageSize,
+    window.modalSupplierTypeTablePagination.totalRecords
+  );
+
+  if (pageInfo) pageInfo.textContent = `Page ${window.modalSupplierTypeTablePagination.currentPage} of ${totalPages}`;
+  if (recordInfo) recordInfo.textContent = `Showing ${startRecord}-${endRecord} of ${window.modalSupplierTypeTablePagination.totalRecords} records`;
+  if (prevBtn) prevBtn.disabled = window.modalSupplierTypeTablePagination.currentPage <= 1;
+  if (nextBtn) nextBtn.disabled = window.modalSupplierTypeTablePagination.currentPage >= totalPages;
+}
+
+// ===== RAW MATERIAL DETAILS MODAL FUNCTIONS =====
 function showRawMaterialDetailsModal(rawMaterialType) {
   console.log('Showing modal for raw material type:', rawMaterialType);
 

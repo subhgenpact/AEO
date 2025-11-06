@@ -219,6 +219,7 @@ class DuckDBService:
             self.part_col = "Part_Number" if "Part_Number" in column_names else "Part Number"
             self.rm_supplier_col = "Level_2_Raw_Material_Supplier" if "Level_2_Raw_Material_Supplier" in column_names else "Level 2 Raw Material Supplier"
             self.supplier_col = "Parent_Part_Supplier" if "Parent_Part_Supplier" in column_names else "Parent Part Supplier"
+            self.supplier_type_col = "Supplier_Type" if "Supplier_Type" in column_names else "Supplier Type"
             self.hw_owner_col = "HW_OWNER" if "HW_OWNER" in column_names else "HW OWNER"
             self.module_col = "Module" if "Module" in column_names else None
             self.esn_col = "ESN" if "ESN" in column_names else "esn"
@@ -1195,6 +1196,92 @@ class DuckDBService:
             
         except Exception as e:
             print(f"[ERROR] Error getting RM supplier details: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
+    def get_supplier_details_by_type(self, supplier_type: str) -> List[Dict[str, Any]]:
+        """
+        Get detailed supplier information with quarterly demand for a specific supplier type
+        Returns list of suppliers with their part numbers and quarterly breakdown
+        """
+        try:
+            main_table = self._get_main_table()
+            
+            # Query to get supplier details with quarterly aggregation
+            query = f"""
+                WITH quarterly_data AS (
+                    SELECT 
+                        "{self.supplier_col}" as supplier,
+                        "{self.part_col}" as part_number,
+                        "Part_Description" as part_description,
+                        "{self.hw_owner_col}" as hwo,
+                        'L1' as level,
+                        "QPE" as qpe,
+                        CAST(EXTRACT(YEAR FROM CAST("{self.target_date_col}" AS DATE)) AS INTEGER) as year,
+                        CAST(CEIL(EXTRACT(MONTH FROM CAST("{self.target_date_col}" AS DATE)) / 3.0) AS INTEGER) as quarter,
+                        COUNT(*) as count
+                    FROM {main_table}
+                    WHERE "{self.supplier_type_col}" = '{supplier_type}'
+                        AND "{self.supplier_col}" IS NOT NULL
+                        AND "{self.supplier_col}" != ''
+                        AND "{self.supplier_col}" != 'NaN'
+                        AND "{self.supplier_col}" != 'nan'
+                        AND "{self.part_col}" IS NOT NULL
+                        AND "{self.part_col}" != ''
+                    GROUP BY 
+                        "{self.supplier_col}",
+                        "{self.part_col}",
+                        "Part_Description",
+                        "{self.hw_owner_col}",
+                        "QPE",
+                        year,
+                        quarter
+                )
+                SELECT * FROM quarterly_data
+                ORDER BY supplier, part_number, year, quarter
+            """
+            
+            result = self.conn.execute(query).fetchall()
+            
+            # Group by supplier and part number
+            supplier_map = {}
+            for row in result:
+                supplier = row[0]
+                part_number = row[1]
+                part_description = row[2]
+                hwo = row[3]
+                level = row[4]
+                qpe = row[5]
+                year = row[6]
+                quarter = row[7]
+                count = row[8]
+                
+                key = f"{supplier}|{part_number}"
+                
+                if key not in supplier_map:
+                    supplier_map[key] = {
+                        "name": supplier,
+                        "partNumber": part_number,
+                        "description": part_description or "Part",
+                        "hwo": hwo or "HW1",
+                        "level": level,
+                        "qpe": qpe or "-",
+                        "mfgLT": "-",
+                        "quarters": {}
+                    }
+                
+                quarter_key = f"{year}-Q{quarter}"
+                supplier_map[key]["quarters"][quarter_key] = count
+            
+            details_list = list(supplier_map.values())
+            
+            print(f"[DUCKDB] ✓ Supplier details for {supplier_type}: {len(details_list)} unique suppliers")
+            
+            return details_list
+            
+        except Exception as e:
+            print(f"[ERROR] Error getting supplier details: {e}")
             import traceback
             traceback.print_exc()
             return []
