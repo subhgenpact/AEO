@@ -326,18 +326,24 @@ async def get_datatable_filter_options():
             "configs": "Configuration" if "Configuration" in column_names else None,
             "suppliers": "Parent_Part_Supplier" if "Parent_Part_Supplier" in column_names else "Parent Part Supplier",
             "rmSuppliers": "Level_2_Raw_Material_Supplier" if "Level_2_Raw_Material_Supplier" in column_names else "Level 2 Raw Material Supplier",
-            "hwOwners": "HW_Owner" if "HW_Owner" in column_names else "HW OWNER",
-            "modules": "Module" if "Module" in column_names else None,
-            "partNumbers": "Level_1_PN" if "Level_1_PN" in column_names else "Part Number",
+            "hwOwners": "HW_OWNER" if "HW_OWNER" in column_names else "HW Owner" if "HW Owner" in column_names else "HW_Owner",
+            "modules": "Level_2_Raw_Type" if "Level_2_Raw_Type" in column_names else "Level 2 Raw Type" if "Level 2 Raw Type" in column_names else "Module",
+            "partNumbers": "Part_Number" if "Part_Number" in column_names else "Level_1_PN" if "Level_1_PN" in column_names else "Part Number",
         }
         
         # Get unique values for each filter
         for filter_name, col_name in filter_columns.items():
             if col_name and col_name in column_names:
+                # Filter to only get values from gap records (Have_Gap = 'Y')
+                gap_col = "Have_Gap" if "Have_Gap" in column_names else None
+                where_clause = f'WHERE "{col_name}" IS NOT NULL AND TRIM(CAST("{col_name}" AS VARCHAR)) != \'\''
+                if gap_col:
+                    where_clause += f' AND "{gap_col}" = \'Y\''
+                
                 values = duckdb_service.conn.execute(f"""
                     SELECT DISTINCT "{col_name}" as value
                     FROM {main_table}
-                    WHERE "{col_name}" IS NOT NULL AND TRIM(CAST("{col_name}" AS VARCHAR)) != ''
+                    {where_clause}
                     ORDER BY value
                 """).fetchall()
                 filter_options[filter_name] = [v[0] for v in values if v[0]]
@@ -346,11 +352,16 @@ async def get_datatable_filter_options():
         
         # Get years from Target_Ship_Date
         date_col = "Target_Ship_Date" if "Target_Ship_Date" in column_names else "Target Ship Date"
+        gap_col = "Have_Gap" if "Have_Gap" in column_names else None
         if date_col in column_names:
+            where_clause = f'WHERE "{date_col}" IS NOT NULL'
+            if gap_col:
+                where_clause += f' AND "{gap_col}" = \'Y\''
+            
             years = duckdb_service.conn.execute(f"""
                 SELECT DISTINCT CAST(YEAR(TRY_CAST("{date_col}" AS DATE)) AS VARCHAR) as year
                 FROM {main_table}
-                WHERE "{date_col}" IS NOT NULL
+                {where_clause}
                 ORDER BY year DESC
             """).fetchall()
             filter_options["years"] = [y[0] for y in years if y[0]]

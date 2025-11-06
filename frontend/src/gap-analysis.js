@@ -128,6 +128,8 @@ class GapAnalysisDashboard {
 
   populateFilterDropdown(filterType, options) {
     try {
+      console.log(`Populating ${filterType} with ${options ? options.length : 0} options:`, options);
+      
       const mappings = {
         'productLines': 'productLine',
         'years': 'year',
@@ -145,6 +147,7 @@ class GapAnalysisDashboard {
         return;
       }
       
+      console.log(`Looking for dropdown: #${dropdownId}Dropdown`);
       const dropdown = document.querySelector(`#${dropdownId}Dropdown`);
       if (!dropdown) {
         console.warn(`Dropdown not found: #${dropdownId}Dropdown`);
@@ -404,6 +407,7 @@ class GapAnalysisDashboard {
     const applyBtn = document.getElementById(`apply${filterType.charAt(0).toUpperCase() + filterType.slice(1)}s`);
     const clearBtn = document.getElementById(`clear${filterType.charAt(0).toUpperCase() + filterType.slice(1)}s`);
     const selectAllBtn = document.getElementById(`selectAll${filterType.charAt(0).toUpperCase() + filterType.slice(1)}s`);
+    const searchInput = document.getElementById(`${filterType}Search`);
     
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
@@ -422,6 +426,28 @@ class GapAnalysisDashboard {
         this.selectAllFilter(filterType);
       });
     }
+    
+    // Add search functionality for dropdown options
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.filterDropdownOptions(filterType, e.target.value);
+      });
+    }
+  }
+  
+  filterDropdownOptions(filterType, searchQuery) {
+    const container = document.querySelector(`#${filterType}Dropdown`).nextElementSibling.querySelector('.dropdown-options');
+    const checkboxDivs = container.querySelectorAll('.form-check');
+    const query = searchQuery.toLowerCase().trim();
+    
+    checkboxDivs.forEach(div => {
+      const label = div.querySelector('label').textContent.toLowerCase();
+      if (!query || label.includes(query)) {
+        div.style.display = '';
+      } else {
+        div.style.display = 'none';
+      }
+    });
   }
 
   applyFilter(filterType) {
@@ -433,6 +459,9 @@ class GapAnalysisDashboard {
     
     this.currentPage = 1; // Reset to first page when filters change
     this.loadTableData();
+    
+    // Update Clear All button visibility
+    this.updateClearAllButtonVisibility();
     
     // Close the dropdown
     const dropdownElement = document.querySelector(`#${filterType}Dropdown`).closest('.dropdown');
@@ -457,6 +486,9 @@ class GapAnalysisDashboard {
     
     this.currentPage = 1; // Reset to first page when filters change
     this.loadTableData();
+    
+    // Update Clear All button visibility
+    this.updateClearAllButtonVisibility();
     
     // Close the dropdown
     const dropdownElement = document.querySelector(`#${filterType}Dropdown`).closest('.dropdown');
@@ -499,6 +531,15 @@ class GapAnalysisDashboard {
       this.filters[key] = [];
     });
     
+    // Clear priority filter
+    this.priorityFilter = null;
+    
+    // Remove active state from all KPI cards
+    document.querySelectorAll('.kpi-card').forEach(card => {
+      card.classList.remove('border-primary', 'border-3');
+      card.style.transform = '';
+    });
+    
     // Uncheck all checkboxes
     document.querySelectorAll('.dropdown-options input[type="checkbox"]').forEach(cb => {
       cb.checked = false;
@@ -506,6 +547,21 @@ class GapAnalysisDashboard {
     
     this.currentPage = 1; // Reset to first page when filters change
     this.loadTableData();
+    
+    // Update Clear All button visibility
+    this.updateClearAllButtonVisibility();
+  }
+  
+  updateClearAllButtonVisibility() {
+    // Check if any filters are active
+    const hasActiveFilters = Object.values(this.filters).some(filterArray => filterArray && filterArray.length > 0);
+    const hasPriorityFilter = this.priorityFilter !== null;
+    
+    // Show button if any filter is active
+    const clearAllBtn = document.getElementById('clearAllFilters');
+    if (clearAllBtn) {
+      clearAllBtn.style.display = (hasActiveFilters || hasPriorityFilter) ? 'block' : 'none';
+    }
   }
 
   updateKPIs(filteredData = null) {
@@ -700,6 +756,9 @@ class GapAnalysisDashboard {
     
     // Highlight active KPI card
     this.highlightActiveKPI(kpiType);
+    
+    // Update Clear All button visibility
+    this.updateClearAllButtonVisibility();
     
     // Reload table with filter (but don't update KPIs - Level 2 filter)
     this.applyTableFilters(false);
@@ -1206,7 +1265,13 @@ class GapAnalysisDashboard {
   }
 
   determineStatus(row) {
-    // Simple status determination - in reality this would be more complex
+    // First check if Status column exists in the data
+    const statusFromDB = row['Status'] || row['STATUS'] || row['status'];
+    if (statusFromDB) {
+      return statusFromDB;
+    }
+    
+    // Fallback: calculate status based on target date if Status column is not available
     const targetDate = new Date(row['Target_Ship_Date'] || row['Target Ship Date']);
     const now = new Date();
     const daysDiff = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
@@ -1218,13 +1283,44 @@ class GapAnalysisDashboard {
   }
 
   getStatusBadge(status) {
+    if (!status) {
+      return '<span class="badge bg-secondary">Unknown</span>';
+    }
+    
+    const statusStr = String(status).trim();
+    
+    // Predefined badge mappings for common statuses
     const badges = {
+      // Calculated statuses
       'Past Due': '<span class="badge bg-danger">Past Due</span>',
       'Due Soon': '<span class="badge bg-warning">Due Soon</span>',
       'Upcoming': '<span class="badge bg-info">Upcoming</span>',
-      'On Track': '<span class="badge bg-success">On Track</span>'
+      'On Track': '<span class="badge bg-success">On Track</span>',
+      
+      // Common database statuses (case-insensitive matches below)
+      'OPEN': '<span class="badge bg-primary">Open</span>',
+      'CLOSED': '<span class="badge bg-success">Closed</span>',
+      'IN PROGRESS': '<span class="badge bg-info">In Progress</span>',
+      'PENDING': '<span class="badge bg-warning">Pending</span>',
+      'COMPLETED': '<span class="badge bg-success">Completed</span>',
+      'DELAYED': '<span class="badge bg-danger">Delayed</span>',
+      'CANCELLED': '<span class="badge bg-secondary">Cancelled</span>',
+      'BLOCKED': '<span class="badge bg-danger">Blocked</span>'
     };
-    return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+    
+    // Check exact match first
+    if (badges[statusStr]) {
+      return badges[statusStr];
+    }
+    
+    // Check case-insensitive match
+    const statusUpper = statusStr.toUpperCase();
+    if (badges[statusUpper]) {
+      return badges[statusUpper];
+    }
+    
+    // Default: return the status as-is with a generic badge style
+    return `<span class="badge bg-secondary">${statusStr}</span>`;
   }
 
   getGapBadge(gapStatus) {
