@@ -1,0 +1,70 @@
+/* Gap Analysis specific styling */
+.text-purple {
+    color: #9c27b0 !important;
+}
+
+.kpi-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.kpi-number {
+    font-family: 'Arial', sans-serif;
+    font-weight: 700;
+}
+
+.kpi-label {
+    font-size: 0.9rem;
+}
+
+.kpi-status {
+    font-size: 0.75rem;
+}
+
+/* Table specific styling */
+#gapAnalysisTable {
+    font-size: 0.875rem;
+}
+
+#gapAnalysisTable th {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dee2e6;
+    vertical-align: middle;
+}
+
+#gapAnalysisTable td {
+    vertical-align: middle;
+    padding: 0.75rem 0.5rem;
+}
+
+#gapAnalysisTable tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.75rem;
+}
+
+.table-responsive {
+    border-radius: 0.375rem;
+}
+
+.pagination-sm .page-link {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+}
