@@ -8,6 +8,7 @@
 </head>
 <!-- Bootstrap 5 CDN -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -684,6 +685,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <!-- Chunk Loader for efficient data loading -->
   <script defer src="src/chunk-loader.js?v=1"></script>
@@ -696,7 +698,7 @@
   <script defer src="src/supplier-type-chart.js?v=4"></script>
   <script defer src="src/rm-supplier-raw-material-chart.js?v=4"></script>
   <script defer src="src/hw-owner-complexity-chart.js?v=1"></script>
-  <script defer src="src/demand.js?v=33"></script>
+  <script defer src="src/demand.js?v=36"></script>
   <script defer src="src/dropdowns.js?v=2"></script>
 
   <!-- Chatbot Icon -->
@@ -737,12 +739,18 @@
           </div>
           <!-- Demand Chart -->
           <div class="card chart-card mb-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
               <h6 class="mb-0" id="modalSupplierTypeChartTitle">Supplier Demand per Part</h6>
+              <button class="btn btn-sm btn-outline-secondary" id="resetSupplierTypeZoom" title="Reset zoom">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset Zoom
+              </button>
             </div>
             <div class="card-body">
               <div class="chart-container" style="height: 300px;">
                 <canvas id="modalSupplierTypeChart"></canvas>
+              </div>
+              <div class="text-muted small text-center mt-2">
+                💡 <strong>Tip:</strong> Ctrl+Scroll to zoom, Shift+Drag to pan, Double-click to reset
               </div>
             </div>
           </div>
@@ -859,12 +867,18 @@
           </div>
           <!-- Demand Chart -->
           <div class="card chart-card mb-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
               <h6 class="mb-0" id="modalChartTitle">Raw Material Demand per Supplier</h6>
+              <button class="btn btn-sm btn-outline-secondary" id="resetRawMaterialZoom" title="Reset zoom">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset Zoom
+              </button>
             </div>
             <div class="card-body">
               <div class="chart-container" style="height: 300px;">
                 <canvas id="modalRawMaterialChart"></canvas>
+              </div>
+              <div class="text-muted small text-center mt-2">
+                💡 <strong>Tip:</strong> Ctrl+Scroll to zoom, Shift+Drag to pan, Double-click to reset
               </div>
             </div>
           </div>

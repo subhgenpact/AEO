@@ -6794,7 +6794,7 @@ let programModalChart = null;
 
 // ===== SUPPLIER TYPE DETAILS MODAL FUNCTIONS =====
 function showSupplierTypeDetailsModal(supplierType) {
-  console.log('Showing modal for supplier type:', supplierType);
+  console.log('🔵 Showing modal for supplier type:', supplierType);
   
   // Clear search filters
   const modalSupplierTypeSupplierSearch = document.getElementById('modalSupplierTypeSupplierSearch');
@@ -6811,15 +6811,29 @@ function showSupplierTypeDetailsModal(supplierType) {
   document.getElementById('supplierTypeModalLabel').textContent = `${supplierType} Supplier Details`;
   document.getElementById('modalSupplierTypeChartTitle').textContent = `${supplierType} Supplier Demand per Part`;
 
+  // Get modal element
+  const modalElement = document.getElementById('supplierTypeModal');
+  
   // Show the modal
-  const modal = new bootstrap.Modal(document.getElementById('supplierTypeModal'));
+  const modal = new bootstrap.Modal(modalElement);
+  
+  // Remove any previous event listeners
+  modalElement.removeEventListener('shown.bs.modal', handleModalShown);
+  
+  // Define handler function
+  function handleModalShown() {
+    console.log('✅ Supplier type modal is now fully visible');
+    // Small delay to ensure canvas is ready
+    setTimeout(() => {
+      renderSupplierTypeDetailsTable(supplierType);
+      renderModalSupplierTypeChart(supplierType);
+    }, 150);
+  }
+  
+  // Add event listener for when modal is shown
+  modalElement.addEventListener('shown.bs.modal', handleModalShown, { once: true });
+  
   modal.show();
-
-  // Load data after modal is shown to ensure proper rendering
-  document.getElementById('supplierTypeModal').addEventListener('shown.bs.modal', function () {
-    renderSupplierTypeDetailsTable(supplierType);
-    renderModalSupplierTypeChart(supplierType);
-  }, { once: true });
 }
 
 window.showSupplierTypeDetailsModal = showSupplierTypeDetailsModal;
@@ -6827,16 +6841,40 @@ window.showSupplierTypeDetailsModal = showSupplierTypeDetailsModal;
 function renderModalSupplierTypeChart(supplierType) {
   console.log('📊 Rendering supplier type modal chart for:', supplierType);
   
+  // Check if canvas exists
+  const ctx = document.getElementById('modalSupplierTypeChart');
+  if (!ctx) {
+    console.error('❌ Canvas element modalSupplierTypeChart not found');
+    return;
+  }
+  
+  // Check if Chart.js is loaded
+  if (typeof Chart === 'undefined') {
+    console.error('❌ Chart.js is not loaded');
+    return;
+  }
+  
   // Fetch data from API
   fetch(`/api/supplier-details/${encodeURIComponent(supplierType)}`)
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(result => {
+      console.log('📦 API response for supplier type chart:', result);
+      
       if (result.status !== 'success' || !result.data || result.data.length === 0) {
         console.log('No data for supplier type chart');
+        // Show message in chart area
+        const chartContainer = ctx.parentElement;
+        chartContainer.innerHTML = '<div class="text-center text-muted p-4">No data available for this supplier type</div>';
         return;
       }
       
       const supplierDetails = result.data;
+      console.log(`📊 Processing ${supplierDetails.length} supplier records`);
       
       // Aggregate by supplier
       const supplierMap = new Map();
@@ -6865,12 +6903,20 @@ function renderModalSupplierTypeChart(supplierType) {
       const data2027 = suppliers.map(s => supplierMap.get(s)['2027'] || 0);
       const data2028 = suppliers.map(s => supplierMap.get(s)['2028'] || 0);
       
+      console.log('📊 Chart data prepared:', {
+        suppliers: suppliers.length,
+        sample: suppliers[0],
+        data2025Sample: data2025[0],
+        data2026Sample: data2026[0]
+      });
+      
       // Destroy existing chart
-      if (window.modalSupplierTypeChart) {
+      if (window.modalSupplierTypeChart && typeof window.modalSupplierTypeChart.destroy === 'function') {
+        console.log('🗑️ Destroying existing chart');
         window.modalSupplierTypeChart.destroy();
       }
       
-      const ctx = document.getElementById('modalSupplierTypeChart');
+      console.log('✨ Creating new Chart.js instance');
       window.modalSupplierTypeChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -6919,6 +6965,30 @@ function renderModalSupplierTypeChart(supplierType) {
                   return `${context.dataset.label}: ${context.parsed.x}`;
                 }
               }
+            },
+            zoom: {
+              zoom: {
+                wheel: {
+                  enabled: true,
+                  modifierKey: 'ctrl'
+                },
+                pinch: {
+                  enabled: true
+                },
+                mode: 'xy',
+                onZoomComplete: function({chart}) {
+                  console.log('Zoom level changed');
+                }
+              },
+              pan: {
+                enabled: true,
+                mode: 'xy',
+                modifierKey: 'shift'
+              },
+              limits: {
+                x: {min: 'original', max: 'original'},
+                y: {min: 'original', max: 'original'}
+              }
             }
           },
           scales: {
@@ -6931,12 +7001,32 @@ function renderModalSupplierTypeChart(supplierType) {
               stacked: true,
               title: { display: true, text: 'Supplier' }
             }
+          },
+          // Add reset zoom on double click
+          onClick: (event, activeElements, chart) => {
+            if (event.type === 'dblclick') {
+              chart.resetZoom();
+            }
           }
         }
       });
+      
+      console.log('✅ Supplier type chart rendered successfully');
+      
+      // Setup reset zoom button
+      const resetBtn = document.getElementById('resetSupplierTypeZoom');
+      if (resetBtn) {
+        resetBtn.onclick = () => {
+          if (window.modalSupplierTypeChart) {
+            window.modalSupplierTypeChart.resetZoom();
+          }
+        };
+      }
     })
     .catch(error => {
-      console.error('Error loading supplier type chart:', error);
+      console.error('❌ Error loading supplier type chart:', error);
+      const chartContainer = ctx.parentElement;
+      chartContainer.innerHTML = `<div class="text-center text-danger p-4">Error loading chart: ${error.message}</div>`;
     });
 }
 
@@ -7234,6 +7324,30 @@ function renderModalRawMaterialChart(data, rawType) {
             // Hide labels for zero values
             return context.dataset.data[context.dataIndex] !== 0;
           }
+        },
+        zoom: {
+          zoom: {
+            wheel: {
+              enabled: true,
+              modifierKey: 'ctrl'
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'xy',
+            onZoomComplete: function({chart}) {
+              console.log('Zoom level changed');
+            }
+          },
+          pan: {
+            enabled: true,
+            mode: 'xy',
+            modifierKey: 'shift'
+          },
+          limits: {
+            x: {min: 'original', max: 'original'},
+            y: {min: 'original', max: 'original'}
+          }
         }
       },
       scales: {
@@ -7252,9 +7366,25 @@ function renderModalRawMaterialChart(data, rawType) {
             text: `${rawType} Supplier`
           }
         }
+      },
+      // Add reset zoom on double click
+      onClick: (event, activeElements, chart) => {
+        if (event.type === 'dblclick') {
+          chart.resetZoom();
+        }
       }
     }
   });
+  
+  // Setup reset zoom button
+  const resetBtn = document.getElementById('resetRawMaterialZoom');
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      if (modalChart) {
+        modalChart.resetZoom();
+      }
+    };
+  }
 }
 
 function buildModalRawMaterialSupplierData(data, rawType) {
