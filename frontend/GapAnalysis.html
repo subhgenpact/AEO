@@ -1,1553 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Gap Analysis Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gap Analysis</title>
   <!-- Bootstrap 5 CDN -->
-<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> -->
-<!-- <link rel="stylesheet" href="styles.css"> -->
-
-
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
   <style>
-    /* Base Reset & Typography */
-*,
-*::before,
-*::after {
-box-sizing: border-box;
-}
-
-
-html, body {
-margin: 0;
-padding: 0;
-font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-background: linear-gradient(135deg, 
-            rgba(0, 102, 204, 0.7) 0%,
-            rgba(0, 68, 153, 0.75) 20%,
-            rgba(0, 51, 102, 0.8) 40%,
-            rgba(0, 34, 68, 0.75) 60%,
-            rgba(26, 26, 26, 0.7) 80%,
-            rgba(32, 33, 36, 0.75) 100%),
-            url('src/images/slide1.jpg') no-repeat center center fixed;
-background-size: cover;
-background-attachment: fixed;
-color: var(--gray-50);
-font-size: 14px;
-line-height: 1.4;
-min-height: 100vh;
-overflow-x: hidden;
-}
-
-/* Container */
-.container.dashboard {
-max-width: 1200px;
-margin: 2rem auto;
-padding: 0 1rem;
-}
-
-/* KPI Grid */
-.kpi-grid {
-display: flex;
-justify-content: space-around;
-flex-wrap: wrap;
-gap: 1.5rem;
-margin-bottom: 2rem;
-}
-
-/* KPI Cards */
-.kpi {
-flex: 1 1 180px;
-border-radius: 10px;
-padding: 1.5rem 1.3rem;
-text-align: center;
-position: relative;
-overflow: hidden;
-cursor: default;
-box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-transition: transform 0.25s ease, box-shadow 0.25s ease;
-color: #003366; /* default dark blue text */
-padding-left: 12px; /* consistent left padding for border */
-}
-
-.kpi:hover {
-transform: translateY(-6px);
-box-shadow: 0 12px 24px rgba(0,0,0,0.18);
-}
-
-.kpi h3 {
-margin: 0;
-font-size: 2.2rem;
-font-weight: 700;
-color: inherit; /* inherit from parent for variant colors */
-}
-
-.kpi span {
-margin-top: 0.5rem;
-font-size: 15px;
-font-weight: 600;
-color: #555;
-}
-
-/* KPI Variants - background, text, and border */
-.kpi.demand {
-
-
-background-color: #d1e7dd;  /* Soft green */
-color: #0f5132;             /* Dark green text */
-border-left: 6px solid #198754; /* Bootstrap Success Green */
-
-}
-
-.kpi.planned {
-  background-color: #fef2f2;           
-color: #fff3cd;
-border-left: 6px solid #cc0000; /* Bootstrap Warning Yellow */
-}
-
-
-.kpi.highPriority {
-  background-color: #e9d9d4;           
-color: #fff3cd;
-border-left: 6px solid #ea580c; /* Bootstrap Warning Yellow */
-}
-.kpi.lowpriority {
-  background-color: #fffbea;      /* very light yellow background */
-  color: #856404;                 /* dark golden text (good contrast) */
-  border-left: 6px solid #ffcc00; 
-}
-
-.kpi.confirmed {
-
-
-background-color: #cfe2ff;  /* Soft blue */
-color: #084298;             /* Dark blue text */
-border-left: 6px solid #0d6efd; /* Bootstrap Primary Blue */
-}
-
-.kpi.gap {
-background-color: #f8d7da;  /* Soft red */
-color: #842029;             /* Dark red text */
-border-left: 6px solid #dc3545; /* Bootstrap Danger Red */
-}
-
-/* ESN Display */
-.kpi-esn {
-position: absolute;
-top: 10px;
-left: 10px;
-font-size: 12px;
-color: #003366;
-text-align: left;
-}
-
-/* KPI Breakdown */
-.kpi-breakdown {
-/* margin-top: 6px; */
-font-size: 13px;
-color: #003366;
-}
-
-/* Filters */
-.filters {
-margin-bottom: 2rem;
-}
-
-.list-group {
-padding: 0;
-margin: 0;
-list-style: none;
-overflow-x: auto;
-scrollbar-width: thin;
-scrollbar-color: #6699cc transparent;
-border-radius: 8px;
-border: 1.5px solid #2a4b7c;
-background-color: rgba(255,255,255,0.1);
-}
-
-.list-group-item {
-display: flex;
-flex-wrap: nowrap;
-gap: 1rem;
-padding: 1rem 1.5rem;
-align-items: flex-start;
-}
-
-.list-group-item::-webkit-scrollbar {
-height: 6px;
-}
-.list-group-item::-webkit-scrollbar-thumb {
-background-color: #6699cc;
-border-radius: 3px;
-}
-
-.filter-item {
-display: flex;
-flex-direction: column;
-min-width: 140px;
-flex: 1 1 150px;
-}
-
-.filter-item label {
-font-weight: 600;
-font-size: 15px;
-margin-bottom: 6px;
-color: #d4e6f7;
-cursor: pointer;
-}
-
-.form-select {
-
-background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org…' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-background-image: var(--bs-form-select-bg-img), var(--bs-form-select-bg-icon, none);
-}
-
-/* Dashboard Content */
-.dashboard-content {
-display: flex;
-flex-direction: column;
-gap: 2rem;
-margin-top: 25px;
-}
-
-/* Cards */
-.card {
-background: #f9f9f9;
-color: #222;
-border-radius: 10px;
-padding: 1.6rem 2rem;
-box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.card:hover {
-transform: translateY(-6px);
-box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-}
-
-.card h2 {
-margin: 0 0 1rem 0;
-font-size: 1.5rem;
-/* color: #4dabf7; */
-border-left: 5px solid #4dabf7;
-padding-left: 0.8rem;
-/* font-weight: 700; */
-user-select: none;
-}
-
-/* Width Helpers */
-.full-width {
-width: 100%;
-}
-
-.row {
-display: flex;
-gap: 2rem;
-flex-wrap: wrap;
-}
-
-.half-width {
-flex: 1 1 45%;
-}
-
-/* Table Styles */
-.table-responsive {
-overflow-x: auto;
-margin-top: 1rem;
-}
-.section-title {
-  color: #004aad;
-}
-table.table {
-width: 100%;
-border-collapse: collapse;
-background-color: white;
-border-radius: 8px;
-overflow: hidden;
-}
-
-table.table thead tr {
-background-color: #004a80;
-color: white;
-}
-
-table.table th,
-table.table td {
-padding: 0.8rem 1rem;
-border: 1px solid #ddd;
-text-align: left;
-font-size: 14px;
-}
-
-table.table tbody tr:nth-child(even) {
-background-color: #f4f8ff;
-}
-
-/* Buttons */
-.btn-group {
-margin-top: 1rem;
-margin-bottom: 1rem;
-display: flex;
-gap: 10px;
-flex-wrap: wrap;
-}
-
-.btn {
-background-color: #004a80;
-border: none;
-color: white;
-padding: 8px 14px;
-border-radius: 6px;
-cursor: pointer;
-font-weight: 600;
-user-select: none;
-transition: background-color 0.25s ease;
-}
-
-.btn:hover {
-background-color: #003366;
-}
-
-.btn.active {
-background-color: #4dabf7;
-color: #003366;
-}
-
-/* Margin top helper */
-.mt-4 {
-margin-top: 2rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-.row {
-  flex-direction: column;
-}
-.half-width {
-  flex: 1 1 100%;
-}
-}
-
-a.btn {
-text-decoration: none !important;
-}
-
-/* Chart Sizes */
-#doughnutChart {
-max-height: 220px;
-}
-#lineChart  {
-max-height: 420px;
-}
-
-</style>
-
-<style>
-  /* dropdown filter */
-  .section-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.filters-inline {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: nowrap;
-}
-
-.filters-inline .form-select-sm {
-  height: 28px;
-  padding: 0 8px;
-  font-size: 12px;
-  min-width: 120px;
-  background-position: right 6px center;
-  background-size: 12px 12px;
-  border-radius: 6px;
-}
-
-/* Search inputs styled like dark filter fields, square-cornered */
-.search-input {
-  height: 28px;
-  background-color: #004a80;
-  color: #f5f7fa;
-  border: 1.5px solid #0066cc;
-  border-radius: 0;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 0 8px;
-}
-.search-input::placeholder {
-  color: #cceeff;
-  opacity: .7;
-}
-.search-input:focus {
-  outline: none;
-  background-color: #0066cc;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
-  border-color: #0099ff;
-}
-
-.filters-inline .filter-item {
-  min-width: auto;
-  max-width: none;
-}
-
-</style> 
-
-<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-
-:root {
-/* Genpact Brand Colors */
---primary: #0066cc;          /* Genpact Blue */
---secondary: #ff6600;        /* Genpact Orange */
---accent: #0099ff;           /* Light Blue */
---success: #00cc66;          /* Green */
---warning: #ff9900;          /* Orange */
---danger: #cc0000;           /* Red */
---dark: #1a1a1a;             /* Dark Gray */
---gray-50: #f8f9fa;
---gray-100: #f1f3f4;
---gray-200: #e8eaed;
---gray-300: #dadce0;
---gray-400: #bdc1c6;
---gray-500: #9aa0a6;
---gray-600: #80868b;
---gray-700: #5f6368;
---gray-800: #3c4043;
---gray-900: #202124;
-}
-
-html, body {
-margin: 0;
-padding: 0;
-font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-background: linear-gradient(135deg, 
-            rgba(0, 102, 204, 0.7) 0%,
-            rgba(0, 68, 153, 0.75) 20%,
-            rgba(0, 51, 102, 0.8) 40%,
-            rgba(0, 34, 68, 0.75) 60%,
-            rgba(26, 26, 26, 0.7) 80%,
-            rgba(32, 33, 36, 0.75) 100%),
-            url('src/images/slide1.jpg') no-repeat center center fixed;
-background-size: cover;
-background-attachment: fixed;
-color: var(--gray-50);
-font-size: 14px;
-line-height: 1.4;
-min-height: 100vh;
-overflow-x: hidden;
-}
-
-/* Compact Circuit pattern overlay */
-body::before {
-content: '';
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-pointer-events: none;
-background-image: 
-  radial-gradient(circle at 25% 25%, rgba(0, 102, 204, 0.1) 1px, transparent 1px),
-  radial-gradient(circle at 75% 75%, rgba(0, 153, 255, 0.08) 1px, transparent 1px);
-background-size: 80px 80px, 120px 120px;
-z-index: -1;
-}
-
-.logo img {
-height: 2.5rem;
-width: auto;
-user-select: none;
-filter: brightness(0) invert(1);
-max-width: 100%;
-}
-
-/* Header Styles - White Background */
-.header {
-background: rgba(255, 255, 255, 0.95);
-backdrop-filter: blur(15px);
--webkit-backdrop-filter: blur(15px);
-margin: 8px auto;
-max-width: calc(100% - 16px);
-width: 100%;
-border-radius: 10px;
-padding: 8px 20px;
-font-size: 16px;
-font-weight: 600;
-color: var(--gray-800);
-box-shadow: 
-  0 4px 16px rgba(0, 0, 0, 0.1),
-  0 2px 8px rgba(0, 0, 0, 0.05);
-border: 1px solid rgba(0, 0, 0, 0.08);
-transition: all 0.3s ease;
-z-index: 1000;
-display: flex;
-flex-wrap: nowrap;       /* prevent wrapping */
-align-items: center;     /* vertical alignment */
-justify-content: space-between; /* space between logo/title and nav */
-
-}
-
-.header:hover {
-background: rgba(255, 255, 255, 0.98);
-transform: translateY(-1px);
-box-shadow: 
-  0 6px 20px rgba(0, 0, 0, 0.15),
-  0 3px 10px rgba(0, 0, 0, 0.08);
-}
-
-.d-flex {
-display: flex;
-align-items: center;
-margin-bottom: 10px;
-
-}
-.logo img {
-height: 32px;
-width: auto;
-max-width: 100%;
-filter: none;
-user-select: none;
-object-fit: contain;
-transition: all 0.3s ease;
-}
-
-.navbar-title span {
-font-weight: 600;
-letter-spacing: 0.2px;
-text-shadow: none;
-font-size: 16px;
-color: var(--gray-800);
-}
-
-/* Home Button */
-.home-button .btn {
-background: rgba(59, 130, 246, 0.8);
-border: 1px solid rgba(147, 197, 253, 0.3);
-color: white;
-font-weight: 500;
-padding: 8px 16px;
-border-radius: 8px;
-transition: all 0.3s ease;
-backdrop-filter: blur(10px);
--webkit-backdrop-filter: blur(10px);
-}
-
-.home-button .btn:hover {
-background: rgba(59, 130, 246, 1);
-border-color: rgba(147, 197, 253, 0.5);
-transform: translateY(-1px);
-box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-}
-
-/* Navigation Menu Styles - Gradient Buttons */
-.navbar-nav {
-display: flex;
-align-items: center;
-position: relative;
-z-index: 1001;
-}
-
-.nav-menu {
-display: flex;
-align-items: center;
-gap: 10px;
-
-list-style-type: none;
-padding-left: 0;
-margin: 0;
-}
-
-
-.nav-item {
-position: relative;
-z-index: 1002;
-}
-
-.nav-link {
-color: white !important;
-text-decoration: none;
-padding: 8px 16px;
-border-radius: 4px;
-font-weight: 500;
-font-size: 13px;
-transition: all 0.3s ease;
-background: var(--primary);
-border: 1px solid rgba(255, 255, 255, 0.2);
-backdrop-filter: blur(8px);
--webkit-backdrop-filter: blur(8px);
-box-shadow: 0 2px 8px rgba(0, 153, 255, 0.3);
-}
-
-.nav-link:hover, .nav-link:active, .nav-link.active {
-background: var(--secondary);
-color: white !important;
-border-color: var(--secondary);
-transform: translateY(-2px);
-box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
-}
-
-/* Dropdown Styles - White Background */
-.dropdown-menu {
-background: rgba(255, 255, 255, 0.98) !important;
-backdrop-filter: blur(15px);
--webkit-backdrop-filter: blur(15px);
-border: 1px solid rgba(0, 0, 0, 0.1) !important;
-border-radius: 8px !important;
-box-shadow: 
-  0 8px 32px rgba(0, 0, 0, 0.15),
-  0 4px 16px rgba(0, 0, 0, 0.1) !important;
-padding: 8px;
-min-width: 220px;
-margin-top: 4px !important;
-z-index: 1050 !important;
-/* overflow: hidden; */
-display: none;
-}
-
-.dropdown-item {
-color: var(--gray-800) !important;
-padding: 8px 12px !important;
-font-size: 13px;
-font-weight: 500;
-transition: all 0.3s ease;
-border-radius: 6px;
-margin: 2px 4px;
-width: calc(100% - 8px);
-box-sizing: border-box;
-}
-
-.dropdown-item:hover {
-background: var(--warning);
-color: white !important;
-transform: scale(1.02);
-margin-left: 6px;
-margin-right: 2px;
-}
-
-.dropdown-toggle::after {
-display: none !important;
-}
-
-.nav-link i.fa-chevron-down {
-font-size: 8px;
-transition: transform 0.3s ease;
-color: white;
-}
-
-.dropdown.show .nav-link i.fa-chevron-down {
-transform: rotate(180deg);
-}
-
-.main-content {
-padding: 30px 15px;
-}
-
-.main-title {
-font-size: 2.8rem;
-font-weight: 800;
-margin-bottom: 16px;
-color: var(--gray-50);
-text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-letter-spacing: -0.5px;
-}
-
-.main-title .highlight {
-color: var(--secondary);
-background: linear-gradient(135deg, var(--secondary), var(--warning));
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
-text-shadow: none;
-}
-
-.subtitle {
-font-size: 1.4rem;
-color: var(--gray-100);
-margin-bottom: 35px;
-font-weight: 500;
-max-width: 800px;
-margin-left: auto;
-margin-right: auto;
-line-height: 1.6;
-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-/* Responsive Design - Compact */
-@media (max-width: 768px) {
-.header {
-  margin: 5px;
-  padding: 8px 15px;
-  flex-direction: column;
-  text-align: center;
-  gap: 8px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.logo img {
-  height: 28px;
-}
-
-.navbar-title span {
-  font-size: 14px;
-  color: var(--gray-800);
-}
-
-.nav-menu {
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-}
-
-.nav-item {
-  width: 100%;
-}
-
-.nav-link {
-  text-align: center;
-  width: 100%;
-  justify-content: center;
-  font-size: 12px;
-  padding: 8px 12px;
-  background: var(--primary);
-  color: white !important;
-  border-radius: 4px;
-}
-}
-
-.btn:hover, .btn:active, .btn.active {
-background: var(--secondary);
-color: white !important;
-border-color: var(--secondary);
-transform: translateY(-2px);
-box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
-}
-
-</style>
-
-  <style>
-    /* === Layout + Theme === */
-   
-    .container.dashboard {
-      max-width: 1400px;
-      margin: auto;
-      padding: 20px;
+    /* Gap Analysis specific styling */
+    .text-purple {
+        color: #9c27b0 !important;
     }
-
-    h2, h3 {
-      margin: 0;
-      /* color: #004aad; */
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .full-width { width: 100%; }
-    .half-width { width: 48%; }
-
-    .row {
-      display: none;
-      /* display: flex; */
-      flex-wrap: wrap;
-      justify-content: space-between;
-    }
-
-    /* === KPI Grid === */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .kpi {
-      background-color: #f0f4ff;
-      border-radius: 10px;
-      text-align: center;
-      padding: 7px;
-      transition: transform 0.2s ease;
-    }
-
-    .kpi:hover {
-      transform: scale(1.03);
-    }
-
-    .kpi h3 {
-      font-size: 2rem;
-      color: #004aad;
-    }
-
-    .kpi span {
-      color: #555;
-      font-weight: 600;
-    }
-
-    /* === Table === */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-    }
-
-    th, td {
-      border: 1px solid #e1e1e1;
-      /* padding: 8px; */
-      text-align: center;
-    }
-
-    th {
-      background-color: #004aad;
-      color: white;
-    }
-
-    /* === GAP Highlighting === */
-    tr.gap-high {
-      background-color: #ffe5e5 !important; /* Light red */
-    }
-
-    tr.gap-medium {
-      background-color: #fff6e5 !important; /* Light amber */
-    }
-
-    tr:hover {
-      background-color: #f1f1f1;
-    }
-
-    /* === Chart Styles === */
-    canvas {
-      width: 100% !important;
-      height: 350px !important;
-    }
-
-    @media (max-width: 768px) {
-      .half-width {
-        width: 100%;
-      }
-    }
-
-
-
-    .toggle-container {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .toggle-btn {
-      background: #e7e9ef;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s ease-in-out;
-    }
-
-    .toggle-btn.active {
-      background: #004aad;
-      color: #fff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    }
-
-    .toggle-btn:hover {
-      background: #c7d3f5;
-    }
-
-    .summary {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 15px;
-      color: #444;
-    }
-
-    canvas {
-      margin: auto;
-      display: block;
-      max-height: 350px;
-    }
-    #chart3 {
-  margin-top: -10px; /* nudge up slightly */
-}
-
-  </style>
-  
- 
-  <style>
- 
-    .header h1 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        /* -webkit-background-clip: text; */
-        -webkit-text-fill-color: transparent;
-        font-size: 36px;
-        margin-bottom: 8px;
-    }
-    .header p { color: #666; font-size: 16px; }
-    .kpi-container {
-      display: none;
-        /* display: grid; */
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-        margin-bottom: 20px;
-    }
+    
     .kpi-card {
-        background: white;
-        padding: 25px;
-        border-radius: 15px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        border-left: 5px solid #667eea;
-        transition: transform 0.3s;
-    }
-    .kpi-card:hover { transform: translateY(-5px); }
-    .kpi-card.gap { border-left-color: #e74c3c; }
-    .kpi-card h3 { font-size: 12px; color: #888; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-    .kpi-card .value { font-size: 36px; font-weight: bold; color: #2c3e50; }
-    .kpi-card.gap .value { color: #e74c3c; }
-    .breadcrumb {
-        background: white;
-        padding: 10px 30px;
-        border-radius: 15px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        margin-bottom: 20px;
-        display: none;
-        align-items: center;
-        gap: 15px;
-    }
-    .breadcrumb.active { display: flex; }
-    .breadcrumb button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         border: none;
-        padding: 1px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.3s;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    }
-    .breadcrumb button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
-    .breadcrumb span { color: #999; font-size: 20px; }
-    .breadcrumb .current { color: #2c3e50; font-weight: 600; font-size: 16px; }
-    .charts-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-    .chart-card {
-        background: white;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        transition: all 0.3s;
-    }
-    .chart-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
-    .chart-card h2 {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 18px;
-        margin-bottom: 8px;
-    }
-    .chart-card p { color: #666; font-size: 12px; margin-bottom: 15px; }
-    .chart-wrapper { position: relative;
-     /* height: 400px; */
-      }
-    
-    /* Status Cards Container */
-    .status-cards-container {
-        background: white;
-        padding: 40px;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        margin-top: 20px;
-        display: none;
-    }
-    .status-cards-container.active { 
-      display: block;
-       }
-    .status-cards-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 25px 30px;
-        border-radius: 12px;
-        margin: -40px -40px 30px -40px;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-    .status-cards-header h3 {
-        color: white;
-        font-size: 24px;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-    .status-cards-header .part-badge {
-        background: rgba(255,255,255,0.2);
-        padding: 8px 20px;
-        border-radius: 20px;
-        font-size: 22px;
-        font-weight: bold;
-        border: 2px solid rgba(255,255,255,0.4);
-    }
-    .status-cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 18px;
-        margin-top: 10px;
-    }
-    .status-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        transition: all 0.3s;
-        border: 2px solid #e0e0e0;
-        position: relative;
-    }
-    .status-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        border-radius: 12px 12px 0 0;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    }
-    .status-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        border-color: #667eea;
-    }
-    .status-card.critical { border-color: #e74c3c; }
-    .status-card.critical::before { background: #e74c3c; }
-    .status-card.warning { border-color: #f39c12; }
-    .status-card.warning::before { background: #f39c12; }
-    .status-card.success { border-color: #27ae60; }
-    .status-card.success::before { background: #27ae60; }
-    .status-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 15px;
-    }
-    .status-card-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: #2c3e50;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .status-card-csn-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-weight: bold;
-        font-size: 16px;
-        color: white;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-    }
-    .card-info-section {
-        background: #f8f9fa;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 12px;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    .gap-detail-item {
-        background: white;
-        padding: 10px;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        border-left: 3px solid #e74c3c;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-    .gap-detail-item:last-child {
-        margin-bottom: 0;
-    }
-    .gap-detail-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 4px;
-    }
-    .gap-detail-row:last-child {
-        margin-bottom: 0;
-    }
-    .gap-detail-label {
-        color: #666;
-        font-weight: 600;
-        font-size: 11px;
-    }
-    .gap-detail-value {
-        color: #2c3e50;
-        font-weight: 700;
-        font-size: 11px;
-        text-align: right;
-        max-width: 60%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .no-gap-message {
-        text-align: center;
-        color: #27ae60;
-        font-weight: 600;
-        font-size: 13px;
-        padding: 10px;
-    }
-    .priority-distribution {
-        margin-top: 12px;
-    }
-    .priority-distribution-title {
-        font-size: 11px;
-        font-weight: 600;
-        color: #666;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .priority-items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-    .priority-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 12px;
-        font-weight: 700;
-        color: white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        transition: all 0.2s;
-    }
-    .priority-badge:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-    }
-    .priority-badge.p1 { background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); }
-    .priority-badge.p2 { background: linear-gradient(135deg, #e74c3c 0%, #ec7063 100%); }
-    .priority-badge.p3 { background: linear-gradient(135deg, #f39c12 0%, #f8c471 100%); }
-    .priority-badge.p4 { background: linear-gradient(135deg, #f1c40f 0%, #f4d03f 100%); }
-    .priority-badge.p5 { background: linear-gradient(135deg, #3498db 0%, #5dade2 100%); }
-    .priority-badge.p6 { background: linear-gradient(135deg, #9b59b6 0%, #bb8fce 100%); }
-    .priority-badge.p7 { background: linear-gradient(135deg, #27ae60 0%, #52be80 100%); }
-    .priority-badge.p8 { background: linear-gradient(135deg, #16a085 0%, #48c9b0 100%); }
-    .priority-badge-label {
-        font-weight: 700;
-        font-size: 11px;
-    }
-    .priority-badge-count {
-        background: rgba(255,255,255,0.3);
-        padding: 1px 6px;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 12px;
-    }
-    .gap-indicator {
-        margin-top: 12px;
-        padding: 10px;
-        border-radius: 8px;
-        text-align: center;
-        font-weight: 600;
-        font-size: 13px;
-    }
-    .gap-indicator.has-gap {
-        background: #ffe5e5;
-        border: 2px solid #e74c3c;
-        color: #c0392b;
-    }
-    .gap-indicator.no-gap {
-        background: #e8f8f5;
-        border: 2px solid #27ae60;
-        color: #196f3d;
-    }
-    .gap-indicator-text {
-        font-size: 13px;
-        font-weight: 700;
-        color: #2c3e50;
-    }
-</style>
-
-<style>
-  
-    /* Action Items Table */
-    .table-section {
-        background: white;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .filter-info {
-        background: #eff6ff;
-        border: 1px solid #3b82f6;
-        border-radius: 0.5rem;
-        padding: 0.6rem 0.85rem;
-        margin-bottom: 0.85rem;
-        font-size: 0.8rem;
-        color: #1e40af;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .clear-filter {
-        background: #3b82f6;
-        color: white;
-        border: none;
-        padding: 0.3rem 0.7rem;
-        border-radius: 0.35rem;
-        cursor: pointer;
-        font-size: 0.7rem;
-        font-weight: 700;
-    }
-    .table-wrap { 
-        overflow-x: auto; 
-        border-radius: 0.5rem; 
-        border: 1px solid #e5e7eb;
-    }
-    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; 
-    color: black;}
-    thead { background: #f9fafb; }
-    th {
-        padding: 0.7rem 0.6rem;
-        text-align: left;
-        font-size: 0.7rem;
-        font-weight: 700;
-        /* color: #6b7280; */
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        border-bottom: 2px solid #e5e7eb;
-    }
-    /* td {  */
-      /* padding: 0.7rem 0.6rem; */
-     /* border-bottom: 1px solid #f3f4f6; */
-      /* } */
-    tbody tr { transition: all 0.15s; }
-    tbody tr:hover { background: #f9fafb; }
-    tbody tr.hidden { display: none; }
- 
-
-    /* Keep the selected row permanently highlighted */
-tr.highlight {
-    background-color: #df3737 !important;  /* Dark blue color */
-    color: white !important;               /* White text for contrast */
-    transition: background-color 0.3s ease;
-}
-
-    .pill {
-        display: inline-block;
-        padding: 0.25rem 0.55rem;
-        border-radius: 0.4rem;
-        font-size: 0.7rem;
-        font-weight: 700;
-    }
-    .pill-red { background: #fee2e2; color: #991b1b; }
-    .pill-yellow { background: #fef3c7; color: #92400e; }
-    .pill-blue { background: #dbeafe; color: #1e40af; }
-    .pill-orange { background: #fed7aa; color: #9a3412; }
-    .pill-green { background: #dcfce7; color: #166534; }
-    .pill-purple { background: #e9d5ff; color: #6b21a8; }
-    
-    .action-buttons { display: flex; gap: 0.35rem; }
-    .btn-close, .btn-comment {
-        padding: 0.4rem 0.65rem;
-        border: none;
-        border-radius: 0.35rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-close {
-        background: #10b981;
-        color: white;
-    }
-    .btn-close:hover {
-        background: #059669;
-    }
-    .btn-comment {
-        background: #3b82f6;
-        color: white;
-    }
-    .btn-comment:hover {
-        background: #2563eb;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    .comment-section {
-        display: none;
-        margin-top: 0.6rem;
-        padding: 0.75rem;
-        background: #f9fafb;
-        border-radius: 0.5rem;
-    }
-    .comment-section.show { display: block; }
-    .comment-input {
-        width: 100%;
-        padding: 0.6rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.4rem;
-        font-size: 0.8rem;
-        font-family: inherit;
-        margin-bottom: 0.5rem;
-        resize: vertical;
-        min-height: 55px;
-    }
-    .comment-input:focus {
-        outline: none;
-        border-color: #3b82f6;
-    }
-    .comment-actions { display: flex; gap: 0.4rem; }
-    .btn-submit {
-        background: #3b82f6;
-        color: white;
-        padding: 0.45rem 0.85rem;
-        border: none;
-        border-radius: 0.4rem;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 0.8rem;
-    }
-    .btn-cancel {
-        background: #e5e7eb;
-        color: #374151;
-        padding: 0.45rem 0.85rem;
-        border: none;
-        border-radius: 0.4rem;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 0.8rem;
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
     
-    /* Modal */
-    .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.7);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-    }
-    .modal {
-        background: white;
-        border-radius: 0.75rem;
-        max-width: 700px;
-        width: 100%;
-        max-height: 90vh;
-        overflow: hidden;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-    }
-    .modal-header {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: white;
-        /* padding: 1.25rem; */
-        display: flex;
-        justify-content: space-between;
-        padding: 7px 20px 2px 20px;
-    }
-    .modal-header h2 { font-size: 1.15rem; }
-    .close-x {
-        background: rgba(255,255,255,0.2);
-        border: none;
-        color: white;
-        font-size: 1.4rem;
-        cursor: pointer;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-    }
-    .modal-body { padding: 1.25rem; max-height: 65vh; overflow-y: auto; }
-    .alert-card {
-        background: #fef2f2;
-        border-left: 3px solid #ef4444;
-        border-radius: 0.5rem;
-        padding: 0.85rem;
-        margin-bottom: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .alert-card:hover {
-        background: #fee2e2;
-        transform: translateX(4px);
-    }
-    .alert-top { display: flex; gap: 0.4rem; margin-bottom: 0.4rem; align-items: center; }
-    .priority-pill { 
-        background: #dc2626; 
-        color: white; 
-        padding: 0.2rem 0.5rem; 
-        border-radius: 0.4rem; 
-        font-size: 0.7rem; 
+    .kpi-number {
+        font-family: 'Arial', sans-serif;
         font-weight: 700;
     }
-    /* .priority-p2 { background: #f97316; } */
-    .alert-title { font-size: 0.85rem; font-weight: 700; color: #991b1b; }
-    .alert-text { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.4rem; }
-    .alert-grid { 
-        display: grid; 
-        grid-template-columns: repeat(3, 1fr); 
-        gap: 0.3rem; 
-        background: white; 
-        padding: 0.6rem; 
-        border-radius: 0.4rem; 
-        font-size: 0.75rem;
-        color: black;
-    }
-    .modal-footer { 
-      padding: 0.25rem;
-       text-align: center; }
-    .btn-primary {
-        width: 20%;
-        background: #3b82f6;
-        color: white;
-        padding: 0.75rem;
-        border: none;
-        border-radius: 0.5rem;
+    
+    .kpi-label {
         font-size: 0.9rem;
-        font-weight: 700;
-        cursor: pointer;
     }
     
-    /* Email Modal */
-    .email-modal { max-width: 850px; }
-    .email-preview { 
-        background: #f9fafb; 
-        border: 2px solid #e5e7eb; 
-        border-radius: 0.75rem; 
-        margin: 0.75rem 0; 
-        overflow: hidden;
+    .kpi-status {
+        font-size: 0.75rem;
     }
-    .email-header { 
-        background: white; 
-        padding: 0.85rem 1rem; 
-        border-bottom: 1px solid #e5e7eb; 
+    
+    /* Table specific styling */
+    #gapAnalysisTable {
+        font-size: 0.875rem;
     }
-    .email-field { 
-        display: flex; 
-        gap: 0.75rem; 
-        margin-bottom: 0.4rem; 
-        font-size: 0.85rem; 
+    
+    #gapAnalysisTable th {
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #dee2e6;
+        vertical-align: middle;
     }
-    .email-field strong { 
-        color: #6b7280; 
-        min-width: 70px; 
-        font-weight: 600; 
+    
+    #gapAnalysisTable td {
+        vertical-align: middle;
+        padding: 0.75rem 0.5rem;
     }
-    .email-body { 
-        padding: 1.25rem; 
-        background: white; 
-        font-size: 0.9rem; 
-        line-height: 1.6; 
+    
+    #gapAnalysisTable tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
     }
-</style>
-
-<style>
-
-  /* White rectangular box */
-  .box {
-    background-color: #27ae60;
-    border: 1px solid #27ae60;
-    border-radius: 6px;
-    /* padding: 16px 20px; */
-    padding: 2px 26px;
-    display: inline-block;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-    width: 16%;
-    margin-right: 54px;
-   
-  }
-
-  .box1 {
-    /* border: 1px solid #4e6156; */
-    border: 1px solid #fff;
-    border-radius: 6px;
-  }
-
-  .toggle-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.8rem;
-    font-size: 0.95rem;
-    font-weight: 500;
-  }
-
-  /* Switch styling */
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 36px;
-    height: 20px;
-  }
-
-  .switch input {
-    display: none;
-  }
-
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0;
-    right: 0; bottom: 0;
-    background-color: #ccc;
-    transition: .3s;
-    border-radius: 20px;
-  }
-
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .3s;
-    border-radius: 50%;
-  }
-
-  input:checked + .slider {
-    /* background-color: #0d6efd; */
-    background-color: #ccc;
-  }
-
-  input:checked + .slider:before {
-    transform: translateX(16px);
-  }
-  #toggleLabel {
-    color: #ffff;
-  }
-</style>
-
-
-
-
-
-
-</style>
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+    }
+    
+    .table-responsive {
+        border-radius: 0.375rem;
+    }
+    
+    .pagination-sm .page-link {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+  </style>
 </head>
-<body>
 
+<body>
 
   <div class="container-fluid p-0 w-100">
 
@@ -1632,1696 +168,1567 @@ tr.highlight {
 
   </div>
 
-
-
-  <div class="container dashboard">
-    <!-- KPI Grid (Updated Layout) -->
-<div class="container dashboard-mode">
-  <div class="kpi-grid" id="kpiGrid">
-
-    <!-- Total Gaps -->
-    <div class="kpi demand">
-      <span>Total Gaps</span>
-      <div class="kpi-esn"></div>
-      <h3 id="kpiTotalGaps">12</h3>
-      <div class="kpi-breakdown">Status: 12% Gap</div>
-    </div>
-
-    <!-- Critical Priority -->
-    <div class="kpi planned">
-      <span>Critical Priority</span>
-      <div class="kpi-esn">
-        <!-- <strong>Engine program: XY2500</strong><br> -->
-      </div>
-      <h3 id="kpiCriticalPriority">2</h3>
-      <div class="kpi-breakdown">Status: Past Due</div>
-    </div>
-
-    <!-- High Priority -->
-    <div class="kpi highPriority">
-      <span>High Priority</span>
-      <div class="kpi-esn">
-        <!-- <strong>Engine program: XY2500</strong><br> -->
-      </div>
-      <h3 id="kpiHighPriority">3</h3>
-      <div class="kpi-breakdown">Status: Due in next 3 weeks</div>
-    </div>
-
-    <!-- Medium Priority -->
-    <div class="kpi lowpriority">
-      <span>Medium Priority</span>
-      <div class="kpi-esn">
-        <!-- <strong>Engine program: XY2500</strong><br> -->
-      </div>
-      <h3 id="kpiMediumPriority">4</h3>
-      <div class="kpi-breakdown">Status: Missing commits</div>
-    </div>
-
-    <!-- Low Priority -->
-    <div class="kpi confirmed">
-      <span>Low Priority</span>
-      <div class="kpi-esn">
-        <!-- <strong>Engine program: XY2500</strong><br> -->
-      </div>
-      <h3 id="kpiLowPriority">3</h3>
-      <div class="kpi-breakdown">Status: Late commits</div>
-    </div>
-
-  </div>
-</div>
-
-
-
-  <!-- Filters Section -->
-  <div class="d-flex gap-2 mb-3 justify-content-end">
-    <div class="filters-inline" style="width: 100%; justify-content: left; display: ruby;">
-
-      <!-- <div class="box">
-        <div class="toggle-item">
-          <div id="toggleLabel">Raw Material</div> 
-          <label class="switch">
-            <input type="checkbox" id="nameToggle">
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
-      
-      <script>
-        const toggle = document.getElementById('nameToggle');
-        const label = document.getElementById('toggleLabel');
-      
-        label.textContent = toggle.checked ? 'Level1' : 'Raw Material';
-      
-        toggle.addEventListener('change', function() {
-          label.textContent = this.checked ? 'Level1' : 'Raw Material';
-        });
-      </script> -->
-      <div class="box">
-        <div class="toggle-item">
-          <div id="toggleLabel">Level1</div> <!-- Default label text -->
-          <label class="switch">
-            <input type="checkbox" id="nameToggle" checked> <!-- Checked by default -->
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
-      
-      <script>
-        const toggle = document.getElementById('nameToggle');
-        const label = document.getElementById('toggleLabel');
-      
-        // Initialize on page load
-        label.textContent = toggle.checked ? 'Level1' : 'Raw Material';
-      
-        // Change label text when toggled
-        toggle.addEventListener('change', function() {
-          label.textContent = this.checked ? 'Level1' : 'Raw Material';
-        });
-      </script>
-
-
-      <div class="filters-section box1 d-flex flex-wrap gap-2">
-        
-        <!-- 0: Product Line -->
-        <div class="filter-item">
-          <div class="dropdown-filter">
-            <button class="form-select form-select-sm" type="button" id="productLineDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false">
-              Product Line
-            </button>
-            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
-              <div class="d-flex gap-1 mb-2">
-                <input type="text" class="form-control form-control-sm" id="productLineSearch" placeholder="Search..."
-                  style="flex: 1;">
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllProductLines"
-                  title="Select All">All</button>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearProductLines" title="Clear">×</button>
-              </div>
-              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
-                <!-- Options will be populated dynamically by JavaScript -->
-              </div>
-              <div class="d-flex justify-content-end border-top pt-2">
-                <button class="btn btn-sm btn-primary w-100" id="applyProductLines">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 1: Year -->
-        <div class="filter-item">
-          <div class="dropdown-filter">
-            <button class="form-select form-select-sm" type="button" id="yearDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false">
-              Year
-            </button>
-            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
-              <div class="d-flex gap-1 mb-2">
-                <input type="text" class="form-control form-control-sm" id="yearSearch" placeholder="Search..."
-                  style="flex: 1;">
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllYears"
-                  title="Select All">All</button>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearYears" title="Clear">×</button>
-              </div>
-              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
-                <!-- Options will be populated dynamically by JavaScript -->
-              </div>
-              <div class="d-flex justify-content-end border-top pt-2">
-                <button class="btn btn-sm btn-primary w-100" id="applyYears">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 2: Eng Config -->
-        <div class="filter-item">
-          <div class="dropdown-filter">
-            <button class="form-select form-select-sm" type="button" id="engConfigDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false">
-              Engine Config
-            </button>
-            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
-              <div class="d-flex gap-1 mb-2">
-                <input type="text" class="form-control form-control-sm" id="engConfigSearch" placeholder="Search..."
-                  style="flex: 1;">
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllConfigs"
-                  title="Select All">All</button>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearConfigs" title="Clear">×</button>
-              </div>
-              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
-                <!-- Options will be populated dynamically by JavaScript -->
-              </div>
-              <div class="d-flex justify-content-end border-top pt-2">
-                <button class="btn btn-sm btn-primary w-100" id="applyConfigs">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 3: Supplier -->
-        <div class="filter-item">
-          <div class="dropdown-filter">
-            <button class="form-select form-select-sm" type="button" id="supplierDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false">
-              Supplier
-            </button>
-            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
-              <div class="d-flex gap-1 mb-2">
-                <input type="text" class="form-control form-control-sm" id="supplierSearch" placeholder="Search..."
-                  style="flex: 1;">
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllSuppliers"
-                  title="Select All">All</button>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearSuppliers"
-                  title="Clear">×</button>
-              </div>
-              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
-                <!-- Options will be populated dynamically by JavaScript -->
-              </div>
-              <div class="d-flex justify-content-end border-top pt-2">
-                <button class="btn btn-sm btn-primary w-100" id="applySuppliers">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-         <!-- 4: RM Supplier (subset of Supplier) -->
-        <div class="filter-item">
-          <div class="dropdown-filter">
-            <button class="form-select form-select-sm" type="button" id="rmSupplierDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false">
-              RM Supplier
-            </button>
-            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
-              <div class="d-flex gap-1 mb-2">
-                <input type="text" class="form-control form-control-sm" id="rmSupplierSearch" placeholder="Search..."
-                  style="flex: 1;">
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllRmSuppliers"
-                  title="Select All">All</button>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearRmSuppliers" title="Clear">×</button>
-              </div>
-              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
-                <!-- Options will be populated dynamically by JavaScript -->
-              </div>
-              <div class="d-flex justify-content-end border-top pt-2">
-                <button class="btn btn-sm btn-primary w-100" id="applyRmSuppliers">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 5: HW Owner -->
-        <div class="filter-item">
-          <div class="dropdown-filter">
-            <button class="form-select form-select-sm" type="button" id="hwOwnerDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false">
-              HW Owner
-            </button>
-            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
-              <div class="d-flex gap-1 mb-2">
-                <input type="text" class="form-control form-control-sm" id="hwOwnerSearch" placeholder="Search..."
-                  style="flex: 1;">
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllHwOwners"
-                  title="Select All">All</button>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearHwOwners" title="Clear">×</button>
-              </div>
-              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
-                <!-- Options will be populated dynamically by JavaScript -->
-              </div>
-              <div class="d-flex justify-content-end border-top pt-2">
-                <button class="btn btn-sm btn-primary w-100" id="applyHwOwners">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 6: Module (placeholder) -->
-        <div class="filter-item">
-          <div class="dropdown-filter">
-            <button class="form-select form-select-sm" type="button" id="moduleDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false">
-              Module
-            </button>
-            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
-              <div class="d-flex gap-1 mb-2">
-                <input type="text" class="form-control form-control-sm" id="moduleSearch" placeholder="Search..."
-                  style="flex: 1;">
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllModules"
-                  title="Select All">All</button>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearModules" title="Clear">×</button>
-              </div>
-              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
-                <!-- Options will be populated dynamically by JavaScript -->
-              </div>
-              <div class="d-flex justify-content-end border-top pt-2">
-                <button class="btn btn-sm btn-primary w-100" id="applyModules">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- 7: Part No -->
-        <div class="filter-item">
-          <div class="dropdown-filter">
-            <button class="form-select form-select-sm" type="button" id="partNoDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false">
-              Part No
-            </button>
-            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
-              <div class="d-flex gap-1 mb-2">
-                <input type="text" class="form-control form-control-sm" id="partNoSearch" placeholder="Search..."
-                  style="flex: 1;">
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllPartNos"
-                  title="Select All">All</button>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearPartNos" title="Clear">×</button>
-              </div>
-              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
-                <!-- Options will be populated dynamically by JavaScript -->
-              </div>
-              <div class="d-flex justify-content-end border-top pt-2">
-                <button class="btn btn-sm btn-primary w-100" id="applyPartNos">Apply</button>
-              </div>
-            </div>
-          </div>
-        </div>
-       
-      </div>
-  </div>
-</div>
+  <!-- Gap Analysis Dashboard Content -->
+  <div class="container dashboard-mode" style="padding-top: 80px;">
     
-
-  <div class="kpi-container">
-    <div class="kpi-card">
-        <h3>Total Records</h3>
-        <div class="value" id="kpi-total">0</div>
-    </div>
-    <div class="kpi-card">
-        <h3>Unique CSNs</h3>
-        <div class="value" id="kpi-csns">0</div>
-    </div>
-    <div class="kpi-card gap">
-        <h3>Gap Records</h3>
-        <div class="value" id="kpi-gaps">0</div>
-    </div>
-    <div class="kpi-card gap">
-        <h3>Overall Gap %</h3>
-        <div class="value" id="kpi-gap-pct">0%</div>
-    </div>
-</div>
-<div class="breadcrumb" id="breadcrumb">
-    <button onclick="resetDashboard()">🏠 Reset All</button>
-    <span>/</span>
-    <span class="current" id="breadcrumb-text"></span>
-</div>
-<div class="charts-grid">
-    <div class="chart-card">
-        <h2>📊 Gap % by Raw Material</h2>
-        <p>Click any bar to filter suppliers and parts →</p>
-        <div class="chart-wrapper"><canvas id="chart1"></canvas></div>
-    </div>
-    <div class="chart-card">
-        <h2>📊 Gap % by Supplier</h2>
-        <p id="chart2-subtitle">All suppliers shown - Click any bar to filter parts →</p>
-        <div class="chart-wrapper"><canvas id="chart2"></canvas></div>
-    </div>
-    <div class="chart-card">
-        <!-- <h2>📊 Parts - Past Due Analysis</h2> -->
-        <h2>📊  Engine Impacted by Problematic Parts</h2>
-        <p id="chart3-subtitle">Click any bar to see detailed status & priority breakdown ↓</p>
-        <div class="chart-wrapper"><canvas id="chart3"></canvas></div>
-    </div>
-</div>
-
-       <!-- Action Items Table with ALL Priority Levels -->
-       <div class="table-section">
-        <h2 class="section-title">📋 Priority Action Items</h2>
-        <div id="filterInfo" class="filter-info" style="display: none;">
-            Filtered by: <strong id="filterCarName"></strong>
-            <button class="clear-filter" onclick="clearFilter()">Clear Filter</button>
+    <!-- Filter Section -->
+    <div class="d-flex gap-2 mb-3 justify-content-between align-items-center">
+      <div class="filters-inline" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <!-- 0: Product Line -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="productLineDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Product Line
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="productLineSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllProductLines"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearProductLines" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyProductLines">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 1: Year -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="yearDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Year
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="yearSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllYears"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearYears" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyYears">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 2: Eng Config -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="engConfigDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Engine Config
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="engConfigSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllConfigs"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearConfigs" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyConfigs">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 3: Supplier -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="supplierDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Supplier
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="supplierSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllSuppliers"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearSuppliers"
+                    title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applySuppliers">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+           <!-- 4: RM Supplier (subset of Supplier) -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="rmSupplierDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                RM Supplier
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="rmSupplierSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllRmSuppliers"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearRmSuppliers" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyRmSuppliers">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 5: HW Owner -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="hwOwnerDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                HW Owner
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="hwOwnerSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllHwOwners"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearHwOwners" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyHwOwners">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 6: Module -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="moduleDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Module
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="moduleSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllModules"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearModules" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyModules">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 7: Part No -->
+          <div class="filter-item">
+            <div class="dropdown-filter">
+              <button class="form-select form-select-sm" type="button" id="partNoDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-expanded="false">
+                Part No
+              </button>
+              <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+                <div class="d-flex gap-1 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="partNoSearch" placeholder="Search..."
+                    style="flex: 1;">
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllPartNos"
+                    title="Select All">All</button>
+                  <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearPartNos" title="Clear">×</button>
+                </div>
+                <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
+                  <!-- Options will be populated dynamically by JavaScript -->
+                </div>
+                <div class="d-flex justify-content-end border-top pt-2">
+                  <button class="btn btn-sm btn-primary w-100" id="applyPartNos">Apply</button>
+                </div>
+              </div>
+            </div>
+          </div>
+         
         </div>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Priority</th>
-                        <th>RM Part</th>
-                        <th>RM Type</th>
-                        <th>RM Supplier</th>
-                        
-                        <th>Parent Part Number</th>
-                        <th>Part Description</th>
-                        <th>Part Supplier</th>
-                        <th>HWO</th>
-                        <th>ESN</th>
-                        <th>Status</th>
-                        
-                        <th>Planned PO Date</th>
-                        
-                        <th>Action Required</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- P1 Items -->
-                    <tr class="overdue" id="row-1" data-car="CAR-2024-001">
-                        <td><span class="pill pill-red">P1</span></td>
-                        <td style="font-weight: 700;">RM-12345</td>
-                        <td>Casting Structural</td>
-                        <td>RM Supplier12</td>
-                        
-                        <td >PN-16787</td>
-                        <td>Description 10</td>
-                        <td>Suppler 10</td>
-                        <td>HW1</td>
-                        <td>ESN-001</td>
-                        <td><span class="pill pill-red">Past Due</span></td>
-                        
-                        <td>
-                            <div style="font-size: 0.75rem;">10/21/2025</div>
-                            <!-- <div style="color: #dc2626; font-size: 0.7rem; font-weight: 700;">⏰ 3d</div> -->
-                        </td>
-                        <td>Place PO immediately</td>
-                        <td><span class="pill pill-blue">Daily</span></td>
-                        <td>
-                            <div class="action-buttons">
-                               
-                                
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-1" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(1)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(1)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <tr id="row-2" data-car="CAR-2024-001">
-                        <td><span class="pill pill-red">P1</span></td>
-                        <td style="font-weight: 700;">RM-3456</td>
-                        <td>Forging ring</td>
-                        <td>RM Supplier13</td>
-                       
-                        <td>PN-37643</td>
-                        <td>Description 11</td>
-                        <td>Suppler 11</td>
-                        <td>HW2</td>
-                        <td>ESN-001</td>
-                        <td><span class="pill pill-red">Past Due</span></td>
-                        
-                        <td style="font-size: 0.75rem;">1/22/2027</td>
-                        <td>Add to forecast</td>
-                        <td><span class="pill pill-blue">Alt</span></td>
-                        <td>
-                            <div class="action-buttons">
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-2" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(2)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(2)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                   
-                    
-                    <!-- P2 Items -->
-                    <tr id="row-4" data-car="CAR-2024-002">
-                        <td><span class="pill pill-orange">P2</span></td>
-                        <td style="font-weight: 700;">RM-45678</td>
-                        <td>Plate</td>
-                        <td>RM Supplier14</td>
-                      
-                        <td>PN-45634</td>
-                        <td>Description 12</td>
-                        <td>Suppler 12</td>
-                        <td>HW4</td>
-                        <td>ESN-002</td>
-                        <td><span class="pill pill-orange">Due in next 3 weeks</span></td>
-                   
-                        <td style="font-size: 0.75rem;">6/21/2026</td>
-                        <td>Review forecast</td>
-                        <td><span class="pill pill-blue">Alt</span></td>
-                        <td>
-                            <div class="action-buttons">
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-4" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(4)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(4)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <tr id="row-5" data-car="CAR-2024-003">
-                        <td><span class="pill pill-orange">P2</span></td>
-                        <td style="font-weight: 700;">RM-78901</td>
-                        <td>Casting Airfail</td>
-                        <td>RM Supplier16</td>
-                      
-                        <td>PN-78164</td>
-                        <td>Description 12</td>
-                        <td>Suppler 12</td>
-                        <td>HW5</td>
-                        <td>ESN-003</td>
-                        <td><span class="pill pill-orange">Due in next 3 weeks</span></td>
-                       
-                        <td style="font-size: 0.75rem;">6/21/2026</td>
-                        <td>Get supplier commit</td>
-                        <td><span class="pill pill-blue">Alt</span></td>
-                        <td>
-                            <div class="action-buttons">
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-5" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(5)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(5)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <tr id="row-6" data-car="CAR-2024-004">
-                        <td><span class="pill pill-orange">P2</span></td>
-                        <td style="font-weight: 700;">RM-23456</td>
-                        <td>Forging ring</td>
-                        <td>RM Supplier17</td>
-                      
-                        <td >PN-23645</td>
-                        <td>Description 13</td>
-                        <td>Suppler 13</td>
-                        <td>HW6</td>
-                        <td>ESN-004</td>
-                        <td><span class="pill pill-orange">Due in next 3 weeks</span></td>
-                   
-                        <td style="font-size: 0.75rem;">6/21/2026</td>
-                        <td>Expedite PO placement</td>
-                        <td><span class="pill pill-blue">Daily</span></td>
-                        <td>
-                            <div class="action-buttons">
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-6" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(6)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(6)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <!-- P3 Items -->
-                    <tr id="row-7" data-car="CAR-2024-001">
-                        <td><span class="pill pill-blue">P3</span></td>
-                        <td style="font-weight: 700;">RM-55555</td>
-                        <td>Forging ring</td>
-                        <td>RM Supplier17</td>
-                       
-                        <td>PN-55764</td>
-                        <td>Description 14</td>
-                        <td>Suppler 14</td>
-                        <td>HW9</td>
-                        <td>ESN-001</td>
-                        <td><span class="pill pill-blue">Late Commit</span></td>
-                      
-                        <td style="font-size: 0.75rem;">6/21/2028</td>
-                        <td>Monitor delivery</td>
-                        <td><span class="pill pill-blue">Weekly</span></td>
-                        <td>
-                            <div class="action-buttons">
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-7" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(7)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(7)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <tr id="row-8" data-car="CAR-2024-003">
-                        <td><span class="pill pill-blue">P3</span></td>
-                        <td style="font-weight: 700;">RM-66666</td>
-                        <td>Forging ring</td>
-                        <td>RM Supplier18</td>
-                        
-                        <td>PN-66436</td>
-                        <td>Description 15</td>
-                        <td>Suppler 15</td>
-                        <td>HW11</td>
-                        <td>ESN-003</td>
-                        <td><span class="pill pill-blue">Late Commit</span></td>
-                       
-                        <td style="font-size: 0.75rem;">7/21/2026</td>
-                        <td>Track shipment</td>
-                        <td><span class="pill pill-blue">Weekly</span></td>
-                        <td>
-                            <div class="action-buttons">
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-8" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(8)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(8)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                     <!-- P3 Item -->
-                     <tr id="row-3" data-car="CAR-2024-002">
-                      <td><span class="pill pill-blue">P3</span></td>
-                      <td style="font-weight: 700;">RM-67890</td>
-                      <td>Forging ring</td>
-                      <td>RM Supplier21</td>
-                  
-                      <td>PN-69789</td>
-                      <td>Description 16</td>
-                        <td>Suppler 16</td>
-                        <td>HW13</td>
-                      <td>ESN-002</td>
-                      <td><span class="pill pill-blue">Late Commit</span></td>
-                    
-                      <td style="font-size: 0.75rem;">6/21/2025</td>
-                      <td>Follow up with supplier</td>
-                      <td><span class="pill pill-blue">Daily</span></td>
-                      <td>
-                          <div class="action-buttons">
-                            <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                            <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                            <button class="btn-close" onclick="closeAction(1)">Close</button>
-                          </div>
-                      </td>
-                  </tr>
-                  <tr>
-                      <td colspan="9">
-                          <div id="comment-3" class="comment-section">
-                              <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                              <div class="comment-actions">
-                                  <button class="btn-submit" onclick="submitComment(3)">Submit</button>
-                                  <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
-                              </div>
-                          </div>
-                      </td>
-                  </tr>
-                    <!-- P4 Items -->
-                    <tr id="row-9" data-car="CAR-2024-004">
-                        <td><span class="pill pill-yellow">P4</span></td>
-                        <td style="font-weight: 700;">RM-77777</td>
-                        <td>Forging ring</td>
-                        <td>RM Supplier22</td>
-                       
-                        <td>PN-77834</td>
-                        <td>Description 17</td>
-                        <td>Suppler 17</td>
-                        <td>HW15</td>
-                        <td>ESN-004</td>
-                        <td><span class="pill pill-yellow">Missing Commit</span></td>
-                       
-                        <td style="font-size: 0.75rem;">5/21/2029</td>
-                        <td>Regular follow-up</td>
-                        <td><span class="pill pill-blue">Weekly</span></td>
-                        <td>
-                            <div class="action-buttons">
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-9" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(9)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(9)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                     <!-- P4 Item -->
-                     <tr id="row-3" data-car="CAR-2024-002">
-                      <td><span class="pill pill-yellow">P4</span></td>
-                      <td style="font-weight: 700;">RM-67890</td>
-                      <td>Forging ring</td>
-                      <td>RM Supplier23</td>
-                  
-                      <td>PN-67089</td>
-                      <td>Description 18</td>
-                        <td>Suppler 18</td>
-                        <td>HW16</td>
-                      <td>ESN-002</td>
-                      <td><span class="pill pill-yellow">Missing Commit</span></td>
-                   
-                      <td style="font-size: 0.75rem;">6/27/2028</td>
-                      <td>Follow up with supplier</td>
-                      <td><span class="pill pill-blue">Daily</span></td>
-                      <td>
-                          <div class="action-buttons">
-                            <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                            <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                            <button class="btn-close" onclick="closeAction(1)">Close</button>
-                          </div>
-                      </td>
-                  </tr>
-                  <tr>
-                      <td colspan="9">
-                          <div id="comment-3" class="comment-section">
-                              <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                              <div class="comment-actions">
-                                  <button class="btn-submit" onclick="submitComment(3)">Submit</button>
-                                  <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
-                              </div>
-                          </div>
-                      </td>
-                  </tr>
+        
+        <!-- Clear All Button (Extreme Right) -->
+        <button class="btn btn-sm" id="clearAllFilters" style="background-color: #ff6600; color: white; border: none; white-space: nowrap;">
+          <i class="fas fa-times-circle me-1"></i>Clear All
+        </button>
+    </div>
+    
+    <!-- Gap Analysis KPIs -->
+    <div class="d-flex gap-3 mb-4 flex-wrap" id="gap-analysis-kpis">
+      <!-- Total Gaps KPI -->
+      <div class="flex-fill">
+        <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3;">
+          <div class="card-body text-center p-3">
+            <div class="kpi-number text-primary fw-bold" style="font-size: 2rem;" id="totalGapsCount">12</div>
+            <div class="kpi-label text-dark fw-semibold mt-1">Total Gaps</div>
+            <div class="kpi-status text-muted small mt-1" id="totalGapsStatus">Status: 12% Gap</div>
+          </div>
+        </div>
+      </div>
 
-                   <!-- P4 Item -->
-                   <tr id="row-3" data-car="CAR-2024-002">
-                    <td><span class="pill pill-yellow">P4</span></td>
-                    <td style="font-weight: 700;">RM-67890</td>
-                    <td>Forging ring</td>
-                    <td>RM Supplier24</td>
-                   
-                    <td>PN-67065</td>
-                    <td>Description 19</td>
-                        <td>Suppler 19</td>
-                        <td>HW18</td>
-                    <td>ESN-002</td>
-                    <td><span class="pill pill-yellow">Missing Commit</span></td>
-       
-                    <td style="font-size: 0.75rem;">6/21/2026</td>
-                    <td>Follow up with supplier</td>
-                    <td><span class="pill pill-blue">Daily</span></td>
-                    <td>
-                        <div class="action-buttons">
-                          <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                          <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                          <button class="btn-close" onclick="closeAction(1)">Close</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="9">
-                        <div id="comment-3" class="comment-section">
-                            <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                            <div class="comment-actions">
-                                <button class="btn-submit" onclick="submitComment(3)">Submit</button>
-                                <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
+      <!-- Critical Priority KPI -->
+      <div class="flex-fill">
+        <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); border-left: 4px solid #f44336;">
+          <div class="card-body text-center p-3">
+            <div class="kpi-number text-danger fw-bold" style="font-size: 2rem;" id="criticalPriorityCount">2</div>
+            <div class="kpi-label text-dark fw-semibold mt-1">Critical Priority</div>
+            <div class="kpi-status text-muted small mt-1" id="criticalPriorityStatus">Status: Past Due</div>
+          </div>
+        </div>
+      </div>
 
-                 <!-- P4 Item -->
-                 <tr id="row-3" data-car="CAR-2024-002">
-                  <td><span class="pill pill-yellow">P4</span></td>
-                  <td style="font-weight: 700;">RM-67890</td>
-                  <td>Forging ring</td>
-                  <td>RM Supplier25</td>
-                 
-                  <td>PN-67076</td>
-                  <td>Description 20</td>
-                        <td>Suppler 20</td>
-                        <td>HW21</td>
-                  <td>ESN-002</td>
-                  <td><span class="pill pill-yellow">Missing Commit</span></td>
-               
-                  <td style="font-size: 0.75rem;">6/21/2026</td>
-                  <td>Follow up with supplier</td>
-                  <td><span class="pill pill-blue">Daily</span></td>
-                  <td>
-                      <div class="action-buttons">
-                        <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                        <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                        <button class="btn-close" onclick="closeAction(1)">Close</button>
-                      </div>
-                  </td>
-              </tr>
+      <!-- High Priority KPI -->
+      <div class="flex-fill">
+        <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left: 4px solid #ff9800;">
+          <div class="card-body text-center p-3">
+            <div class="kpi-number text-warning fw-bold" style="font-size: 2rem;" id="highPriorityCount">3</div>
+            <div class="kpi-label text-dark fw-semibold mt-1">High Priority</div>
+            <div class="kpi-status text-muted small mt-1" id="highPriorityStatus">Status: Due in next 3 weeks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medium Priority KPI -->
+      <div class="flex-fill">
+        <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); border-left: 4px solid #9c27b0;">
+          <div class="card-body text-center p-3">
+            <div class="kpi-number text-purple fw-bold" style="font-size: 2rem;" id="mediumPriorityCount">4</div>
+            <div class="kpi-label text-dark fw-semibold mt-1">Medium Priority</div>
+            <div class="kpi-status text-muted small mt-1" id="mediumPriorityStatus">Status: Missing commits</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Low Priority KPI -->
+      <div class="flex-fill">
+        <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); border-left: 4px solid #4caf50;">
+          <div class="card-body text-center p-3">
+            <div class="kpi-number text-success fw-bold" style="font-size: 2rem;" id="lowPriorityCount">3</div>
+            <div class="kpi-label text-dark fw-semibold mt-1">Low Priority</div>
+            <div class="kpi-status text-muted small mt-1" id="lowPriorityStatus">Status: Late commits</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Priority Action Items Table -->
+    <div class="card mt-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-0">📋 Priority Action Items - Gap Records Only</h5>
+          <small class="text-muted">Showing only records with identified gaps (Have Gap = Y)</small>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="badge bg-primary" id="totalRecordsCount">Loading...</span>
+          <button class="btn btn-sm btn-outline-secondary" id="refreshTableBtn">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <!-- Table Controls -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+          <div class="d-flex gap-2 align-items-center">
+            <label for="recordsPerPage" class="form-label mb-0 small">Show:</label>
+            <select class="form-select form-select-sm" id="recordsPerPage" style="width: auto;">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span class="small text-muted">records per page</span>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <label for="tableSearch" class="form-label mb-0 small">Search:</label>
+            <input type="text" class="form-control form-control-sm" id="tableSearch" placeholder="Search records..." style="width: 200px;">
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="gapAnalysisTable">
+            <thead class="table-dark">
               <tr>
-                  <td colspan="9">
-                      <div id="comment-3" class="comment-section">
-                          <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                          <div class="comment-actions">
-                              <button class="btn-submit" onclick="submitComment(3)">Submit</button>
-                              <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
-                          </div>
-                      </div>
-                  </td>
+                <th scope="col" class="text-center">Priority</th>
+                <th scope="col">RM Part</th>
+                <th scope="col">Parent Part Number</th>
+                <th scope="col">ESN</th>
+                <th scope="col">Status</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Action Required</th>
+                <th scope="col" class="text-center">Email</th>
+                <th scope="col" class="text-center">Actions</th>
               </tr>
-                    <!-- P5 Items -->
-                    <tr id="row-10" data-car="CAR-2024-002">
-                        <td><span class="pill pill-green">P5</span></td>
-                        <td style="font-weight: 700;">RM-88888</td>
-                        <td>Forging ring</td>
-                        <td>RM Supplier26</td>
-                       
-                        <td>PN-88758</td>
-                        <td>Description 21</td>
-                        <td>Suppler 21</td>
-                        <td>HW013</td>
-                        <td>ESN-002</td>
-                        <td><span class="pill pill-green">Good</span></td>
-                  
-                        <td style="font-size: 0.75rem;">6/21/2026</td>
-                        <td>Status update</td>
-                        <td><span class="pill pill-blue">Monthly</span></td>
-                        <td>
-                            <div class="action-buttons">
-                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
-                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
-                              <button class="btn-close" onclick="closeAction(1)">Close</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-10" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(10)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(10)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Data will be populated by JavaScript -->
+            </tbody>
+          </table>
         </div>
+
+        <!-- Table Loading -->
+        <div id="tableLoading" class="text-center py-4" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-2 mb-0">Loading table data...</p>
+        </div>
+
+        <!-- No Data Message -->
+        <div id="noDataMessage" class="text-center py-4" style="display: none;">
+          <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+          <p class="text-muted mb-0">No records found matching your criteria.</p>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+          <div class="small text-muted" id="paginationInfo">
+            Showing 0 to 0 of 0 entries
+          </div>
+          <nav aria-label="Table pagination">
+            <ul class="pagination pagination-sm mb-0" id="paginationControls">
+              <!-- Pagination will be populated by JavaScript -->
+            </ul>
+          </nav>
+        </div>
+      </div>
     </div>
 
+    <!-- Loading indicator -->
+    <div id="loadingIndicator" class="text-center py-4" style="display: none;">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Loading Gap Analysis data...</p>
+    </div>
 
+    <!-- Error message -->
+    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <span id="errorText">Failed to load data. Please try again.</span>
+    </div>
 
   </div>
 
- 
- 
-
- <!-- Alert Modal -->
- <div id="alertModal" class="modal-backdrop">
-  <div class="modal">
-      <div class="modal-header">
-          <h2>🚨 3 New Alerts</h2>
-          <button class="close-x" onclick="hideModal('alertModal')">×</button>
-      </div>
-      <div class="modal-body">
-          <div class="alert-card" onclick="goToRow('row-1')">
-              <div class="alert-top">
-                  <span class="priority-pill">P1</span>
-                  <span class="alert-title">Critical: RM Part RM-12345 Past Due</span>
-              </div>
-              <p class="alert-text">PO not placed. Due date was 3 days ago.</p>
-              <div class="alert-grid">
-                <div><strong>ESN :</strong> ESN-10</div>
-                <div><strong>Raw Material Supplier:</strong> Supplier10</div>
-                <div><strong>Raw Material:</strong> Casting Structural</div>
-                 
-                  <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">🔴 3 days overdue - Click to view</div>
-              </div>
-          </div>
-          <div class="alert-card" onclick="goToRow('row-3')">
-              <div class="alert-top">
-                  <span class="priority-pill">P1</span>
-                  <span class="alert-title">Urgent: RM Part RM-67890</span>
-              </div>
-              <p class="alert-text">Part delivery late. Follow up with supplier.</p>
-              <div class="alert-grid">
-                <div><strong>ESN:</strong> ESN-11</div>
-                <div><strong>Raw Material Suplier:</strong> Description11</div>
-                <div><strong>Raw Material:</strong> Forging ring</div>
-                 
-                  <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">🔴 3 days overdue - Click to view</div>
-              </div>
-          </div>
-          <div class="alert-card" onclick="goToRow('row-4')">
-              <div class="alert-top">
-                  <span class="priority-pill priority-p2">P2</span>
-                  <span class="alert-title">RM Part RM-45678 - Pending Review</span>
-              </div>
-              <p class="alert-text">Review forecast for this part.</p>
-              <div class="alert-grid">
-                  <div><strong>ESN :</strong> ESN-12</div>
-                  <div><strong>Raw Material Suplier:</strong> Description12</div>
-                  <div><strong>Raw Material:</strong> Casting Structural</div>
-                  <!-- <div style="color: #f97316; font-weight: bold; grid-column: span 2;">📋 Click to view action</div> -->
-                  <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">📋 Click to view action</div>
-              </div>
-          </div>
-      </div>
-      <div class="modal-footer">
-          <button class="btn-primary" onclick="hideModal('alertModal')">Close</button>
-      </div>
-  </div>
-</div>   
-
-
- <script>
- 
-  document.addEventListener('DOMContentLoaded', function() {
-    const popup = document.getElementById('initialActionPopup');
-    const closeBtn = document.getElementById('closeInitialPopup');
-    if (closeBtn) {
-      closeBtn.onclick = function() {
-        popup.style.display = 'none';
-      };
-    }
-  });
-</script>
-
-<script>
-  const csvData = `Car Family,CSN,Configuration,Target Ship Date,Part Number,Quantity,Supplier,Owner,Raw Material Type,Total Lead Time,Raw Material Need By,Planned PO Date Target,RM PN,RM Supplier,PO Available (Y/N),PO Placed on Time (Y/N/NA),Status,Delivery Date of RM Part,Past Due,Due Days,Action Recommendation,Gap (Y/N)
-Model S,CSN-2025-001,Premium,2025-12-15,RM-4521,4,ABC Automotive,John Smith,Casting Structural,45,2025-10-31,2025-10-15,RM-AL-7075,RM Supplier 20,N,N,Forecasted,2025-11-15,Past Due,-15,Alert HWO,Y
-Model S,CSN-2025-001,Premium,2025-12-15,RM-8834,2,XYZ Electronics,Sarah Johnson,Casting Airfoil,60,2025-10-16,2025-09-30,RM-ST-304,RM Supplier 41,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
-Model S,CSN-2025-001,Premium,2025-12-15,RM-1205,8,RM Supplier 35,Mike Chen,Plate,30,2025-11-15,2025-10-30,RM-PL-ABS,RM Supplier 18,N,NA,Forecasted,2025-11-20,Due in next 3 weeks,12,Alert HWO,
-Model S,CSN-2025-001,Premium,2025-12-15,RM-3301,3,Tech Solutions,Anna Lee,Forging ring,40,2025-11-05,2025-10-20,RM-CU-101,RM Supplier 32,Y,Y,Good Commits,2025-11-03,NA,NA,No Action,
-Model S,CSN-2025-002,Standard,2025-12-10,RM-4521,4,ABC Automotive,John Smith,Casting Structural,45,2025-10-26,2025-10-10,RM-AL-7075,RM Supplier 20,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
-Model S,CSN-2025-002,Standard,2025-12-10,RM-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-11-19,2025-11-04,RM-CU-220,RM Supplier 26,N,N,Forecasted,2025-11-25,Not due in next 3,25,Alert HWO,
-Model S,CSN-2025-002,Standard,2025-12-10,RM-8834,2,XYZ Electronics,Sarah Johnson,Plate,60,2025-10-11,2025-09-25,RM-PL-HDPE,RM Supplier 18,Y,Y,No Forecast,NA,NA,NA,Execution,Y
-Model S,CSN-2025-002,Standard,2025-12-10,RM-5567,6,Quality Parts,Tom Wilson,Casting Airfoil,35,2025-11-05,2025-10-20,RM-ST-450,RM Supplier 35,Y,Y,Delivered On Time,2025-11-03,NA,NA,No Action,
-Model S,CSN-2025-003,Sport,2025-12-20,RM-4521,6,ABC Automotive,John Smith,Casting Airfoil,45,2025-11-05,2025-10-20,RM-ST-420,RM Supplier 41,Y,Y,Delivered On Time,2025-11-03,NA,NA,No Action,
-Model S,CSN-2025-003,Sport,2025-12-20,RM-7743,4,Performance Parts,David Lee,Forging Closed Die,50,2025-10-31,2025-10-10,RM-CF-300,RM Supplier 37,Y,Y,Good Commits,2025-10-29,NA,NA,No Action,
-Model S,CSN-2025-003,Sport,2025-12-20,RM-1205,10,RM Supplier 35,Mike Chen,Plate,30,2025-11-20,2025-11-05,RM-PL-ABS,RM Supplier 18,Y,Y,Delivered On Time,2025-11-18,NA,NA,No Action,
-Model S,CSN-2025-003,Sport,2025-12-20,RM-2234,5,Premium Components,Lisa Chen,Casting Structural,42,2025-11-08,2025-10-22,RM-AL-6063,RM Supplier 42,Y,N,Late Commits,2025-11-15,NA,NA,HWO Action,Y
-Model S,CSN-2025-004,Premium,2025-12-25,RM-8834,2,XYZ Electronics,Sarah Johnson,Casting Airfoil,60,2025-10-26,2025-10-10,RM-ST-304,RM Supplier 41,Y,N,Delivered Late,2025-11-20,Past Due,-25,Past Due Action,Y
-Model S,CSN-2025-004,Premium,2025-12-25,RM-5521,6,Premium Auto,Lisa Wang,Casting Structural,35,2025-11-20,2025-11-05,RM-AL-6061,RM Supplier 20,Y,Y,Good Commits,2025-11-18,NA,NA,No Action,
-Model S,CSN-2025-004,Premium,2025-12-25,RM-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-12-04,2025-11-19,RM-CU-220,RM Supplier 26,Y,Y,Late Commits,2025-12-06,NA,NA,Alert HWO,Y
-Model S,CSN-2025-004,Premium,2025-12-25,RM-6678,4,Elite Manufacturing,Robert Kim,Plate,28,2025-11-27,2025-11-12,RM-PL-PP,RM Supplier 40,Y,Y,Good Commits,2025-11-25,NA,NA,No Action,
-Model S,CSN-2025-005,Standard,2025-11-30,RM-7743,4,Performance Parts,David Lee,Forging Closed Die,50,2025-10-11,2025-09-26,RM-CF-300,RM Supplier 37,NA,NA,NA,NA,NA,NA,Connect SFL,
-Model S,CSN-2025-005,Standard,2025-11-30,RM-1205,8, RM Supplier 35,Mike Chen,Casting Airfoil,30,2025-10-31,2025-10-16,RM-ST-304,RM Supplier 41,Y,N,Delivered Late,2025-11-05,NA,NA,Tag as LATE,
-Model S,CSN-2025-005,Standard,2025-11-30,RM-4521,4,ABC Automotive,John Smith,Plate,45,2025-10-16,2025-10-01,RM-PL-PP,RM Supplier 18,Y,Y,Delivered On Time,2025-10-14,NA,NA,No Action,
-Model S,CSN-2025-005,Standard,2025-11-30,RM-3398,7,Precision Parts,Mark Davis,Casting Structural,38,2025-10-23,2025-10-08,RM-AL-5052,RM Supplier 42,Y,Y,Good Commits,2025-10-21,NA,NA,No Action,
-Model S,CSN-2025-006,Sport,2026-01-05,RM-5521,8,Premium Auto,Lisa Wang,Forging ring,35,2025-12-01,2025-11-16,RM-CU-110,RM Supplier 26,Y,Y,Late Commits,2025-12-03,NA,NA,Improve commits,Y
-Model S,CSN-2025-006,Sport,2026-01-05,RM-8834,3,XYZ Electronics,Sarah Johnson,Casting Structural,60,2025-11-06,2025-10-21,RM-AL-5052,RM Supplier 20,Y,Y,Missing Commits,2025-11-10,NA,NA,Update commits,Y
-Model S,CSN-2025-006,Sport,2026-01-05,RM-9912,2,Tech Components,Emily Davis,Plate,21,2025-12-15,2025-11-30,RM-PL-ABS,RM Supplier 18,Y,Y,Good Commits,2025-12-13,NA,NA,Execution,
-Model S,CSN-2025-006,Sport,2026-01-05,RM-7721,5,Industrial Supply,Kevin Zhang,Casting Airfoil,44,2025-11-21,2025-11-06,RM-ST-316,RM Supplier 35,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
-Model S,CSN-2025-007,Premium,2025-12-05,RM-4521,5,ABC Automotive,John Smith,Casting Structural,45,2025-10-21,2025-10-05,RM-AL-7075,RM Supplier 20,Y,N,Delivered Late,2025-11-08,Past Due,-18,Tag as LATE,
-Model S,CSN-2025-007,Premium,2025-12-05,RM-7743,6,Performance Parts,David Lee,Casting Airfoil,50,2025-10-16,2025-10-01,RM-ST-420,RM Supplier 41,Y,Y,Delivered On Time,2025-10-15,NA,NA,No Action,
-Model S,CSN-2025-007,Premium,2025-12-05,RM-1205,12,RM Supplier 35,Mike Chen,Plate,30,2025-11-05,2025-10-21,RM-PL-HDPE,RM Supplier 18,Y,Y,Good Commits,2025-11-03,NA,NA,No Action,
-Model S,CSN-2025-007,Premium,2025-12-05,RM-4456,3,Superior Parts,Jessica Brown,Forging Closed Die,55,2025-10-11,2025-09-26,RM-CF-700,RM Supplier 45,Y,Y,Good Commits,2025-10-09,NA,NA,No Action,
-Model S,CSN-2025-008,Standard,2025-12-18,RM-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-11-27,2025-11-12,RM-CU-220,RM Supplier 26,Y,Y,Late Commits,2025-11-29,NA,NA,Improve commits,Y
-Model S,CSN-2025-008,Standard,2025-12-18,RM-5521,4,Premium Auto,Lisa Wang,Casting Airfoil,35,2025-11-13,2025-10-29,RM-ST-304,RM Supplier 41,Y,Y,Missing Commits,2025-11-16,NA,NA,Update commits,Y
-Model S,CSN-2025-008,Standard,2025-12-18,RM-8834,2,XYZ Electronics,Sarah Johnson,Forging Closed Die,60,2025-10-19,2025-10-03,RM-CF-T700,RM Supplier 37,Y,Y,Delivered On Time,2025-10-17,NA,NA,No Action,
-Model S,CSN-2025-008,Standard,2025-12-18,RM-2298,6,Modern Manufacturing,Daniel Park,Casting Structural,33,2025-11-15,2025-10-30,RM-AL-2024,RM Supplier 42 ,Y,Y,Good Commits,2025-11-13,NA,NA,No Action,
-Model S,CSN-2025-009,Premium,2025-12-22,RM-4521,4,ABC Automotive,John Smith,Casting Airfoil,45,2025-11-07,2025-10-22,RM-ST-420,RM Supplier 41,Y,Y,Good Commits,2025-11-05,NA,NA,No Action,
-Model S,CSN-2025-009,Premium,2025-12-22,RM-8899,5,Advanced Tech,Chris Lee,Plate,25,2025-11-27,2025-11-12,RM-PL-HDPE,RM Supplier 40,Y,N,Late Commits,2025-12-02,NA,NA,Improve commits,Y
-Model S,CSN-2025-009,Premium,2025-12-22,RM-3345,8,Quality Systems,Amy Johnson,Forging ring,38,2025-11-14,2025-10-29,RM-CU-150,RM Supplier 32,Y,Y,Good Commits,2025-11-12,NA,NA,No Action,
-Model S,CSN-2025-009,Premium,2025-12-22,RM-7743,3,Performance Parts,David Lee,Forging Closed Die,50,2025-11-02,2025-10-17,RM-CF-300,RM Supplier 37,Y,Y,Delivered On Time,2025-10-31,NA,NA,No Action,
-Model S,CSN-2025-010,Sport,2026-01-10,RM-5567,7,Quality Parts,Tom Wilson,Casting Structural,35,2025-12-06,2025-11-21,RM-AL-7075,RM Supplier 20,Y,N,Missing Commits,2025-12-15,NA,NA,Update commits,Y
-Model S,CSN-2025-010,Sport,2026-01-10,RM-88888,2,Tech Components,Emily Davis,Casting Airfoil,21,2025-12-20,2025-12-05,RM-ST-304,RM Supplier 35,Y,Y,Good Commits,2025-12-18,NA,NA,No Action,
-Model S,CSN-2025-010,Sport,2026-01-10,RM-67890,9,RM Supplier 35,Mike Chen,Plate,30,2025-12-11,2025-11-26,RM-PL-ABS,RM Supplier 18,Y,Y,Good Commits,2025-12-09,NA,NA,No Action,
-Model S,CSN-2025-010,Sport,2026-01-10,RM-67890,4,Elite Parts,Nancy White,Forging ring,27,2025-12-14,2025-11-29,RM-CU-220,RM Supplier 26,N,N,Forecasted,2025-12-20,NA,NA,Alert HWO,
-Model S,CSN-2025-011,Standard,2025-12-28,RM-67890,6,ABC Automotive,John Smith,Forging ring,45,2025-11-13,2025-10-28,RM-CU-110,RM Supplier 32,Y,Y,Late Commits,2025-11-18,NA,NA,Improve commits,Y
-Model S,CSN-2025-011,Standard,2025-12-28,RM-77777,3,XYZ Electronics,Sarah Johnson,Plate,60,2025-10-29,2025-10-13,RM-PL-PP,RM Supplier 18,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
-Model S,CSN-2025-011,Standard,2025-12-28,	RM-3456,5,Mega Parts,Frank Miller,Casting Structural,40,2025-11-18,2025-11-03,RM-AL-6061,RM Supplier 42,Y,Y,Good Commits,2025-11-16,NA,NA,No Action,
-Model S,CSN-2025-011,Standard,2025-12-28,RM-3310,7,Pro Manufacturing,Sandra Kim,Casting Airfoil,32,2025-11-26,2025-11-11,RM-ST-316,RM Supplier 41,Y,Y,Delivered On Time,2025-11-24,NA,NA,No Action,
-Model S,CSN-2025-012,Premium,2026-01-15,RM-78901,5,Premium Auto,Lisa Wang,Forging Closed Die,35,2025-12-11,2025-11-26,RM-CF-T700,RM Supplier 45,Y,Y,Good Commits,2025-12-09,NA,NA,No Action,
-Model S,CSN-2025-012,Premium,2026-01-15,RM-45678,1,Tech Components,Emily Davis,Casting Structural,21,2025-12-25,2025-12-10,RM-AL-5052,RM Supplier 20,Y,N,Delivered Late,2025-12-30,Past Due,-5,Past Due Action,Y
-Model S,CSN-2025-012,Premium,2026-01-15,RM-34567,8,Supreme Quality,Brian Taylor,Casting Airfoil,48,2025-11-28,2025-11-13,RM-ST-420,RM Supplier 35,Y,Y,Good Commits,2025-11-26,NA,NA,No Action,
-Model S,CSN-2025-012,Premium,2026-01-15,RM-12345,4,ABC Automotive,John Smith,Plate,45,2025-12-01,2025-11-16,RM-PL-ABS,RM Supplier 40,Y,Y,Delivered On Time,2025-11-29,NA,NA,No Action,`;
-  
-  function parseCSV(csv){const lines=csv.trim().split('\n');const headers=lines[0].split(',');return lines.slice(1).map(line=>{const values=line.split(',');const obj={};headers.forEach((header,i)=>{obj[header]=values[i];});return obj;});}
-  const data=parseCSV(csvData);
-  let selectedMaterial=null,selectedSupplier=null,selectedPart=null,chart1,chart2,chart3;
-  
-  function getPriority(row) {
-      const pastDue = row['Past Due'];
-      const status = row['Status'];
-      const poAvailable = row['PO Available (Y/N)'];
-      
-      // P1: Past Due + High Importance
-      if (pastDue === 'Past Due') return 'P1';
-      
-      // P2: Due in next 3 weeks + High Importance OR Past Due
-      if (pastDue === 'Due in next 3 weeks') return 'P2';
-      
-      // Status-based priorities
-      if (status === 'Missing Commits') return 'P5';
-      if (status === 'Late Commits') return 'P6';
-      if (status === 'Good Commits') return 'P7';
-      if (status === 'No Forecast') {
-          if (poAvailable === 'N') return 'P2';
-          return 'P4';
-      }
-      if (status === 'Forecasted') {
-          if (pastDue === 'Not due in next 3') return 'P3';
-          return 'P4';
-      }
-      if (status === 'Delivered Late') return 'P2';
-      if (status === 'Delivered On Time') return 'P7';
-      
-      // Default
-      return 'P4';
-  }
-  
-  function updateKPIs(){const totalRecords=data.length;const uniqueCSNs=new Set(data.map(d=>d.CSN)).size;const gapRecords=data.filter(d=>d['Gap (Y/N)']==='Y').length;const gapPct=((gapRecords/totalRecords)*100).toFixed(1);document.getElementById('kpi-total').textContent=totalRecords;document.getElementById('kpi-csns').textContent=uniqueCSNs;document.getElementById('kpi-gaps').textContent=gapRecords;document.getElementById('kpi-gap-pct').textContent=gapPct+'%';}
-  
-  function createChart1() {
-  const materialStats = {};
-  data.forEach(row => {
-    const material = row['Raw Material Type'];
-    if (!materialStats[material]) {
-      materialStats[material] = { total: 0, gaps: 0 };
-    }
-    materialStats[material].total++;
-    if (row['Gap (Y/N)'] === 'Y') {
-      materialStats[material].gaps++;
-    }
-  });
-
-  const chartData = Object.entries(materialStats)
-    .map(([material, stats]) => ({
-      material,
-      gapPct: parseFloat(((stats.gaps / stats.total) * 100).toFixed(1)),
-      noGapPct: parseFloat((((stats.total - stats.gaps) / stats.total) * 100).toFixed(1))
-    }))
-    .sort((a, b) => b.gapPct - a.gapPct);
-
-  const ctx = document.getElementById('chart1').getContext('2d');
-  chart1 = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: chartData.map(d => d.material),
-      datasets: [
-        {
-          label: 'No Gap ',
-          data: chartData.map(d => d.noGapPct),
-          backgroundColor: '#27ae60'
-        },
-        {
-          label: 'Gap ',
-          data: chartData.map(d => d.gapPct),
-          backgroundColor: '#e74c3c'
-        }
-      ]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      onClick: (event, elements) => {
-        if (elements.length > 0) {
-          const index = elements[0].index;
-          selectedMaterial = chartData[index].material;
-          selectedSupplier = null;
-          selectedPart = null;
-          updateCharts();
-          document.getElementById('breadcrumb').classList.add('active');
-          document.getElementById('breadcrumb-text').textContent = selectedMaterial;
-          document.getElementById('status-cards-container').classList.remove('active');
-        }
-      },
-      scales: {
-        x: {
-          stacked: true,
-          max: 100,
-          title: { display: true, text: 'Percentage (%)' }
-        },
-        y: {
-          stacked: true
-        }
-      },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          align: 'center', // align to left
-          labels: {
-            font: {
-              size: 10 // 👈 Correctly set legend font size here
-            },
-            boxWidth: 20,
-            padding: 5
-          }
-        }
-      }
-    }
-  });
-}
-
-  
-  function createChart2(){const filteredData=selectedMaterial?data.filter(d=>d['Raw Material Type']===selectedMaterial):data;const supplierStats={};filteredData.forEach(row=>{const supplier=row['RM Supplier'];if(!supplierStats[supplier]){supplierStats[supplier]={total:0,gaps:0};}supplierStats[supplier].total++;if(row['Gap (Y/N)']==='Y'){supplierStats[supplier].gaps++;}});const chartData=Object.entries(supplierStats).map(([supplier,stats])=>({supplier,gapPct:parseFloat(((stats.gaps/stats.total)*100).toFixed(1)),noGapPct:parseFloat((((stats.total-stats.gaps)/stats.total)*100).toFixed(1))})).sort((a,b)=>b.gapPct-a.gapPct);if(chart2)chart2.destroy();const ctx=document.getElementById('chart2').getContext('2d');chart2=new Chart(ctx,{type:'bar',data:{labels:chartData.map(d=>d.supplier),datasets:[{label:'No Gap ',data:chartData.map(d=>d.noGapPct),backgroundColor:'#27ae60'},{label:'Gap ',data:chartData.map(d=>d.gapPct),backgroundColor:'#e74c3c'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:(event,elements)=>{if(elements.length>0){const index=elements[0].index;selectedSupplier=chartData[index].supplier;selectedPart=null;updateCharts();const breadcrumbText=selectedMaterial?`${selectedMaterial} / ${selectedSupplier}`:`All Materials / ${selectedSupplier}`;document.getElementById('breadcrumb-text').textContent=breadcrumbText;document.getElementById('breadcrumb').classList.add('active');document.getElementById('status-cards-container').classList.remove('active');}},scales:{x:{stacked:true,max:100,title:{display:true,text:'Percentage (%)'}},y:{stacked:true}},plugins:{legend:{display:true,position:'top', labels: {
-      font: {
-        size: 10 // 👈 Set legend font size to 10px
-      },
-      boxWidth: 20,
-      padding: 5,}}}}});const subtitle=selectedMaterial?`Suppliers for: ${selectedMaterial}  →`:`Click any bar to filter supplier  →`;document.getElementById('chart2-subtitle').textContent=subtitle;}
-  
-      function createChart3() {
-  let filteredData = data;
-  if (selectedMaterial && selectedSupplier) {
-    filteredData = data.filter(
-      d => d['Raw Material Type'] === selectedMaterial && d['RM Supplier'] === selectedSupplier
-    );
-  } else if (selectedMaterial) {
-    filteredData = data.filter(d => d['Raw Material Type'] === selectedMaterial);
-  } else if (selectedSupplier) {
-    filteredData = data.filter(d => d['RM Supplier'] === selectedSupplier);
-  }
-
-  // Initialize stats
-  const partStats = {};
-
-  filteredData.forEach(row => {
-    const partNum = row['Part Number'];
-    const pastDue = row['Past Due'];
-
-    if (!partStats[partNum]) {
-      partStats[partNum] = { notPastDue: 0, pastDue: 0, dueSoon: 0 };
-    }
-
-    if (pastDue === 'Past Due') {
-      partStats[partNum].pastDue++;
-    } else if (pastDue === 'Due in next 3 weeks') {
-      partStats[partNum].dueSoon++;
-    } else {
-      partStats[partNum].notPastDue++;
-    }
-  });
-
-  // Prepare chart data with total for sorting (descending)
-  const chartData = Object.entries(partStats)
-    .map(([part, stats]) => ({
-      part,
-      notPastDue: stats.notPastDue,
-      dueSoon: stats.dueSoon,
-      pastDue: stats.pastDue,
-      total: stats.notPastDue + stats.dueSoon + stats.pastDue
-    }))
-    .sort((a, b) => b.total - a.total); // descending order
-
-  // Destroy previous chart if it exists
-  if (chart3) chart3.destroy();
-  const ctx = document.getElementById('chart3').getContext('2d');
-
-  // ✅ Do NOT reverse the arrays — Chart.js draws from top (first) to bottom (last)
-  const labels = chartData.map(d => d.part);
-  const notPastDueData = chartData.map(d => d.notPastDue);
-  const dueSoonData = chartData.map(d => d.dueSoon);
-  const pastDueData = chartData.map(d => d.pastDue);
-
-  chart3 = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Not Due in next 3 weeks',
-          data: notPastDueData,
-          backgroundColor: '#27ae60'
-        },
-        {
-          label: 'Due in next 3 weeks',
-          data: dueSoonData,
-          backgroundColor: '#f39c12'
-        },
-        {
-          label: 'Past Due',
-          data: pastDueData,
-          backgroundColor: '#e74c3c'
-        }
-      ]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      onClick: (event, elements) => {
-        if (elements.length > 0) {
-          const index = elements[0].index;
-          selectedPart = labels[index];
-          showStatusCards(selectedPart);
-        }
-      },
-      scales: {
-        x: {
-          stacked: true,
-          title: { display: true, text: 'Number of Records' },
-          ticks: {
-            stepSize: 1,
-            callback: function (value) {
-              return Number.isInteger(value) ? value : '';
-            }
-          },
-          beginAtZero: true
-        },
-        y: {
-          stacked: true
-        }
-      },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          align: 'start',
-          labels: {
-            boxWidth: 20,
-            padding: 8,
-            font: { size: 10 }
-          }
-        }
-      },
-      layout: {
-        padding: {
-          top: 10,
-          bottom: 20 // ✅ Adds consistent space below legend
-        }
-      }
-    }
-  });
-
-  // Subtitle logic
-  let subtitle = 'Click any bar to see detailed status & priority breakdown ↓';
-  if (selectedMaterial && selectedSupplier) {
-    subtitle = `Parts for: ${selectedSupplier}  ↓`;
-  } else if (selectedMaterial) {
-    subtitle = `Parts for: ${selectedMaterial}  ↓`;
-  } else if (selectedSupplier) {
-    subtitle = `Parts for: ${selectedSupplier}  ↓`;
-  }
-  document.getElementById('chart3-subtitle').textContent = subtitle;
-}
-
-
-
-  function showStatusCards(partNumber) {
-      let filteredData = data.filter(d => d['Part Number'] === partNumber);
-      if (selectedMaterial) filteredData = filteredData.filter(d => d['Raw Material Type'] === selectedMaterial);
-      if (selectedSupplier) filteredData = filteredData.filter(d => d['RM Supplier'] === selectedSupplier);
-      
-      const statusStats = {};
-      filteredData.forEach(row => {
-          const status = row['Status'];
-          const csn = row['CSN'];
-          const hasGap = row['Gap (Y/N)'] === 'Y';
-          const priority = getPriority(row);
-          const rmPn = row['RM PN'];
-          const rmSupplier = row['RM Supplier'];
-          const owner = row['Owner'];
-          
-          if (!statusStats[status]) {
-              statusStats[status] = {
-                  csns: new Set(),
-                  gapCSNs: new Set(),
-                  priorities: {P1:0, P2:0, P3:0, P4:0, P5:0, P6:0, P7:0, P8:0},
-                  gapRecords: []
-              };
-          }
-          
-          statusStats[status].csns.add(csn);
-          if (hasGap) {
-              statusStats[status].gapCSNs.add(csn);
-              statusStats[status].gapRecords.push({
-                  csn: csn,
-                  rmPn: rmPn,
-                  rmSupplier: rmSupplier,
-                  owner: owner,
-                  priority: priority
-              });
-          }
-          statusStats[status].priorities[priority]++;
-      });
-      
-      document.getElementById('selected-part-name').textContent = partNumber;
-      const cardsGrid = document.getElementById('status-cards-grid');
-      cardsGrid.innerHTML = '';
-      
-      Object.entries(statusStats).forEach(([status, stats]) => {
-          const csnCount = stats.csns.size;
-          const gapCount = stats.gapCSNs.size;
-          const hasGap = gapCount > 0;
-          
-          let cardClass = 'status-card';
-          if (gapCount > csnCount * 0.7) cardClass += ' critical';
-          else if (gapCount > csnCount * 0.3) cardClass += ' warning';
-          else cardClass += ' success';
-          
-          // Only show priorities with count > 0
-          const priorityBadges = Object.entries(stats.priorities)
-              .filter(([priority, count]) => count > 0)
-              .map(([priority, count]) => `
-                  <div class="priority-badge ${priority.toLowerCase()}">
-                      <span class="priority-badge-label">${priority}</span>
-                      <span class="priority-badge-count">${count}</span>
-                  </div>
-              `).join('');
-          
-          // Build gap details section
-          let gapDetailsHtml = '';
-          if (hasGap && stats.gapRecords.length > 0) {
-              gapDetailsHtml = stats.gapRecords.map(record => `
-                  <div class="gap-detail-item">
-                      <div class="gap-detail-row">
-                          <span class="gap-detail-label">CSN:</span>
-                          <span class="gap-detail-value">${record.csn}</span>
-                      </div>
-                      <div class="gap-detail-row">
-                          <span class="gap-detail-label">RM Part #:</span>
-                          <span class="gap-detail-value">${record.rmPn}</span>
-                      </div>
-                      <div class="gap-detail-row">
-                          <span class="gap-detail-label">Supplier:</span>
-                          <span class="gap-detail-value">${record.rmSupplier}</span>
-                      </div>
-                      <div class="gap-detail-row">
-                          <span class="gap-detail-label">Owner:</span>
-                          <span class="gap-detail-value">${record.owner}</span>
-                      </div>
-                  </div>
-              `).join('');
-          } else {
-              gapDetailsHtml = '<div class="no-gap-message">✅ No gaps detected for this status</div>';
-          }
-          
-          const card = document.createElement('div');
-          card.className = cardClass;
-          card.innerHTML = `
-              <div class="status-card-header">
-                  <div class="status-card-title">${status || 'NA'}</div>
-                  <div class="status-card-csn-badge">${csnCount}</div>
-              </div>
-              <div class="card-info-section">
-                  ${gapDetailsHtml}
-              </div>
-              <div class="priority-distribution">
-                  <div class="priority-distribution-title">Priority Distribution</div>
-                  <div class="priority-items">
-                      ${priorityBadges || '<span style="color: #999; font-size: 10px;">No priorities</span>'}
-                  </div>
-              </div>
-              <div class="gap-indicator ${hasGap ? 'has-gap' : 'no-gap'}">
-                  <div class="gap-indicator-text">
-                      ${hasGap ? `⚠️ ${gapCount} Gap${gapCount !== 1 ? 's' : ''} Detected` : '✅ All Clear'}
-                  </div>
-              </div>
-          `;
-          cardsGrid.appendChild(card);
-      });
-      
-      document.getElementById('status-cards-container').classList.add('active');
-  }
-  
-  function updateCharts(){createChart2();createChart3();}
-  
-  function resetDashboard(){selectedMaterial=null;selectedSupplier=null;selectedPart=null;document.getElementById('breadcrumb').classList.remove('active');document.getElementById('status-cards-container').classList.remove('active');document.getElementById('chart2-subtitle').textContent='All suppliers shown - Click any bar to filter parts →';document.getElementById('chart3-subtitle').textContent='Click any bar to see detailed status & priority breakdown ↓';updateCharts();}
-  
-  updateKPIs();createChart1();createChart2();createChart3();
-</script>
-
-<!-- filter for table -->
-
-        <script>
-          (function () {
-            // Keep any existing showStatusCards() behavior intact
-            const originalShowStatusCards = window.showStatusCards;
-          
-            // Replace showStatusCards() to also trigger RM Part filtering
-            window.showStatusCards = function (rmPartNumber) {
-              try {
-                if (typeof originalShowStatusCards === "function") {
-                  originalShowStatusCards(rmPartNumber);
-                }
-              } catch (err) {
-                console.warn("showStatusCards() error skipped:", err.message);
-              }
-          
-              filterByRMPart(rmPartNumber);
-            };
-          
-            function filterByRMPart(rmPartNumber) {
-              const tableSection = document.querySelector(".table-section");
-              if (!tableSection) return;
-          
-              const rows = Array.from(tableSection.querySelectorAll("tbody tr"));
-              let showNextComment = false;
-          
-              rows.forEach((row) => {
-                const rmPartCell = row.querySelector("td:nth-child(2)"); // 2nd column = RM Part
-                const isCommentRow = row.querySelector(".comment-section") !== null;
-          
-                if (isCommentRow) {
-                  if (showNextComment) {
-                    row.style.display = "";
-                    showNextComment = false;
-                  } else {
-                    row.style.display = "none";
-                  }
-                  return;
-                }
-          
-                // Match RM Part column (2nd column)
-                if (rmPartCell && rmPartCell.textContent.trim() === rmPartNumber) {
-                  row.style.display = "";
-                  showNextComment = true; // also show comment row right after
-                } else {
-                  row.style.display = "none";
-                  showNextComment = false;
-                }
-              });
-          
-              // Show info banner
-              const info = document.getElementById("filterInfo");
-              const carName = document.getElementById("filterCarName");
-              if (info && carName) {
-                info.style.display = "block";
-                carName.textContent = `RM Part: ${rmPartNumber}`;
-              }
-          
-              // Smooth scroll to table
-              tableSection.scrollIntoView({ behavior: "smooth", block: "start" });
-          
-              // Allow clearing filter
-              window.clearFilter = function () {
-                rows.forEach((row) => (row.style.display = ""));
-                if (info) info.style.display = "none";
-              };
-            }
-          })();
-          </script>
-          
-<!-- filter for table -->
-
-
-
-
-<script>
-let currentFilter = null;
-
-function showModal(id) { 
-document.getElementById(id).style.display = 'flex'; 
-}
-
-function hideModal(id) { 
-document.getElementById(id).style.display = 'none'; 
-}
-
-
-function goToRow(rowId) {
-  hideModal('alertModal');
-
-  // Remove highlight from all rows first
-  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('highlight'));
-
-  // Find and highlight the new row
-  const row = document.getElementById(rowId);
-  if (row) {
-    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    row.classList.add('highlight');
-  }
-}
-
-
-function filterByCar(carName, element) {
-document.querySelectorAll('.car-card').forEach(card => {
-    card.classList.remove('selected');
-});
-
-element.classList.add('selected');
-currentFilter = carName;
-
-document.getElementById('filterInfo').style.display = 'flex';
-document.getElementById('filterCarName').textContent = carName;
-
-const rows = document.querySelectorAll('tbody tr[data-car]');
-rows.forEach(row => {
-    if (row.getAttribute('data-car') === carName) {
-        row.style.display = '';
-        if (row.nextElementSibling) {
-            row.nextElementSibling.style.display = '';
-        }
-    } else {
-        row.style.display = 'none';
-        if (row.nextElementSibling) {
-            row.nextElementSibling.style.display = 'none';
-        }
-    }
-});
-}
-
-function clearFilter() {
-currentFilter = null;
-document.querySelectorAll('.car-card').forEach(card => {
-    card.classList.remove('selected');
-});
-document.getElementById('filterInfo').style.display = 'none';
-const rows = document.querySelectorAll('tbody tr');
-rows.forEach(row => {
-    row.style.display = '';
-});
-}
-
-function toggleComment(id) {
-const comment = document.getElementById('comment-' + id);
-comment.classList.toggle('show');
-}
-
-function submitComment(id) {
-const comment = document.getElementById('comment-' + id);
-const textarea = comment.querySelector('textarea');
-if (textarea.value.trim()) {
-    alert('✅ Comment Saved!\n\n"' + textarea.value + '"');
-    textarea.value = '';
-    comment.classList.remove('show');
-} else {
-    alert('⚠️ Please enter a comment.');
-}
-}
-
-function closeAction(id) {
-if (confirm('Close this action?\n\n')) {
-    alert('✅ Action Closed Successfully!');
-    document.getElementById('row-' + id).style.opacity = '0.5';
-    document.getElementById('row-' + id).style.pointerEvents = 'none';
-}
-}
-
-document.getElementById('alertModal').addEventListener('click', function(e) {
-if (e.target === this) hideModal('alertModal');
-});
-
-document.getElementById('emailModal').addEventListener('click', function(e) {
-if (e.target === this) hideModal('emailModal');
-});
-</script>  
-
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-<script defer src="src/utils.js"></script>
-<script defer src="src/filters.js"></script>
-<script defer src="src/dropdowns.js"></script>
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    // === KPI to priority mapping (with full names) ===
-    const kpiFilters = {
-      demand:        { label: "P1", name: "Critical Priority" }, // "Total Gaps" → show all rows
-      planned:       { label: "P1", name: "Critical Priority" },
-      highPriority:  { label: "P2", name: "High Priority" },
-      confirmed:     { label: "P3", name: "Low Priority" },
-      lowpriority:   { label: "P4", name: "Medium Priority" }
-    };
-  
-    // === Filter table by priority and limit rows ===
-    function filterTableByPriority(priorityLabel, limitCount, displayName) {
-      const rows = document.querySelectorAll("tbody tr[id^='row-']");
-      let shownCount = 0;
-  
-      rows.forEach(row => {
-        const nextRow = row.nextElementSibling; // comment row (paired)
-        const priorityCell = row.querySelector("td:first-child span");
-  
-        // Skip invalid or empty rows
-        if (!priorityCell || row.textContent.trim() === "") {
-          row.style.display = "none";
-          if (nextRow) nextRow.style.display = "none";
-          return;
-        }
-  
-        const match = priorityCell.textContent.trim() === priorityLabel;
-  
-        if (match && shownCount < limitCount) {
-          row.style.display = "";
-          if (nextRow) nextRow.style.display = ""; // show paired comment
-          shownCount++;
-        } else {
-          row.style.display = "none";
-          if (nextRow) nextRow.style.display = "none";
-        }
-      });
-  
-      // === Show filter info ===
-      const infoBox = document.getElementById("filterInfo");
-      const filterCarName = document.getElementById("filterCarName");
-      if (infoBox && filterCarName) {
-        infoBox.style.display = "block";
-        filterCarName.textContent = `${displayName} (${shownCount} rows shown)`;
+    // Gap Analysis Dashboard JavaScript
+    class GapAnalysisDashboard {
+      constructor() {
+        this.filters = {
+          productLines: [],
+          years: [],
+          configs: [],
+          suppliers: [],
+          rmSuppliers: [],
+          hwOwners: [],
+          modules: [],
+          partNumbers: []
+        };
+        this.filterOptions = {};
+        this.gapAnalysisData = [];
+        this.tableData = [];
+        this.allTableData = []; // Store all data for client-side filtering
+        this.priorityFilter = null; // Active priority filter from KPI clicks
+        this.isLoadingData = false; // Flag to prevent loading loops
+        this.kpiData = {
+          totalGaps: { count: 12, status: '12% Gap' },
+          criticalPriority: { count: 2, status: 'Past Due' },
+          highPriority: { count: 3, status: 'Due in next 3 weeks' },
+          lowPriority: { count: 3, status: 'Late commits' },
+          mediumPriority: { count: 4, status: 'Missing commits' },
+          onTrack: { count: 85, status: 'Meeting targets' }
+        };
+        
+        // Table pagination settings
+        this.currentPage = 1;
+        this.recordsPerPage = 10;
+        this.totalRecords = 0;
+        this.searchQuery = '';
+        
+        this.init();
       }
-  
-      scrollToTable();
-    }
-  
-    // === Clear filter (show all rows again) ===
-    function clearFilter(showMessage = false) {
-      const rows = document.querySelectorAll("tbody tr");
-  
-      rows.forEach(row => {
-        // Hide truly empty rows
-        if (row.textContent.trim() === "") {
-          row.style.display = "none";
-        } else {
-          row.style.display = "";
-        }
-      });
-      
-      const infoBox = document.getElementById("filterInfo");
-      const filterCarName = document.getElementById("filterCarName");
-  
-      if (infoBox && filterCarName) {
-        if (showMessage) {
-          infoBox.style.display = "block";
-          filterCarName.textContent = "All Priorities (Full Table Displayed)";
-        } else {
-          infoBox.style.display = "none";
+
+      async init() {
+        try {
+          console.log('Initializing Gap Analysis Dashboard...');
+          this.showLoading(true);
+          
+          console.log('Step 1: Loading filter options...');
+          await this.loadFilterOptions();
+          
+          console.log('Step 2: Loading gap analysis data...');
+          await this.loadGapAnalysisData();
+          
+          console.log('Step 3: Loading table data...');
+          await this.loadTableData();
+          
+          console.log('Step 4: Setting up event listeners...');
+          this.setupEventListeners();
+          
+          console.log('Step 5: Updating KPIs...');
+          this.updateKPIs();
+          
+          console.log('Dashboard initialization complete!');
+          this.showLoading(false);
+        } catch (error) {
+          console.error('Failed to initialize Gap Analysis dashboard:', error);
+          this.showError(`Failed to initialize dashboard: ${error.message}. Please refresh the page.`);
         }
       }
-  
-      document.querySelectorAll(".kpi").forEach(k => k.classList.remove("active"));
-    }
-  
-    // === Smooth scroll helper ===
-    function scrollToTable() {
-      const tableSection = document.querySelector(".table-section");
-      if (tableSection) {
-        tableSection.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      showLoading(show) {
+        const loadingEl = document.getElementById('loadingIndicator');
+        const errorEl = document.getElementById('errorMessage');
+        
+        if (show) {
+          loadingEl.style.display = 'block';
+          errorEl.style.display = 'none';
+        } else {
+          loadingEl.style.display = 'none';
+        }
       }
-    }
-  
-    // === Attach click events to KPI cards ===
-    document.addEventListener("DOMContentLoaded", () => {
-      const kpis = document.querySelectorAll(".kpi");
-  
-      kpis.forEach(kpi => {
-        kpi.addEventListener("click", () => {
-          kpis.forEach(k => k.classList.remove("active"));
-          kpi.classList.add("active");
-  
-          const kpiType =
-            kpi.classList.contains("demand") ? "demand" :
-            kpi.classList.contains("planned") ? "planned" :
-            kpi.classList.contains("highPriority") ? "highPriority" :
-            kpi.classList.contains("confirmed") ? "confirmed" :
-            "lowpriority";
-  
-          const priorityData = kpiFilters[kpiType];
-          const kpiValue = parseInt(kpi.querySelector("h3").textContent.trim()) || 0;
-  
-          // === NEW FEATURE: "Total Gaps" shows all rows ===
-          if (kpiType === "demand") {
-            clearFilter(true);
-            scrollToTable();
+
+      showError(message) {
+        const errorEl = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const loadingEl = document.getElementById('loadingIndicator');
+        
+        errorText.textContent = message;
+        errorEl.style.display = 'block';
+        loadingEl.style.display = 'none';
+      }
+
+      async loadFilterOptions() {
+        try {
+          console.log('Loading filter options...');
+          // Load filter options from the backend API
+          const response = await fetch('/api/datatable/filter-options');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('Filter options loaded:', data);
+          this.filterOptions = data.filterOptions || {};
+          
+          // Populate filter dropdowns
+          this.populateFilterDropdown('productLines', this.filterOptions.productLines || []);
+          this.populateFilterDropdown('years', this.filterOptions.years || []);
+          this.populateFilterDropdown('configs', this.filterOptions.configs || []);
+          this.populateFilterDropdown('suppliers', this.filterOptions.suppliers || []);
+          this.populateFilterDropdown('rmSuppliers', this.filterOptions.rmSuppliers || []);
+          this.populateFilterDropdown('hwOwners', this.filterOptions.hwOwners || []);
+          this.populateFilterDropdown('modules', this.filterOptions.modules || []);
+          this.populateFilterDropdown('partNumbers', this.filterOptions.partNumbers || []);
+          
+          console.log('Filter dropdowns populated');
+        } catch (error) {
+          console.error('Failed to load filter options:', error);
+          // Don't throw error, continue with empty options
+          this.filterOptions = {
+            productLines: [],
+            years: ['2025', '2026', '2027'],
+            configs: [],
+            suppliers: [],
+            rmSuppliers: [],
+            hwOwners: [],
+            modules: [],
+            partNumbers: []
+          };
+          console.log('Using fallback filter options');
+        }
+      }
+
+      populateFilterDropdown(filterType, options) {
+        try {
+          const mappings = {
+            'productLines': 'productLine',
+            'years': 'year',
+            'configs': 'engConfig',
+            'suppliers': 'supplier',
+            'rmSuppliers': 'rmSupplier',
+            'hwOwners': 'hwOwner',
+            'modules': 'module',
+            'partNumbers': 'partNo'
+          };
+          
+          const dropdownId = mappings[filterType];
+          if (!dropdownId) {
+            console.warn(`No mapping found for filter type: ${filterType}`);
             return;
           }
-  
-          // === Apply filter normally for other KPIs ===
-          if (priorityData && kpiValue > 0) {
-            filterTableByPriority(priorityData.label, kpiValue, priorityData.name);
+          
+          const dropdown = document.querySelector(`#${dropdownId}Dropdown`);
+          if (!dropdown) {
+            console.warn(`Dropdown not found: #${dropdownId}Dropdown`);
+            return;
+          }
+          
+          const container = dropdown.nextElementSibling?.querySelector('.dropdown-options');
+          if (!container) {
+            console.warn(`Container not found for dropdown: ${dropdownId}`);
+            return;
+          }
+          
+          container.innerHTML = '';
+          
+          if (!Array.isArray(options)) {
+            console.warn(`Options is not an array for ${filterType}:`, options);
+            return;
+          }
+          
+          options.forEach((option, index) => {
+            if (option && option.toString().trim()) {
+              const div = document.createElement('div');
+              div.className = 'form-check';
+              const safeId = `${dropdownId}_${index}`;
+              div.innerHTML = `
+                <input class="form-check-input" type="checkbox" value="${option}" id="${safeId}">
+                <label class="form-check-label" for="${safeId}">
+                  ${option}
+                </label>
+              `;
+              container.appendChild(div);
+            }
+          });
+          
+          console.log(`Populated ${filterType} with ${options.length} options`);
+        } catch (error) {
+          console.error(`Error populating filter dropdown ${filterType}:`, error);
+        }
+      }
+
+      async loadGapAnalysisData() {
+        try {
+          console.log('Loading gap analysis data...');
+          // Load KPI data from backend API
+          const response = await fetch('/api/gap-analysis/kpis');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('Gap analysis KPIs loaded from API:', data);
+          this.kpiData = data.kpis || this.kpiData;
+          
+          console.log('Gap analysis KPI data loaded successfully');
+        } catch (error) {
+          console.error('Failed to load gap analysis KPIs:', error);
+          // Keep default mock data if API fails
+          console.log('Using default KPI data');
+        }
+      }
+
+      transformToGapAnalysisFormat(demandData) {
+        // Transform demand data into gap analysis format
+        // This is a simplified transformation - in reality you'd have supply data too
+        const gapData = [];
+        
+        demandData.forEach(item => {
+          // Simulate supply data (in reality this would come from supply planning)
+          const demand = item.No || 0;
+          const supply = Math.floor(demand * (0.7 + Math.random() * 0.4)); // Random supply between 70-110% of demand
+          const gap = demand - supply;
+          
+          gapData.push({
+            period: `${item.Year}-${item.Mon}`,
+            program: item.PL,
+            demand: demand,
+            supply: supply,
+            gap: gap,
+            year: item.Year,
+            month: item.Mon
+          });
+        });
+        
+        return gapData;
+      }
+
+      createMockGapData() {
+        // Create mock gap analysis data for testing
+        const mockData = [];
+        const programs = ['LM2500', 'LM6000', 'LMS100'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        
+        programs.forEach(program => {
+          months.forEach(month => {
+            const demand = Math.floor(Math.random() * 50) + 10;
+            const supply = Math.floor(demand * (0.7 + Math.random() * 0.4));
+            const gap = demand - supply;
+            
+            mockData.push({
+              period: `2025-${month}`,
+              program: program,
+              demand: demand,
+              supply: supply,
+              gap: gap,
+              year: 2025,
+              month: month
+            });
+          });
+        });
+        
+        return mockData;
+      }
+
+      transformDemandDataToTable(demandData) {
+        // Transform demand data to table format
+        const tableData = [];
+        
+        demandData.forEach(program => {
+          program.configs?.forEach(config => {
+            config.esns?.forEach(esn => {
+              config.level1Parts?.forEach(part => {
+                // Simulate gap status based on target date and other factors
+                const targetDate = new Date(esn.targetShipDate);
+                const now = new Date();
+                const daysDiff = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+                
+                // Consider it a gap if:
+                // - Past due (negative days)
+                // - Due within 21 days and no supplier info
+                // - Random factor for demonstration (60% chance)
+                const hasGap = daysDiff < 0 || 
+                              (daysDiff <= 21 && !part.supplier) || 
+                              Math.random() < 0.6 ? 'Y' : 'N';
+                
+                tableData.push({
+                  'ENGINE_PROGRAM': program.engineProgram,
+                  'Configuration': config.config,
+                  'ESN': esn.esn,
+                  'Part_Number': part.pn,
+                  'Target_Ship_Date': esn.targetShipDate,
+                  'Parent_Part_Supplier': part.supplier,
+                  'HW_OWNER': part.hwo?.join(', ') || '',
+                  'Level_2_PN': part.level2Parts?.[0]?.pn || part.pn,
+                  'Level_2_Raw_Material_Supplier': part.level2Parts?.[0]?.rmSupplier || '',
+                  'Have_Gap': hasGap,
+                  'Gap_Y_N': hasGap,
+                  'Gap (Y/N)': hasGap
+                });
+              });
+            });
+          });
+        });
+        
+        return tableData;
+      }
+
+      createMockTableData() {
+        // Create mock table data for testing
+        const mockData = [];
+        const programs = ['LM2500', 'LM6000', 'LMS100'];
+        const configs = ['Standard', 'Premium', 'Sport'];
+        const suppliers = ['ABC Automotive', 'XYZ Electronics', 'Tech Solutions'];
+        const hwOwners = ['John Smith', 'Sarah Johnson', 'Mike Chen'];
+        
+        for (let i = 0; i < this.recordsPerPage * 2; i++) { // Create more records to have some with gaps
+          const program = programs[Math.floor(Math.random() * programs.length)];
+          const config = configs[Math.floor(Math.random() * configs.length)];
+          const supplier = suppliers[Math.floor(Math.random() * suppliers.length)];
+          const hwOwner = hwOwners[Math.floor(Math.random() * hwOwners.length)];
+          
+          // Create some past due dates to simulate gaps
+          const futureDate = new Date();
+          const daysOffset = Math.floor(Math.random() * 180) - 60; // -60 to +120 days
+          futureDate.setDate(futureDate.getDate() + daysOffset);
+          
+          // Determine if this record has a gap (70% chance for demonstration)
+          const hasGap = Math.random() < 0.7 ? 'Y' : 'N';
+          
+          mockData.push({
+            'ENGINE_PROGRAM': program,
+            'Configuration': config,
+            'ESN': `ESN-${2025}-${String(i + 1).padStart(3, '0')}`,
+            'Part_Number': `PN-${Math.floor(Math.random() * 9000) + 1000}`,
+            'Target_Ship_Date': futureDate.toISOString().split('T')[0],
+            'Parent_Part_Supplier': supplier,
+            'HW_OWNER': hwOwner,
+            'Level_2_PN': `RM-${Math.floor(Math.random() * 9000) + 1000}`,
+            'Level_2_Raw_Material_Supplier': `RM ${supplier}`,
+            'Have_Gap': hasGap,
+            'Gap_Y_N': hasGap, // Alternative column name
+            'Gap (Y/N)': hasGap // Another possible column name
+          });
+        }
+        
+        return mockData;
+      }
+
+      filterGapRecords(data) {
+        // Filter records to show only those with gaps
+        if (!Array.isArray(data)) {
+          console.warn('Data is not an array:', data);
+          return [];
+        }
+        
+        const filteredData = data.filter(record => {
+          // Check multiple possible column names for gap indicator
+          const hasGap = record['Have_Gap'] || 
+                        record['Gap_Y_N'] || 
+                        record['Gap (Y/N)'] || 
+                        record['Gap_YN'] ||
+                        record['have_gap'] ||
+                        record['gap_y_n'] ||
+                        record['gap_yn'];
+          
+          // Return true if the record has a gap (Y, Yes, true, 1)
+          if (typeof hasGap === 'string') {
+            return hasGap.toUpperCase() === 'Y' || hasGap.toUpperCase() === 'YES';
+          }
+          if (typeof hasGap === 'boolean') {
+            return hasGap;
+          }
+          if (typeof hasGap === 'number') {
+            return hasGap === 1;
+          }
+          
+          // If no gap indicator found, simulate based on priority
+          // (for existing data that doesn't have gap indicators)
+          const priority = this.calculateRowPriority(record);
+          return priority === 'P1' || priority === 'P2'; // Consider P1 and P2 as having gaps
+        });
+        
+        console.log(`Filtered ${data.length} records to ${filteredData.length} gap records`);
+        return filteredData;
+      }
+
+      setupEventListeners() {
+        // Clear all filters button
+        document.getElementById('clearAllFilters').addEventListener('click', () => {
+          this.clearAllFilters();
+        });
+
+        // Setup filter event listeners for each filter type
+        const filterTypes = ['productLine', 'year', 'engConfig', 'supplier', 'rmSupplier', 'hwOwner', 'module', 'partNo'];
+        
+        filterTypes.forEach(filterType => {
+          this.setupFilterEventListeners(filterType);
+        });
+
+        // Add click handlers for KPI cards
+        this.setupKPIClickHandlers();
+
+        // Table event listeners
+        this.setupTableEventListeners();
+      }
+
+      setupFilterEventListeners(filterType) {
+        const applyBtn = document.getElementById(`apply${filterType.charAt(0).toUpperCase() + filterType.slice(1)}s`);
+        const clearBtn = document.getElementById(`clear${filterType.charAt(0).toUpperCase() + filterType.slice(1)}s`);
+        const selectAllBtn = document.getElementById(`selectAll${filterType.charAt(0).toUpperCase() + filterType.slice(1)}s`);
+        
+        if (applyBtn) {
+          applyBtn.addEventListener('click', () => {
+            this.applyFilter(filterType);
+          });
+        }
+        
+        if (clearBtn) {
+          clearBtn.addEventListener('click', () => {
+            this.clearFilter(filterType);
+          });
+        }
+        
+        if (selectAllBtn) {
+          selectAllBtn.addEventListener('click', () => {
+            this.selectAllFilter(filterType);
+          });
+        }
+      }
+
+      applyFilter(filterType) {
+        const container = document.querySelector(`#${filterType}Dropdown`).nextElementSibling.querySelector('.dropdown-options');
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+        
+        const filterKey = this.getFilterKey(filterType);
+        this.filters[filterKey] = Array.from(checkboxes).map(cb => cb.value);
+        
+        this.currentPage = 1; // Reset to first page when filters change
+        this.updateKPIs();
+        this.loadTableData();
+      }
+
+      clearFilter(filterType) {
+        const container = document.querySelector(`#${filterType}Dropdown`).nextElementSibling.querySelector('.dropdown-options');
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        
+        const filterKey = this.getFilterKey(filterType);
+        this.filters[filterKey] = [];
+        
+        this.currentPage = 1; // Reset to first page when filters change
+        this.updateKPIs();
+        this.loadTableData();
+      }
+
+      selectAllFilter(filterType) {
+        const container = document.querySelector(`#${filterType}Dropdown`).nextElementSibling.querySelector('.dropdown-options');
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = true);
+        
+        this.applyFilter(filterType);
+      }
+
+      getFilterKey(filterType) {
+        const mappings = {
+          'productLine': 'productLines',
+          'year': 'years',
+          'engConfig': 'configs',
+          'supplier': 'suppliers',
+          'rmSupplier': 'rmSuppliers',
+          'hwOwner': 'hwOwners',
+          'module': 'modules',
+          'partNo': 'partNumbers'
+        };
+        return mappings[filterType] || filterType;
+      }
+
+      clearAllFilters() {
+        // Clear all filter selections
+        Object.keys(this.filters).forEach(key => {
+          this.filters[key] = [];
+        });
+        
+        // Uncheck all checkboxes
+        document.querySelectorAll('.dropdown-options input[type="checkbox"]').forEach(cb => {
+          cb.checked = false;
+        });
+        
+        this.currentPage = 1; // Reset to first page when filters change
+        this.updateKPIs();
+        this.loadTableData();
+      }
+
+      updateKPIs() {
+        // Use the KPI data loaded from the API
+        const kpis = this.kpiData;
+        
+        // Update KPI displays
+        this.updateKPIDisplay('totalGapsCount', kpis.totalGaps.count);
+        this.updateKPIDisplay('totalGapsStatus', `Status: ${kpis.totalGaps.status}`);
+        
+        this.updateKPIDisplay('criticalPriorityCount', kpis.criticalPriority.count);
+        this.updateKPIDisplay('criticalPriorityStatus', `Status: ${kpis.criticalPriority.status}`);
+        
+        this.updateKPIDisplay('highPriorityCount', kpis.highPriority.count);
+        this.updateKPIDisplay('highPriorityStatus', `Status: ${kpis.highPriority.status}`);
+        
+        this.updateKPIDisplay('mediumPriorityCount', kpis.mediumPriority.count);
+        this.updateKPIDisplay('mediumPriorityStatus', `Status: ${kpis.mediumPriority.status}`);
+        
+        this.updateKPIDisplay('lowPriorityCount', kpis.lowPriority.count);
+        this.updateKPIDisplay('lowPriorityStatus', `Status: ${kpis.lowPriority.status}`);
+      }
+
+      updateKPIDisplay(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.textContent = value;
+        }
+      }
+
+      calculateKPIsFromData(filteredData) {
+        // Calculate KPIs based on filtered gap analysis data
+        const totalItems = filteredData.length;
+        const totalGaps = filteredData.filter(item => item.gap > 0).length;
+        const criticalGaps = filteredData.filter(item => item.gap > 50).length; // High gap threshold
+        const highPriorityGaps = filteredData.filter(item => item.gap > 20 && item.gap <= 50).length;
+        const mediumPriorityGaps = filteredData.filter(item => item.gap > 5 && item.gap <= 20).length;
+        const lowPriorityGaps = filteredData.filter(item => item.gap > 0 && item.gap <= 5).length;
+        const onTrack = filteredData.filter(item => item.gap <= 0).length;
+        
+        const gapPercentage = totalItems > 0 ? Math.round((totalGaps / totalItems) * 100) : 0;
+        
+        return {
+          totalGaps: {
+            count: totalGaps,
+            status: `${gapPercentage}% Gap`
+          },
+          criticalPriority: {
+            count: criticalGaps,
+            status: criticalGaps > 0 ? 'Past Due' : 'None'
+          },
+          highPriority: {
+            count: highPriorityGaps,
+            status: highPriorityGaps > 0 ? 'Due in next 3 weeks' : 'None'
+          },
+          mediumPriority: {
+            count: mediumPriorityGaps,
+            status: mediumPriorityGaps > 0 ? 'Missing commits' : 'None'
+          },
+          lowPriority: {
+            count: lowPriorityGaps,
+            status: lowPriorityGaps > 0 ? 'Late commits' : 'None'
+          },
+          onTrack: {
+            count: onTrack,
+            status: onTrack > 0 ? 'Meeting targets' : 'None'
+          }
+        };
+      }
+
+      setupKPIClickHandlers() {
+        // Add click handlers for KPI cards to filter table by priority
+        const kpiCards = document.querySelectorAll('.kpi-card');
+        kpiCards.forEach(card => {
+          card.style.cursor = 'pointer';
+          card.addEventListener('click', (e) => {
+            const kpiType = this.getKPITypeFromCard(card);
+            this.filterByKPI(kpiType);
+          });
+        });
+      }
+
+      getKPITypeFromCard(card) {
+        // Determine KPI type based on the card content
+        const label = card.querySelector('.kpi-label').textContent.trim();
+        const typeMap = {
+          'Total Gaps': 'totalGaps',
+          'Critical Priority': 'criticalPriority',
+          'High Priority': 'highPriority',
+          'Medium Priority': 'mediumPriority',
+          'Low Priority': 'lowPriority',
+          'On Track': 'onTrack'
+        };
+        return typeMap[label] || 'unknown';
+      }
+
+      filterByKPI(kpiType) {
+        // Filter table based on clicked KPI
+        console.log(`Filtering by KPI: ${kpiType}`);
+        
+        // Map KPI type to priority filter
+        const priorityFilters = {
+          'criticalPriority': ['Critical', 'P1', '1', 'CRITICAL'],
+          'highPriority': ['High', 'P2', '2', 'HIGH'],
+          'mediumPriority': ['Medium', 'P3', '3', 'MEDIUM'],
+          'lowPriority': ['Low', 'P4', '4', 'LOW'],
+          'totalGaps': null // Show all gaps (no priority filter)
+        };
+        
+        // Set priority filter
+        this.priorityFilter = priorityFilters[kpiType] || null;
+        
+        // Reset to first page and reload data
+        this.currentPage = 1;
+        
+        // Highlight active KPI card
+        this.highlightActiveKPI(kpiType);
+        
+        // Reload table with filter
+        this.applyTableFilters();
+      }
+
+      highlightActiveKPI(activeType) {
+        // Remove active state from all cards
+        document.querySelectorAll('.kpi-card').forEach(card => {
+          card.classList.remove('border-primary', 'border-3');
+          card.style.transform = '';
+        });
+        
+        // Add active state to clicked card
+        if (activeType && activeType !== 'totalGaps') {
+          const kpiCards = document.querySelectorAll('.kpi-card');
+          kpiCards.forEach(card => {
+            const kpiType = this.getKPITypeFromCard(card);
+            if (kpiType === activeType) {
+              card.classList.add('border-primary', 'border-3');
+              card.style.transform = 'scale(1.05)';
+            }
+          });
+        }
+      }
+
+      applyTableFilters() {
+        // Apply priority filter to table data
+        if (!this.allTableData || this.allTableData.length === 0) {
+          // If no data loaded yet and not currently loading, load it first
+          if (!this.isLoadingData) {
+            this.loadTableData();
+          }
+          return;
+        }
+        
+        let filteredData = [...this.allTableData];
+        
+        // Apply priority filter
+        if (this.priorityFilter && this.priorityFilter.length > 0) {
+          filteredData = filteredData.filter(row => {
+            const priority = String(row['Priority'] || row['PRIORITY'] || row['priority'] || '').toUpperCase().trim();
+            return this.priorityFilter.some(p => String(p).toUpperCase().trim() === priority);
+          });
+        }
+        
+        // Apply search filter
+        if (this.searchQuery && this.searchQuery.length > 0) {
+          const query = this.searchQuery.toLowerCase();
+          filteredData = filteredData.filter(row => {
+            // Search across multiple columns
+            const searchableText = [
+              row['Level_2_PN'] || row['Level 2 PN'] || '',
+              row['Part_Number'] || row['Part Number'] || row['Level_1_PN'] || '',
+              row['ESN'] || '',
+              row['HW_OWNER'] || row['HW OWNER'] || '',
+              row['Priority'] || row['PRIORITY'] || row['priority'] || ''
+            ].join(' ').toLowerCase();
+            
+            return searchableText.includes(query);
+          });
+        }
+        
+        // Sort by priority
+        filteredData = this.sortByPriority(filteredData);
+        
+        // Update total records and current page data
+        this.totalRecords = filteredData.length;
+        
+        // Apply pagination
+        const startIndex = (this.currentPage - 1) * this.recordsPerPage;
+        const endIndex = startIndex + this.recordsPerPage;
+        this.tableData = filteredData.slice(startIndex, endIndex);
+        
+        // Render table
+        this.renderTable();
+        this.updatePagination();
+        this.updateRecordsCount();
+      }
+
+      showKPIDetails(kpiType) {
+        // Show detailed view for the selected KPI type
+        console.log(`Showing details for KPI: ${kpiType}`);
+        // This could open a modal, navigate to a detailed page, or expand a section
+        // For now, just log the action
+        alert(`Showing detailed view for ${kpiType.replace(/([A-Z])/g, ' $1').trim()}`);
+      }
+
+      getFilteredData() {
+        let filtered = [...this.gapAnalysisData];
+        
+        // Apply filters
+        if (this.filters.productLines.length > 0) {
+          filtered = filtered.filter(item => this.filters.productLines.includes(item.program));
+        }
+        
+        if (this.filters.years.length > 0) {
+          filtered = filtered.filter(item => this.filters.years.includes(item.year.toString()));
+        }
+        
+        return filtered;
+      }
+
+      // Sort table data by priority (P1 first, then P2, P3, P4)
+      sortByPriority(data) {
+        if (!data || !Array.isArray(data)) {
+          return data;
+        }
+
+        return data.sort((a, b) => {
+          // Get priority values from different possible column names
+          const getPriority = (row) => {
+            let priority = row['Priority'] || row['PRIORITY'] || row['priority'] || '';
+            
+            // Normalize to uppercase string for comparison
+            let priorityStr = String(priority).toUpperCase().trim();
+            
+            // Convert priority to numeric value for comparison
+            // P1 or 1 or CRITICAL or Critical -> 1
+            // P2 or 2 or HIGH or High -> 2
+            // P3 or 3 or MEDIUM or Medium -> 3
+            // P4 or 4 or LOW or Low -> 4
+            // Default to 5 (lowest) if not found
+            
+            if (priorityStr === 'P1' || priorityStr === '1' || priorityStr === 'CRITICAL') return 1;
+            if (priorityStr === 'P2' || priorityStr === '2' || priorityStr === 'HIGH') return 2;
+            if (priorityStr === 'P3' || priorityStr === '3' || priorityStr === 'MEDIUM') return 3;
+            if (priorityStr === 'P4' || priorityStr === '4' || priorityStr === 'LOW') return 4;
+            
+            return 5; // Unknown priority goes to the end
+          };
+
+          const priorityA = getPriority(a);
+          const priorityB = getPriority(b);
+
+          // Sort ascending (P1 first, P4 last)
+          return priorityA - priorityB;
+        });
+      }
+
+      // Table Management Methods
+      async loadTableData() {
+        try {
+          console.log('Loading table data...');
+          this.isLoadingData = true; // Set loading flag
+          this.showTableLoading(true);
+          
+          // Try the gap analysis API first - load ALL gap records for client-side filtering
+          try {
+            const response = await fetch(`/api/gap-analysis/all?skip=0&limit=10000`); // Load all records
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log('Gap analysis data loaded from API:', data);
+              
+              // Store all data for filtering
+              this.allTableData = this.sortByPriority(data.data || []);
+              this.isLoadingData = false; // Clear loading flag
+              
+              // Apply filters (priority, search, etc.)
+              this.applyTableFilters();
+              
+              this.showTableLoading(false);
+              return;
+            }
+          } catch (apiError) {
+            console.warn('Gap analysis API failed, trying alternative:', apiError);
+          }
+          
+          // Fallback: try datatable API and filter client-side
+          try {
+            const response = await fetch(`/api/datatable/all?skip=0&limit=10000`); // Load all records
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log('Table data loaded from datatable API:', data);
+              
+              // Filter for records with gaps only
+              let filteredData = this.filterGapRecords(data.data || []);
+              
+              // Store all data for filtering
+              this.allTableData = this.sortByPriority(filteredData);
+              
+              // Apply filters
+              this.applyTableFilters();
+              
+              this.showTableLoading(false);
+              return;
+            }
+          } catch (apiError) {
+            console.warn('Datatable API failed, trying demand API:', apiError);
+          }
+          
+          // Fallback: try demand API
+          try {
+            const response = await fetch('/api/demand/programs?skip=0&limit=100');
+            if (response.ok) {
+              const data = await response.json();
+              console.log('Using demand data as fallback:', data);
+              
+              // Transform demand data to table format
+              let transformedData = this.transformDemandDataToTable(data.data || []);
+              
+              // Filter for records with gaps only
+              let filteredData = this.filterGapRecords(transformedData);
+              
+              // Store all data for filtering
+              this.allTableData = this.sortByPriority(filteredData);
+              this.isLoadingData = false; // Clear loading flag
+              
+              // Apply filters
+              this.applyTableFilters();
+              
+              this.showTableLoading(false);
+              return;
+            }
+          } catch (demandError) {
+            console.warn('Demand API also failed:', demandError);
+          }
+          
+          // Final fallback: use mock data
+          console.log('Using mock table data');
+          let mockData = this.createMockTableData();
+          
+          // Filter for records with gaps only
+          let filteredData = this.filterGapRecords(mockData);
+          
+          // Store all data for filtering
+          this.allTableData = this.sortByPriority(filteredData);
+          this.isLoadingData = false; // Clear loading flag
+          
+          // Apply filters
+          this.applyTableFilters();
+          
+          this.showTableLoading(false);
+          
+        } catch (error) {
+          console.error('Failed to load table data:', error);
+          this.isLoadingData = false; // Clear loading flag on error
+          this.showTableLoading(false);
+          this.showNoData(true);
+        }
+      }
+
+      setupTableEventListeners() {
+        // Records per page change
+        document.getElementById('recordsPerPage').addEventListener('change', (e) => {
+          this.recordsPerPage = parseInt(e.target.value);
+          this.currentPage = 1; // Reset to first page
+          this.applyTableFilters(); // Use filter method instead of reload
+        });
+
+        // Search input
+        const searchInput = document.getElementById('tableSearch');
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            this.searchQuery = e.target.value.trim();
+            this.currentPage = 1; // Reset to first page
+            this.applyTableFilters(); // Use filter method instead of reload
+          }, 500); // Debounce search
+        });
+
+        // Refresh button
+        document.getElementById('refreshTableBtn').addEventListener('click', () => {
+          this.priorityFilter = null; // Clear filters
+          this.searchQuery = '';
+          document.getElementById('tableSearch').value = '';
+          this.highlightActiveKPI(null); // Remove highlights
+          this.loadTableData(); // Reload all data
+        });
+      }
+
+      showTableLoading(show) {
+        const loadingEl = document.getElementById('tableLoading');
+        const tableEl = document.getElementById('gapAnalysisTable');
+        const noDataEl = document.getElementById('noDataMessage');
+        
+        if (show) {
+          loadingEl.style.display = 'block';
+          tableEl.style.display = 'none';
+          noDataEl.style.display = 'none';
+        } else {
+          loadingEl.style.display = 'none';
+          tableEl.style.display = 'table';
+        }
+      }
+
+      showNoData(show) {
+        const noDataEl = document.getElementById('noDataMessage');
+        const tableEl = document.getElementById('gapAnalysisTable');
+        
+        if (show) {
+          noDataEl.style.display = 'block';
+          tableEl.style.display = 'none';
+        } else {
+          noDataEl.style.display = 'none';
+          tableEl.style.display = 'table';
+        }
+      }
+
+      renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        if (this.tableData.length === 0) {
+          this.showNoData(true);
+          return;
+        }
+
+        this.showNoData(false);
+
+        this.tableData.forEach((row, index) => {
+          const tr = document.createElement('tr');
+          
+          // Get priority from database or calculate if not available
+          const priority = row['Priority'] || row['PRIORITY'] || row['priority'] || this.calculateRowPriority(row);
+          const priorityBadge = this.getPriorityBadge(priority);
+          
+          // Format target date (Due Date)
+          const dueDate = this.formatDate(row['Target_Ship_Date'] || row['Target Ship Date']);
+          
+          // Determine status based on available data
+          const status = this.determineStatus(row);
+          const statusBadge = this.getStatusBadge(status);
+
+          // Get action required (based on gap status and priority)
+          const actionRequired = this.getActionRequired(row, priority);
+          
+          // Get HW Owner for email
+          const hwOwner = row['HW_OWNER'] || row['HW OWNER'] || 'N/A';
+
+          tr.innerHTML = `
+            <td class="text-center">${priorityBadge}</td>
+            <td class="fw-semibold">${row['Level_2_PN'] || row['Level 2 PN'] || 'N/A'}</td>
+            <td>${row['Part_Number'] || row['Part Number'] || row['Level_1_PN'] || 'N/A'}</td>
+            <td>${row['ESN'] || 'N/A'}</td>
+            <td>${statusBadge}</td>
+            <td class="small">${dueDate}</td>
+            <td>${actionRequired}</td>
+            <td class="text-center">
+              <button class="btn btn-outline-info btn-sm" onclick="gapDashboard.emailAction(${index})" title="Email ${hwOwner}">
+                <i class="fas fa-envelope me-1"></i>${hwOwner}
+              </button>
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-outline-success btn-sm" onclick="gapDashboard.closeAction(${index})" title="Close">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="gapDashboard.commentAction(${index})" title="Comment">
+                  <i class="fas fa-comment"></i>
+                </button>
+              </div>
+            </td>
+          `;
+          
+          tbody.appendChild(tr);
+        });
+      }
+
+      getActionRequired(row, priority) {
+        // Determine action required based on priority and gap status
+        const priorityStr = String(priority).toUpperCase().trim();
+        
+        if (priorityStr === 'P1' || priorityStr === '1' || priorityStr === 'CRITICAL') {
+          return '<span class="badge bg-danger">Immediate Action</span>';
+        } else if (priorityStr === 'P2' || priorityStr === '2' || priorityStr === 'HIGH') {
+          return '<span class="badge bg-warning text-dark">Expedite</span>';
+        } else if (priorityStr === 'P3' || priorityStr === '3' || priorityStr === 'MEDIUM') {
+          return '<span class="badge bg-info">Monitor</span>';
+        } else if (priorityStr === 'P4' || priorityStr === '4' || priorityStr === 'LOW') {
+          return '<span class="badge bg-secondary">Track</span>';
+        }
+        return '<span class="badge bg-secondary">Review</span>';
+      }
+
+      calculateRowPriority(row) {
+        // Simple priority calculation based on available data
+        // In a real implementation, this would use more sophisticated logic
+        const targetDate = new Date(row['Target_Ship_Date'] || row['Target Ship Date']);
+        const now = new Date();
+        const daysDiff = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff < 0) return 'P1'; // Past due
+        if (daysDiff <= 21) return 'P2'; // Due in next 3 weeks
+        if (daysDiff <= 60) return 'P3'; // Due in next 2 months
+        return 'P4'; // Future
+      }
+
+      getPriorityBadge(priority) {
+        // Normalize priority to uppercase string for comparison
+        const priorityStr = String(priority || '').toUpperCase().trim();
+        
+        // Map priority values to badges
+        // Critical -> P1, High -> P2, Medium -> P3, Low -> P4
+        const badges = {
+          'P1': '<span class="badge bg-danger">P1 - Critical</span>',
+          '1': '<span class="badge bg-danger">P1 - Critical</span>',
+          'CRITICAL': '<span class="badge bg-danger">P1 - Critical</span>',
+          
+          'P2': '<span class="badge bg-warning text-dark">P2 - High</span>',
+          '2': '<span class="badge bg-warning text-dark">P2 - High</span>',
+          'HIGH': '<span class="badge bg-warning text-dark">P2 - High</span>',
+          
+          'P3': '<span class="badge bg-info">P3 - Medium</span>',
+          '3': '<span class="badge bg-info">P3 - Medium</span>',
+          'MEDIUM': '<span class="badge bg-info">P3 - Medium</span>',
+          
+          'P4': '<span class="badge bg-secondary">P4 - Low</span>',
+          '4': '<span class="badge bg-secondary">P4 - Low</span>',
+          'LOW': '<span class="badge bg-secondary">P4 - Low</span>'
+        };
+        
+        return badges[priorityStr] || '<span class="badge bg-secondary">P4 - Low</span>';
+      }
+
+      determineStatus(row) {
+        // Simple status determination - in reality this would be more complex
+        const targetDate = new Date(row['Target_Ship_Date'] || row['Target Ship Date']);
+        const now = new Date();
+        const daysDiff = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff < 0) return 'Past Due';
+        if (daysDiff <= 7) return 'Due Soon';
+        if (daysDiff <= 21) return 'Upcoming';
+        return 'On Track';
+      }
+
+      getStatusBadge(status) {
+        const badges = {
+          'Past Due': '<span class="badge bg-danger">Past Due</span>',
+          'Due Soon': '<span class="badge bg-warning">Due Soon</span>',
+          'Upcoming': '<span class="badge bg-info">Upcoming</span>',
+          'On Track': '<span class="badge bg-success">On Track</span>'
+        };
+        return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+      }
+
+      getGapBadge(gapStatus) {
+        if (typeof gapStatus === 'string') {
+          if (gapStatus.toUpperCase() === 'Y' || gapStatus.toUpperCase() === 'YES') {
+            return '<span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Gap</span>';
+          } else if (gapStatus.toUpperCase() === 'N' || gapStatus.toUpperCase() === 'NO') {
+            return '<span class="badge bg-success"><i class="fas fa-check"></i> No Gap</span>';
+          }
+        }
+        if (typeof gapStatus === 'boolean') {
+          return gapStatus ? 
+            '<span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Gap</span>' :
+            '<span class="badge bg-success"><i class="fas fa-check"></i> No Gap</span>';
+        }
+        // Default to Gap since we're filtering for gap records
+        return '<span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Gap</span>';
+      }
+
+      formatDate(dateStr) {
+        if (!dateStr) return 'N/A';
+        try {
+          const date = new Date(dateStr);
+          return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          });
+        } catch (e) {
+          return dateStr;
+        }
+      }
+
+      updatePagination() {
+        const totalPages = Math.ceil(this.totalRecords / this.recordsPerPage);
+        const paginationEl = document.getElementById('paginationControls');
+        
+        paginationEl.innerHTML = '';
+        
+        if (totalPages <= 1) return;
+
+        // Previous button
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${this.currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<a class="page-link" href="#" data-page="${this.currentPage - 1}">Previous</a>`;
+        paginationEl.appendChild(prevLi);
+
+        // Page numbers
+        const startPage = Math.max(1, this.currentPage - 2);
+        const endPage = Math.min(totalPages, this.currentPage + 2);
+
+        if (startPage > 1) {
+          const firstLi = document.createElement('li');
+          firstLi.className = 'page-item';
+          firstLi.innerHTML = `<a class="page-link" href="#" data-page="1">1</a>`;
+          paginationEl.appendChild(firstLi);
+          
+          if (startPage > 2) {
+            const ellipsisLi = document.createElement('li');
+            ellipsisLi.className = 'page-item disabled';
+            ellipsisLi.innerHTML = `<span class="page-link">...</span>`;
+            paginationEl.appendChild(ellipsisLi);
+          }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          const li = document.createElement('li');
+          li.className = `page-item ${i === this.currentPage ? 'active' : ''}`;
+          li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+          paginationEl.appendChild(li);
+        }
+
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+            const ellipsisLi = document.createElement('li');
+            ellipsisLi.className = 'page-item disabled';
+            ellipsisLi.innerHTML = `<span class="page-link">...</span>`;
+            paginationEl.appendChild(ellipsisLi);
+          }
+          
+          const lastLi = document.createElement('li');
+          lastLi.className = 'page-item';
+          lastLi.innerHTML = `<a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>`;
+          paginationEl.appendChild(lastLi);
+        }
+
+        // Next button
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${this.currentPage === totalPages ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<a class="page-link" href="#" data-page="${this.currentPage + 1}">Next</a>`;
+        paginationEl.appendChild(nextLi);
+
+        // Add click event listeners
+        paginationEl.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (e.target.tagName === 'A' && !e.target.parentElement.classList.contains('disabled')) {
+            const page = parseInt(e.target.dataset.page);
+            if (page && page !== this.currentPage) {
+              this.currentPage = page;
+              this.loadTableData();
+            }
           }
         });
-      });
+      }
+
+      updateRecordsCount() {
+        const start = (this.currentPage - 1) * this.recordsPerPage + 1;
+        const end = Math.min(this.currentPage * this.recordsPerPage, this.totalRecords);
+        
+        document.getElementById('paginationInfo').textContent = 
+          `Showing ${start} to ${end} of ${this.totalRecords.toLocaleString()} entries`;
+        
+        document.getElementById('totalRecordsCount').textContent = 
+          `${this.totalRecords.toLocaleString()} Total Records`;
+      }
+
+      // Action handlers for table buttons
+      closeAction(index) {
+        const row = this.tableData[index];
+        if (confirm(`Close action for ${row['Level_2_PN'] || row['Level 2 PN'] || 'this item'}?`)) {
+          alert('Action closed successfully!');
+          // In a real implementation, you would make an API call here
+        }
+      }
+
+      commentAction(index) {
+        const row = this.tableData[index];
+        const comment = prompt(`Add comment for ${row['Level_2_PN'] || row['Level 2 PN'] || 'this item'}:`);
+        if (comment && comment.trim()) {
+          alert(`Comment added: "${comment}"`);
+          // In a real implementation, you would make an API call here
+        }
+      }
+
+      emailAction(index) {
+        const row = this.tableData[index];
+        const hwOwner = row['HW_OWNER'] || row['HW OWNER'] || 'owner';
+        alert(`Email notification sent to ${hwOwner}`);
+        // In a real implementation, you would make an API call here
+      }
+
+    }
+
+    // Initialize the dashboard when the page loads
+    let gapDashboard;
+    document.addEventListener('DOMContentLoaded', () => {
+      gapDashboard = new GapAnalysisDashboard();
     });
   </script>
-  
+
 </body>
 </html>

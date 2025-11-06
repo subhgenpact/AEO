@@ -71,12 +71,6 @@ async def gap_analysis_page_html():
     return FileResponse("frontend/GapAnalysis.html")
 
 
-@router.get("/GapAnalysis1.html")
-async def gap_analysis_v1_page_html():
-    """Legacy route - redirects to /gap-analysis-v1"""
-    return FileResponse("frontend/GapAnalysis1.html")
-
-
 @router.get("/index.html")
 async def index_page_html():
     """Legacy route - redirects to /"""
