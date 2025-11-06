@@ -6795,6 +6795,17 @@ let programModalChart = null;
 // ===== SUPPLIER TYPE DETAILS MODAL FUNCTIONS =====
 function showSupplierTypeDetailsModal(supplierType) {
   console.log('Showing modal for supplier type:', supplierType);
+  
+  // Clear search filters
+  const modalSupplierTypeSupplierSearch = document.getElementById('modalSupplierTypeSupplierSearch');
+  const modalSupplierTypePartNumberSearch = document.getElementById('modalSupplierTypePartNumberSearch');
+  const modalSupplierTypeHWOSearch = document.getElementById('modalSupplierTypeHWOSearch');
+  if (modalSupplierTypeSupplierSearch) modalSupplierTypeSupplierSearch.value = '';
+  if (modalSupplierTypePartNumberSearch) modalSupplierTypePartNumberSearch.value = '';
+  if (modalSupplierTypeHWOSearch) modalSupplierTypeHWOSearch.value = '';
+  
+  // Clear original data cache
+  window.originalSupplierTypeData = null;
 
   // Update modal title
   document.getElementById('supplierTypeModalLabel').textContent = `${supplierType} Supplier Details`;
@@ -6968,6 +6979,9 @@ function renderSupplierTypeDetailsTable(supplierType) {
 
       // Setup pagination controls
       setupSupplierTypeModalTablePaginationControls();
+      
+      // Setup search filters
+      setupSupplierTypeSearchFilters(supplierDetails);
     })
     .catch(error => {
       console.error('Error fetching supplier details:', error);
@@ -7078,9 +7092,63 @@ function updateSupplierTypeModalTablePaginationUI() {
   if (nextBtn) nextBtn.disabled = window.modalSupplierTypeTablePagination.currentPage >= totalPages;
 }
 
+// ===== SUPPLIER TYPE MODAL SEARCH FUNCTIONALITY =====
+function setupSupplierTypeSearchFilters(allData) {
+  const supplierSearch = document.getElementById('modalSupplierTypeSupplierSearch');
+  const partNumberSearch = document.getElementById('modalSupplierTypePartNumberSearch');
+  const hwoSearch = document.getElementById('modalSupplierTypeHWOSearch');
+  
+  if (!window.modalSupplierTypeTablePagination) return;
+  
+  // Store original data
+  if (!window.originalSupplierTypeData) {
+    window.originalSupplierTypeData = allData;
+  }
+  
+  const filterData = () => {
+    const supplierFilter = supplierSearch?.value.toLowerCase() || '';
+    const partNumberFilter = partNumberSearch?.value.toLowerCase() || '';
+    const hwoFilter = hwoSearch?.value.toLowerCase() || '';
+    
+    const filtered = window.originalSupplierTypeData.filter(item => {
+      const matchesSupplier = !supplierFilter || (item.name && item.name.toLowerCase().includes(supplierFilter));
+      const matchesPartNumber = !partNumberFilter || (item.partNumber && item.partNumber.toLowerCase().includes(partNumberFilter));
+      const matchesHWO = !hwoFilter || (item.hwo && item.hwo.toLowerCase().includes(hwoFilter));
+      
+      return matchesSupplier && matchesPartNumber && matchesHWO;
+    });
+    
+    window.modalSupplierTypeTablePagination.setData(filtered);
+    window.modalSupplierTypeTablePagination.currentPage = 1;
+    window.modalSupplierTypeTablePagination.renderTable();
+    updateSupplierTypeModalTablePaginationUI();
+  };
+  
+  if (supplierSearch) {
+    supplierSearch.addEventListener('input', filterData);
+  }
+  if (partNumberSearch) {
+    partNumberSearch.addEventListener('input', filterData);
+  }
+  if (hwoSearch) {
+    hwoSearch.addEventListener('input', filterData);
+  }
+}
+
 // ===== RAW MATERIAL DETAILS MODAL FUNCTIONS =====
 function showRawMaterialDetailsModal(rawMaterialType) {
   console.log('Showing modal for raw material type:', rawMaterialType);
+  
+  // Clear search filters
+  const modalSupplierSearch = document.getElementById('modalSupplierSearch');
+  const modalPartNumberSearch = document.getElementById('modalPartNumberSearch');
+  const modalHWOSearch = document.getElementById('modalHWOSearch');
+  if (modalSupplierSearch) modalSupplierSearch.value = '';
+  if (modalPartNumberSearch) modalPartNumberSearch.value = '';
+  if (modalHWOSearch) modalHWOSearch.value = '';
+  
+  // Clear original data cache
+  window.originalRawMaterialData = null;
 
   // Update modal title
   document.getElementById('rawMaterialModalLabel').textContent = `${rawMaterialType} Details`;
@@ -7281,6 +7349,9 @@ function renderModalDetailsTable(data, rawType) {
 
       // Setup pagination controls
       setupModalTablePaginationControls();
+      
+      // Setup search filters
+      setupRawMaterialSearchFilters(supplierDetails);
     })
     .catch(error => {
       console.error('Error fetching RM supplier details:', error);
@@ -7422,6 +7493,49 @@ function updateModalTablePaginationUI() {
   if (nextBtn) nextBtn.disabled = window.modalTablePagination.currentPage >= totalPages;
   
   console.log('✅ Modal pagination UI updated');
+}
+
+// ===== RAW MATERIAL MODAL SEARCH FUNCTIONALITY =====
+function setupRawMaterialSearchFilters(allData) {
+  const supplierSearch = document.getElementById('modalSupplierSearch');
+  const partNumberSearch = document.getElementById('modalPartNumberSearch');
+  const hwoSearch = document.getElementById('modalHWOSearch');
+  
+  if (!window.modalTablePagination) return;
+  
+  // Store original data
+  if (!window.originalRawMaterialData) {
+    window.originalRawMaterialData = allData;
+  }
+  
+  const filterData = () => {
+    const supplierFilter = supplierSearch?.value.toLowerCase() || '';
+    const partNumberFilter = partNumberSearch?.value.toLowerCase() || '';
+    const hwoFilter = hwoSearch?.value.toLowerCase() || '';
+    
+    const filtered = window.originalRawMaterialData.filter(item => {
+      const matchesSupplier = !supplierFilter || (item.name && item.name.toLowerCase().includes(supplierFilter));
+      const matchesPartNumber = !partNumberFilter || (item.partNumber && item.partNumber.toLowerCase().includes(partNumberFilter));
+      const matchesHWO = !hwoFilter || (item.hwo && item.hwo.toLowerCase().includes(hwoFilter));
+      
+      return matchesSupplier && matchesPartNumber && matchesHWO;
+    });
+    
+    window.modalTablePagination.setData(filtered);
+    window.modalTablePagination.currentPage = 1;
+    window.modalTablePagination.renderTable();
+    updateModalTablePaginationUI();
+  };
+  
+  if (supplierSearch) {
+    supplierSearch.addEventListener('input', filterData);
+  }
+  if (partNumberSearch) {
+    partNumberSearch.addEventListener('input', filterData);
+  }
+  if (hwoSearch) {
+    hwoSearch.addEventListener('input', filterData);
+  }
 }
 
 function buildModalSupplierDetailsData(data, rawType) {
