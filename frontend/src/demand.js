@@ -6958,29 +6958,47 @@ function extractModalRawMaterialData(parts, targetRawType, year, supplierMap) {
 function renderModalDetailsTable(data, rawType) {
   console.log('📋 renderModalDetailsTable called for rawType:', rawType);
   const tableBody = document.getElementById('modalDetailsTableBody');
-  const supplierDetails = buildModalSupplierDetailsData(data, rawType);
+  
+  // Show loading state
+  tableBody.innerHTML = '<tr><td colspan="20" class="text-center">Loading data...</td></tr>';
+  
+  // Fetch data from backend API
+  fetch(`/api/rm-supplier-details/${encodeURIComponent(rawType)}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(result => {
+      console.log('📦 Fetched supplier details from API:', {
+        count: result.data.length,
+        sample: result.data[0]
+      });
+      
+      const supplierDetails = result.data;
+      
+      // Initialize pagination manager for modal table
+      if (!window.modalTablePagination) {
+        console.log('🆕 Creating new TablePaginationManager');
+        window.modalTablePagination = new TablePaginationManager('modalDetailsTable', (pageData) => {
+          renderModalTablePage(pageData);
+        });
+      }
 
-  console.log('📦 Supplier details data:', {
-    count: supplierDetails.length,
-    sample: supplierDetails[0]
-  });
+      // Set the data and render first page
+      window.modalTablePagination.setData(supplierDetails);
+      window.modalTablePagination.pageSize = parseInt(document.getElementById('supplierDetailsPageSize')?.value || 10);
+      console.log('📄 Rendering table with pageSize:', window.modalTablePagination.pageSize);
+      window.modalTablePagination.renderTable();
 
-  // Initialize pagination manager for modal table
-  if (!window.modalTablePagination) {
-    console.log('🆕 Creating new TablePaginationManager');
-    window.modalTablePagination = new TablePaginationManager('modalDetailsTable', (pageData) => {
-      renderModalTablePage(pageData);
+      // Setup pagination controls
+      setupModalTablePaginationControls();
+    })
+    .catch(error => {
+      console.error('Error fetching RM supplier details:', error);
+      tableBody.innerHTML = `<tr><td colspan="20" class="text-center text-danger">Error loading data: ${error.message}</td></tr>`;
     });
-  }
-
-  // Set the data and render first page
-  window.modalTablePagination.setData(supplierDetails);
-  window.modalTablePagination.pageSize = parseInt(document.getElementById('supplierDetailsPageSize')?.value || 10);
-  console.log('📄 Rendering table with pageSize:', window.modalTablePagination.pageSize);
-  window.modalTablePagination.renderTable();
-
-  // Setup pagination controls
-  setupModalTablePaginationControls();
 }
 
 function renderModalTablePage(pageData) {
@@ -7010,6 +7028,10 @@ function renderModalTablePage(pageData) {
       <td>${supplier.quarters['2027-Q2'] || '-'}</td>
       <td>${supplier.quarters['2027-Q3'] || '-'}</td>
       <td>${supplier.quarters['2027-Q4'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q1'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q2'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q3'] || '-'}</td>
+      <td>${supplier.quarters['2028-Q4'] || '-'}</td>
     `;
     tableBody.appendChild(row);
   });

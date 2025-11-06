@@ -694,9 +694,9 @@
   <script defer src="src/utils.js?v=2"></script>
   <script defer src="src/filters.js?v=2"></script>
   <script defer src="src/supplier-type-chart.js?v=3"></script>
-  <script defer src="src/rm-supplier-raw-material-chart.js?v=3"></script>
+  <script defer src="src/rm-supplier-raw-material-chart.js?v=4"></script>
   <script defer src="src/hw-owner-complexity-chart.js?v=1"></script>
-  <script defer src="src/demand.js?v=29"></script>
+  <script defer src="src/demand.js?v=31"></script>
   <script defer src="src/dropdowns.js?v=2"></script>
 
   <!-- Chatbot Icon -->
@@ -720,12 +720,12 @@
             <div class="card-body">
               <div class="row g-2">
                 <div class="col-md-4">
-                  <label for="modalSupplierSearch" class="form-label">Search Supplier</label>
-                  <input type="text" class="form-control form-control-sm" id="modalSupplierSearch" placeholder="Filter by supplier...">
+                  <label for="modalSupplierSearch" class="form-label">Search RM Supplier</label>
+                  <input type="text" class="form-control form-control-sm" id="modalSupplierSearch" placeholder="Filter by RM supplier...">
                 </div>
                 <div class="col-md-4">
-                  <label for="modalPartNumberSearch" class="form-label">Search Part Number</label>
-                  <input type="text" class="form-control form-control-sm" id="modalPartNumberSearch" placeholder="Filter by part number...">
+                  <label for="modalPartNumberSearch" class="form-label">Search RM Part Number</label>
+                  <input type="text" class="form-control form-control-sm" id="modalPartNumberSearch" placeholder="Filter by RM part number...">
                 </div>
                 <div class="col-md-4">
                   <label for="modalHWOSearch" class="form-label">Search HWO</label>
@@ -757,10 +757,10 @@
                 <table class="table table-sm" id="modalDetailsTable">
                   <thead>
                     <tr>
-                      <th>Supplier</th>
-                      <th>Part Number</th>
+                      <th>RM Supplier</th>
+                      <th>RM Part Number</th>
                       <th>Parent Part No</th>
-                      <th>Description</th>
+                      <th>Part Description</th>
                       <th>HWO</th>
                       <th>Level</th>
                       <th>QPE</th>
@@ -768,6 +768,7 @@
                       <th colspan="4" class="text-center">2025</th>
                       <th colspan="4" class="text-center">2026</th>
                       <th colspan="4" class="text-center">2027</th>
+                      <th colspan="4" class="text-center">2028</th>
                     </tr>
                     <tr>
                       <th></th>
@@ -778,6 +779,10 @@
                       <th></th>
                       <th></th>
                       <th></th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
                       <th>Q1</th>
                       <th>Q2</th>
                       <th>Q3</th>

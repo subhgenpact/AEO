@@ -1109,6 +1109,96 @@ class DuckDBService:
             traceback.print_exc()
             return []
     
+    def get_rm_supplier_details_by_raw_material(self, raw_material_type: str) -> List[Dict[str, Any]]:
+        """
+        Get detailed RM supplier information with quarterly demand for a specific raw material type
+        Returns list of RM suppliers with their part numbers and quarterly breakdown
+        """
+        try:
+            main_table = self._get_main_table()
+            
+            # Query to get RM supplier details with quarterly aggregation
+            query = f"""
+                WITH quarterly_data AS (
+                    SELECT 
+                        "{self.rm_supplier_col}" as rm_supplier,
+                        "{self.level2_pn_col}" as rm_part_number,
+                        "{self.part_col}" as parent_part_no,
+                        "Part_Description" as part_description,
+                        "{self.hw_owner_col}" as hwo,
+                        'L2' as level,
+                        "QPE" as qpe,
+                        CAST(EXTRACT(YEAR FROM CAST("{self.target_date_col}" AS DATE)) AS INTEGER) as year,
+                        CAST(CEIL(EXTRACT(MONTH FROM CAST("{self.target_date_col}" AS DATE)) / 3.0) AS INTEGER) as quarter,
+                        COUNT(*) as count
+                    FROM {main_table}
+                    WHERE "{self.level2_raw_type_col}" = '{raw_material_type}'
+                        AND "{self.rm_supplier_col}" IS NOT NULL
+                        AND "{self.rm_supplier_col}" != ''
+                        AND "{self.rm_supplier_col}" != 'NaN'
+                        AND "{self.rm_supplier_col}" != 'nan'
+                        AND "{self.level2_pn_col}" IS NOT NULL
+                        AND "{self.level2_pn_col}" != ''
+                    GROUP BY 
+                        "{self.rm_supplier_col}",
+                        "{self.level2_pn_col}",
+                        "{self.part_col}",
+                        "Part_Description",
+                        "{self.hw_owner_col}",
+                        "QPE",
+                        year,
+                        quarter
+                )
+                SELECT * FROM quarterly_data
+                ORDER BY rm_supplier, rm_part_number, year, quarter
+            """
+            
+            result = self.conn.execute(query).fetchall()
+            
+            # Group by supplier and part number
+            supplier_map = {}
+            for row in result:
+                rm_supplier = row[0]
+                rm_part_number = row[1]
+                parent_part_no = row[2]
+                part_description = row[3]
+                hwo = row[4]
+                level = row[5]
+                qpe = row[6]
+                year = row[7]
+                quarter = row[8]
+                count = row[9]
+                
+                key = f"{rm_supplier}|{rm_part_number}"
+                
+                if key not in supplier_map:
+                    supplier_map[key] = {
+                        "name": rm_supplier,
+                        "partNumber": rm_part_number,
+                        "parentPartNo": parent_part_no or "-",
+                        "description": part_description or "Raw Material Component",
+                        "hwo": hwo or "HW1",
+                        "level": level,
+                        "qpe": qpe or "-",
+                        "mfgLT": "-",
+                        "quarters": {}
+                    }
+                
+                quarter_key = f"{year}-Q{quarter}"
+                supplier_map[key]["quarters"][quarter_key] = count
+            
+            details_list = list(supplier_map.values())
+            
+            print(f"[DUCKDB] ✓ RM Supplier details for {raw_material_type}: {len(details_list)} unique RM suppliers")
+            
+            return details_list
+            
+        except Exception as e:
+            print(f"[ERROR] Error getting RM supplier details: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
     def close(self):
         """Close DuckDB connection"""
         if self.conn:

@@ -782,3 +782,62 @@ async def get_rm_supplier_by_raw_material():
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/rm-supplier-details/{raw_material_type}")
+async def get_rm_supplier_details(raw_material_type: str):
+    """
+    Get detailed RM supplier information with quarterly demand for a specific raw material type
+    
+    Args:
+        raw_material_type: The raw material type (e.g., "Casting Structural", "Forging Ring")
+    
+    Example response:
+    {
+      "status": "success",
+      "data": [
+        {
+          "name": "RM Supplier 18",
+          "partNumber": "RM PN8",
+          "parentPartNo": "PN18",
+          "description": "Part Desc16",
+          "hwo": "HW1",
+          "level": "L2",
+          "qpe": "2",
+          "mfgLT": "-",
+          "quarters": {
+            "2025-Q1": 5,
+            "2025-Q2": 3,
+            "2026-Q1": 8
+          }
+        },
+        ...
+      ]
+    }
+    """
+    try:
+        if not duckdb_service:
+            raise HTTPException(status_code=500, detail="DuckDB service not initialized")
+        
+        start_time = time.time()
+        
+        details = duckdb_service.get_rm_supplier_details_by_raw_material(raw_material_type)
+        
+        elapsed = time.time() - start_time
+        
+        print(f"[API] RM Supplier details for '{raw_material_type}': {len(details)} records in {elapsed*1000:.2f}ms")
+        
+        return {
+            "status": "success",
+            "data": details,
+            "raw_material_type": raw_material_type,
+            "execution_time_ms": f"{elapsed*1000:.2f}"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] RM supplier details endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

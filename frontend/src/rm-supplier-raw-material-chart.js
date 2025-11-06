@@ -89,6 +89,21 @@ function renderRMSupplierRawMaterialChart() {
             }
           },
           interaction: { intersect: true, mode: 'nearest' },
+          onClick: (event, activeElements) => {
+            if (activeElements.length > 0) {
+              const index = activeElements[0].index;
+              const rawMaterialType = labels[index];
+              const count = counts[index];
+              console.log(`Clicked on ${rawMaterialType} (${count} suppliers)`);
+              
+              // Show raw material details modal
+              if (typeof showRawMaterialDetailsModal === 'function') {
+                showRawMaterialDetailsModal(rawMaterialType);
+              } else {
+                console.warn('⚠️ showRawMaterialDetailsModal function not found');
+              }
+            }
+          },
           animation: {
             animateRotate: true,
             animateScale: true,
