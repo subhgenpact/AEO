@@ -921,8 +921,11 @@ class GapAnalysisDashboard {
       const priority = row['Priority'] || row['PRIORITY'] || row['priority'] || this.calculateRowPriority(row);
       const priorityBadge = this.getPriorityBadge(priority);
       
-      // Format target date (Due Date)
-      const dueDate = this.formatDate(row['Target_Ship_Date'] || row['Target Ship Date']);
+      // Format target ship date
+      const targetShipDate = this.formatDate(row['Target_Ship_Date'] || row['Target Ship Date']);
+      
+      // Format Planned PO Date Target
+      const plannedPODate = this.formatDate(row['Planned_PO_Date_Target'] || row['Planned PO Date Target'] || row['PLANNED_PO_DATE_TARGET']);
       
       // Determine status based on available data
       const status = this.determineStatus(row);
@@ -931,20 +934,30 @@ class GapAnalysisDashboard {
       // Get action required (based on gap status and priority)
       const actionRequired = this.getActionRequired(row, priority);
       
-      // Get HW Owner for email
+      // Get all the new columns
+      const rmType = row['Level_2_Raw_Type'] || row['Level 2 Raw Type'] || row['Level_2_Type'] || 'N/A';
+      const rmSupplier = row['Level_2_Raw_Material_Supplier'] || row['Level 2 Raw Material Supplier'] || 'N/A';
+      const partDescription = row['Part_Description'] || row['Part Description'] || row['Description'] || 'N/A';
+      const partSupplier = row['Parent_Part_Supplier'] || row['Parent Part Supplier'] || 'N/A';
       const hwOwner = row['HW_OWNER'] || row['HW OWNER'] || 'N/A';
 
       tr.innerHTML = `
         <td class="text-center">${priorityBadge}</td>
         <td class="fw-semibold">${row['Level_2_PN'] || row['Level 2 PN'] || 'N/A'}</td>
+        <td class="small">${rmType}</td>
+        <td>${rmSupplier}</td>
         <td>${row['Part_Number'] || row['Part Number'] || row['Level_1_PN'] || 'N/A'}</td>
+        <td class="small">${partDescription}</td>
+        <td>${partSupplier}</td>
         <td>${row['ESN'] || 'N/A'}</td>
+        <td>${hwOwner}</td>
         <td>${statusBadge}</td>
-        <td class="small">${dueDate}</td>
+        <td class="small">${targetShipDate}</td>
+        <td class="small">${plannedPODate}</td>
         <td>${actionRequired}</td>
         <td class="text-center">
           <button class="btn btn-outline-info btn-sm" onclick="gapDashboard.emailAction(${index})" title="Email ${hwOwner}">
-            <i class="fas fa-envelope me-1"></i>${hwOwner}
+            <i class="fas fa-envelope"></i>
           </button>
         </td>
         <td class="text-center">
