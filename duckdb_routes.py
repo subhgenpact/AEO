@@ -740,3 +740,45 @@ async def get_hw_owner_by_part_complexity():
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/rm-supplier-by-raw-material")
+async def get_rm_supplier_by_raw_material():
+    """
+    Get RM Supplier distribution grouped by Raw Material Type (Level_2_Raw_Type)
+    Returns count and percentage for each raw material type, excluding NaN values
+    
+    Example response:
+    {
+      "status": "success",
+      "data": [
+        {"raw_material": "Casting Structural", "count": 25, "percentage": 34.72},
+        {"raw_material": "Forging Ring", "count": 18, "percentage": 25.00},
+        {"raw_material": "Detail Part", "count": 11, "percentage": 15.28},
+        ...
+      ]
+    }
+    """
+    try:
+        if not duckdb_service:
+            raise HTTPException(status_code=500, detail="DuckDB service not initialized")
+        
+        start_time = time.time()
+        
+        distribution = duckdb_service.get_rm_supplier_by_raw_material()
+        
+        elapsed = time.time() - start_time
+        
+        return {
+            "status": "success",
+            "data": distribution,
+            "execution_time_ms": f"{elapsed*1000:.2f}"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] RM supplier by raw material endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

@@ -3755,6 +3755,16 @@ function renderSupplierChart(sectionId = 'section-supplier') {
     }
   }
   
+  // For RM supplier section, use the new raw material chart
+  if (sectionId === 'section-rm-supplier') {
+    if (typeof window.renderRMSupplierRawMaterialChart === 'function') {
+      window.renderRMSupplierRawMaterialChart();
+      return;
+    } else {
+      console.warn('⚠️ renderRMSupplierRawMaterialChart not loaded yet');
+    }
+  }
+  
   // Don't use cache - always re-render to respect filter changes
   // The cache check was preventing charts from updating when filters changed
   const cacheKey = sectionId === 'section-rm-supplier' ? 'rmSupplier' : 'supplier';

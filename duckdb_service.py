@@ -1059,6 +1059,56 @@ class DuckDBService:
             traceback.print_exc()
             return []
     
+    def get_rm_supplier_by_raw_material(self) -> List[Dict[str, Any]]:
+        """
+        Get RM Supplier count grouped by Raw Material Type (Level_2_Raw_Type)
+        Returns count and percentage for each raw material type, excluding NaN/empty values
+        """
+        try:
+            main_table = self._get_main_table()
+            
+            # Get count of distinct RM suppliers for each raw material type
+            query = f"""
+                SELECT 
+                    "{self.level2_raw_type_col}" as raw_material,
+                    COUNT(DISTINCT "{self.rm_supplier_col}") as count
+                FROM {main_table}
+                WHERE "{self.level2_raw_type_col}" IS NOT NULL 
+                    AND "{self.level2_raw_type_col}" != ''
+                    AND "{self.level2_raw_type_col}" != 'NaN'
+                    AND "{self.level2_raw_type_col}" != 'nan'
+                    AND "{self.rm_supplier_col}" IS NOT NULL
+                    AND "{self.rm_supplier_col}" != ''
+                    AND "{self.rm_supplier_col}" != 'NaN'
+                    AND "{self.rm_supplier_col}" != 'nan'
+                GROUP BY "{self.level2_raw_type_col}"
+                ORDER BY count DESC
+            """
+            
+            result = self.conn.execute(query).fetchall()
+            
+            # Calculate total and percentages
+            total = sum(row[1] for row in result)
+            
+            distribution = [
+                {
+                    "raw_material": row[0],
+                    "count": row[1],
+                    "percentage": round((row[1] / total * 100), 2) if total > 0 else 0
+                }
+                for row in result
+            ]
+            
+            print(f"[DUCKDB] ✓ RM Supplier by Raw Material: {distribution}")
+            
+            return distribution
+            
+        except Exception as e:
+            print(f"[ERROR] Error getting RM supplier by raw material: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
     def close(self):
         """Close DuckDB connection"""
         if self.conn:

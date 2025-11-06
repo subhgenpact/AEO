@@ -1,71 +1,72 @@
 /**
- * Supplier Type Chart Module
- * Renders donut chart showing supplier distribution by type (Internal, AEO, External)
+ * RM Supplier Raw Material Chart Module
+ * Renders donut chart showing RM supplier count distribution by raw material type
  */
 
-function renderSupplierTypeChart() {
-  console.log('📊 Rendering Supplier Type Distribution Chart');
+function renderRMSupplierRawMaterialChart() {
+  console.log('📊 Rendering RM Supplier by Raw Material Chart');
   
-  // Prevent double rendering - check if already rendering
-  if (window._renderingSupplierTypeChart) {
-    console.log('⚠️ Already rendering supplier type chart, skipping...');
+  // Prevent double rendering
+  if (window._renderingRMSupplierChart) {
+    console.log('⚠️ Already rendering RM supplier chart, skipping...');
     return;
   }
   
-  window._renderingSupplierTypeChart = true;
+  window._renderingRMSupplierChart = true;
   
-  // Fetch supplier type distribution from backend
-  fetch('/api/supplier-type-distribution')
+  // Fetch RM supplier by raw material from backend
+  fetch('/api/rm-supplier-by-raw-material')
     .then(response => response.json())
     .then(result => {
       if (result.status !== 'success' || !result.data || result.data.length === 0) {
-        console.error('❌ No supplier type data available');
+        console.error('❌ No RM supplier raw material data available');
+        window._renderingRMSupplierChart = false;
         return;
       }
       
-      const supplierTypeData = result.data;
-      console.log('✓ Supplier type data:', supplierTypeData);
+      const rawMaterialData = result.data;
+      console.log('✓ RM supplier raw material data:', rawMaterialData);
       
       // Extract labels, counts, and percentages
-      const labels = supplierTypeData.map(item => item.supplier_type);
-      const counts = supplierTypeData.map(item => item.count);
-      const percentages = supplierTypeData.map(item => item.percentage);
+      const labels = rawMaterialData.map(item => item.raw_material);
+      const counts = rawMaterialData.map(item => item.count);
+      const percentages = rawMaterialData.map(item => item.percentage);
       const totalSuppliers = counts.reduce((sum, val) => sum + val, 0);
       
-      // Define colors for each supplier type
-      const colorMap = {
-        'Internal': '#3b82f6',  // Blue
-        'AEO': '#22c55e',       // Green
-        'External': '#ef4444'   // Orange/Amber
-      };
+      // Define colors for each raw material type (matching the attached image)
+      const colorPalette = [
+        '#3b82f6',  // Blue - Casting Structural
+        '#1e40af',  // Dark Blue - Forging Ring
+        '#f97316',  // Orange - Detail Part
+        '#7c3aed',  // Purple - Casting Airfoil
+        '#ec4899',  // Pink - Casting Other
+        '#8b5cf6',  // Violet - Plate
+        '#eab308',  // Yellow - Forging Closed Die
+        '#ef4444'   // Red - Forging Powder
+      ];
       
-      const hoverColorMap = {
-        'Internal': '#3b82f6',  // Blue
-        'AEO': '#22c55e',       // Green
-        'External': '#ef4444'   // Orange/Amber
-      };
+      const backgroundColor = labels.map((label, index) => colorPalette[index % colorPalette.length]);
+      const hoverBackgroundColor = labels.map((label, index) => colorPalette[index % colorPalette.length]);
       
-      const backgroundColor = labels.map(label => colorMap[label] || '#6b7280');
-      const hoverBackgroundColor = labels.map(label => hoverColorMap[label] || '#4b5563');
-      
-      const ctx = document.getElementById('supplierChart');
+      const ctx = document.getElementById('rmDetailChart');
       if (!ctx) {
-        console.error('❌ supplierChart canvas not found');
+        console.error('❌ rmDetailChart canvas not found');
+        window._renderingRMSupplierChart = false;
         return;
       }
       
       // Destroy existing chart if it exists
-      if (window.supplierChart && typeof window.supplierChart.destroy === 'function') {
-        window.supplierChart.destroy();
+      if (window.rmSupplierChart && typeof window.rmSupplierChart.destroy === 'function') {
+        window.rmSupplierChart.destroy();
       }
       
       // Create donut chart
-      window.supplierChart = new Chart(ctx, {
+      window.rmSupplierChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels: labels,
           datasets: [{
-            label: 'Parent Part Supplier',
+            label: 'RM Supplier',
             data: counts,
             backgroundColor: backgroundColor,
             borderColor: '#ffffff',
@@ -99,8 +100,8 @@ function renderSupplierTypeChart() {
               position: 'right',
               labels: {
                 boxWidth: 15,
-                padding: 12,
-                font: { size: 13, weight: '500' },
+                padding: 8,
+                font: { size: 11, weight: '500' },
                 generateLabels: function (chart) {
                   const data = chart.data;
                   if (data.labels.length && data.datasets.length) {
@@ -116,6 +117,17 @@ function renderSupplierTypeChart() {
                     });
                   }
                   return [];
+                }
+              },
+              title: {
+                display: true,
+                text: 'Raw Material',
+                font: {
+                  size: 12,
+                  weight: '600'
+                },
+                padding: {
+                  bottom: 10
                 }
               }
             },
@@ -145,7 +157,7 @@ function renderSupplierTypeChart() {
               color: '#000000',
               font: {
                 weight: 'bold',
-                size: 11
+                size: 10
               },
               formatter: function (value, context) {
                 const count = counts[context.dataIndex];
@@ -163,14 +175,14 @@ function renderSupplierTypeChart() {
         }
       });
       
-      console.log('✓ Supplier Type chart rendered successfully');
-      window._renderingSupplierTypeChart = false;
+      console.log('✓ RM Supplier Raw Material chart rendered successfully');
+      window._renderingRMSupplierChart = false;
     })
     .catch(error => {
-      console.error('❌ Error fetching supplier type distribution:', error);
-      window._renderingSupplierTypeChart = false;
+      console.error('❌ Error fetching RM supplier raw material data:', error);
+      window._renderingRMSupplierChart = false;
     });
 }
 
 // Make function available globally
-window.renderSupplierTypeChart = renderSupplierTypeChart;
+window.renderRMSupplierRawMaterialChart = renderRMSupplierRawMaterialChart;
