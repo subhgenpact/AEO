@@ -311,9 +311,9 @@
       <div class="flex-fill">
         <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-left: 4px solid #2196f3;">
           <div class="card-body text-center p-3">
-            <div class="kpi-number text-primary fw-bold" style="font-size: 2rem;" id="totalGapsCount">12</div>
+            <div class="kpi-number text-primary fw-bold" style="font-size: 2rem;" id="totalGapsCount">0</div>
             <div class="kpi-label text-dark fw-semibold mt-1">Total Gaps</div>
-            <div class="kpi-status text-muted small mt-1" id="totalGapsStatus">Status: 12% Gap</div>
+            <div class="kpi-status text-muted small mt-1" id="totalGapsStatus">Status: 0% Gap</div>
           </div>
         </div>
       </div>
@@ -322,7 +322,7 @@
       <div class="flex-fill">
         <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); border-left: 4px solid #f44336;">
           <div class="card-body text-center p-3">
-            <div class="kpi-number text-danger fw-bold" style="font-size: 2rem;" id="criticalPriorityCount">2</div>
+            <div class="kpi-number text-danger fw-bold" style="font-size: 2rem;" id="criticalPriorityCount">0</div>
             <div class="kpi-label text-dark fw-semibold mt-1">Critical Priority</div>
             <div class="kpi-status text-muted small mt-1" id="criticalPriorityStatus">Status: Past Due</div>
           </div>
@@ -333,7 +333,7 @@
       <div class="flex-fill">
         <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left: 4px solid #ff9800;">
           <div class="card-body text-center p-3">
-            <div class="kpi-number text-warning fw-bold" style="font-size: 2rem;" id="highPriorityCount">3</div>
+            <div class="kpi-number text-warning fw-bold" style="font-size: 2rem;" id="highPriorityCount">0</div>
             <div class="kpi-label text-dark fw-semibold mt-1">High Priority</div>
             <div class="kpi-status text-muted small mt-1" id="highPriorityStatus">Status: Due in next 3 weeks</div>
           </div>
@@ -344,7 +344,7 @@
       <div class="flex-fill">
         <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); border-left: 4px solid #9c27b0;">
           <div class="card-body text-center p-3">
-            <div class="kpi-number text-purple fw-bold" style="font-size: 2rem;" id="mediumPriorityCount">4</div>
+            <div class="kpi-number text-purple fw-bold" style="font-size: 2rem;" id="mediumPriorityCount">0</div>
             <div class="kpi-label text-dark fw-semibold mt-1">Medium Priority</div>
             <div class="kpi-status text-muted small mt-1" id="mediumPriorityStatus">Status: Missing commits</div>
           </div>
@@ -355,7 +355,7 @@
       <div class="flex-fill">
         <div class="card kpi-card h-100" style="background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%); border-left: 4px solid #4caf50;">
           <div class="card-body text-center p-3">
-            <div class="kpi-number text-success fw-bold" style="font-size: 2rem;" id="lowPriorityCount">3</div>
+            <div class="kpi-number text-success fw-bold" style="font-size: 2rem;" id="lowPriorityCount">0</div>
             <div class="kpi-label text-dark fw-semibold mt-1">Low Priority</div>
             <div class="kpi-status text-muted small mt-1" id="lowPriorityStatus">Status: Late commits</div>
           </div>
@@ -444,14 +444,6 @@
           </nav>
         </div>
       </div>
-    </div>
-
-    <!-- Loading indicator -->
-    <div id="loadingIndicator" class="text-center py-4" style="display: none;">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-2">Loading Gap Analysis data...</p>
     </div>
 
     <!-- Error message -->

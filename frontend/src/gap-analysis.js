@@ -64,7 +64,7 @@ class GapAnalysisDashboard {
   }
 
   showLoading(show) {
-    const loadingEl = document.getElementById('loadingIndicator');
+    const loadingEl = document.getElementById('tableLoading');
     const errorEl = document.getElementById('errorMessage');
     
     if (show) {
@@ -78,7 +78,7 @@ class GapAnalysisDashboard {
   showError(message) {
     const errorEl = document.getElementById('errorMessage');
     const errorText = document.getElementById('errorText');
-    const loadingEl = document.getElementById('loadingIndicator');
+    const loadingEl = document.getElementById('tableLoading');
     
     errorText.textContent = message;
     errorEl.style.display = 'block';
