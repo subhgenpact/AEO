@@ -899,3 +899,181 @@ async def get_supplier_details(supplier_type: str):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/gap-analysis/all")
+async def get_gap_analysis_data(skip: int = 0, limit: int = 1000):
+    """
+    Get gap analysis data - only records where Have Gap = 'Y'
+    Supports pagination for efficient data loading
+    
+    Args:
+        skip: Number of records to skip (default: 0)
+        limit: Number of records to return (default: 1000)
+    
+    Returns only records with:
+        - Have_Gap = 'Y' OR Gap_Y_N = 'Y' OR various gap column variations
+    
+    Example response:
+    {
+      "status": "success",
+      "total": 500,
+      "data": [
+        {
+          "ENGINE_PROGRAM": "LM2500",
+          "Configuration": "Standard",
+          "ESN": "ESN-001",
+          "Part_Number": "PN-001",
+          "Have_Gap": "Y",
+          ...
+        }
+      ]
+    }
+    """
+    try:
+        if not duckdb_service:
+            raise HTTPException(status_code=500, detail="DuckDB service not initialized")
+        
+        start_time = time.time()
+        main_table = duckdb_service._get_main_table()
+        
+        # Get column names
+        column_check = duckdb_service.conn.execute(f"SELECT * FROM {main_table} LIMIT 0").description
+        column_names = [col[0] for col in column_check]
+        
+        # Find which gap column exists in the database
+        gap_columns = ['Have_Gap', 'Gap_Y_N', 'Gap (Y/N)', 'Gap_YN', 'have_gap', 'gap_y_n', 'gap_yn']
+        gap_col = None
+        for col in gap_columns:
+            if col in column_names:
+                gap_col = col
+                break
+        
+        if not gap_col:
+            # If no gap column found, return empty result
+            print("[WARNING] No gap indicator column found in database")
+            return {
+                "status": "success",
+                "total": 0,
+                "skip": skip,
+                "limit": limit,
+                "hasMore": False,
+                "returned_rows": 0,
+                "execution_time_ms": "0",
+                "data": [],
+                "message": "No gap indicator column found in database"
+            }
+        
+        print(f"[GAP ANALYSIS] Using gap column: {gap_col}")
+        
+        # Find which priority column exists in the database
+        priority_columns = ['Priority', 'PRIORITY', 'priority']
+        priority_col = None
+        for col in priority_columns:
+            if col in column_names:
+                priority_col = col
+                break
+        
+        # Build query to filter for gap records only
+        count_query = f"""
+            SELECT COUNT(*) 
+            FROM {main_table} 
+            WHERE "{gap_col}" = 'Y'
+        """
+        total = duckdb_service.conn.execute(count_query).fetchall()[0][0]
+        
+        # Build ORDER BY clause for priority sorting (P1 first)
+        order_by_clause = ""
+        if priority_col:
+            # Use CASE to map priorities to numeric values for sorting
+            order_by_clause = f"""
+                ORDER BY 
+                    CASE 
+                        WHEN "{priority_col}" IN ('P1', '1', 'CRITICAL') THEN 1
+                        WHEN "{priority_col}" IN ('P2', '2', 'HIGH') THEN 2
+                        WHEN "{priority_col}" IN ('P3', '3', 'MEDIUM') THEN 3
+                        WHEN "{priority_col}" IN ('P4', '4', 'LOW') THEN 4
+                        ELSE 5
+                    END
+            """
+            print(f"[GAP ANALYSIS] Sorting by priority column: {priority_col}")
+        
+        # Get paginated gap records sorted by priority
+        data_query = f"""
+            SELECT * 
+            FROM {main_table} 
+            WHERE "{gap_col}" = 'Y'
+            {order_by_clause}
+            LIMIT {limit} OFFSET {skip}
+        """
+        result = duckdb_service.conn.execute(data_query).fetchall()
+        columns = [col[0] for col in duckdb_service.conn.description]
+        
+        data = [dict(zip(columns, row)) for row in result]
+        
+        elapsed = time.time() - start_time
+        has_more = (skip + limit) < total
+        
+        print(f"[GAP ANALYSIS] Returned {len(data)} gap records (total: {total}) in {elapsed*1000:.2f}ms")
+        
+        return {
+            "status": "success",
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+            "hasMore": has_more,
+            "returned_rows": len(data),
+            "execution_time_ms": f"{elapsed*1000:.2f}",
+            "data": data,
+            "gap_column_used": gap_col
+        }
+    
+    except Exception as e:
+        print(f"[ERROR] Gap analysis endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/gap-analysis/kpis")
+async def get_gap_analysis_kpis():
+    """
+    Get KPI data for gap analysis dashboard
+    Uses actual Priority and Have_Gap columns from database
+    
+    Returns:
+    {
+      "status": "success",
+      "kpis": {
+        "totalGaps": {"count": 100, "status": "10% Gap"},
+        "criticalPriority": {"count": 20, "status": "P1 - Past Due"},
+        "highPriority": {"count": 30, "status": "P2 - Due Soon"},
+        "mediumPriority": {"count": 25, "status": "P3 - Upcoming"},
+        "lowPriority": {"count": 15, "status": "P4 - Low Risk"},
+        "onTrack": {"count": 900, "status": "Meeting targets"}
+      }
+    }
+    """
+    try:
+        if not duckdb_service:
+            raise HTTPException(status_code=500, detail="DuckDB service not initialized")
+        
+        start_time = time.time()
+        
+        kpis = duckdb_service.get_gap_analysis_kpis()
+        
+        elapsed = time.time() - start_time
+        
+        print(f"[GAP ANALYSIS KPIs] Retrieved in {elapsed*1000:.2f}ms")
+        
+        return {
+            "status": "success",
+            "kpis": kpis,
+            "execution_time_ms": f"{elapsed*1000:.2f}"
+        }
+    
+    except Exception as e:
+        print(f"[ERROR] Gap analysis KPIs endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

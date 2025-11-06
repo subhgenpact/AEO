@@ -40,6 +40,12 @@ async def gap_analysis_page():
     return FileResponse("frontend/GapAnalysis.html")
 
 
+@router.get("/gap-analysis-v1")
+async def gap_analysis_v1_page():
+    """Serve the gap analysis v1 page (alternative version)"""
+    return FileResponse("frontend/GapAnalysis1.html")
+
+
 # Keep backward compatibility with .html extensions
 @router.get("/demand.html")
 async def demand_page_html():
@@ -63,6 +69,12 @@ async def bom_explosion_page_html():
 async def gap_analysis_page_html():
     """Legacy route - redirects to /gap-analysis"""
     return FileResponse("frontend/GapAnalysis.html")
+
+
+@router.get("/GapAnalysis1.html")
+async def gap_analysis_v1_page_html():
+    """Legacy route - redirects to /gap-analysis-v1"""
+    return FileResponse("frontend/GapAnalysis1.html")
 
 
 @router.get("/index.html")

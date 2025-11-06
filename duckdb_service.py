@@ -1286,6 +1286,156 @@ class DuckDBService:
             traceback.print_exc()
             return []
     
+    def get_gap_analysis_kpis(self):
+        """
+        Get KPI data for gap analysis based on Priority and Have_Gap columns
+        
+        Returns:
+        {
+            "totalGaps": {"count": 100, "status": "10% Gap"},
+            "criticalPriority": {"count": 20, "status": "P1 - Critical"},
+            "highPriority": {"count": 30, "status": "P2 - High"},
+            "mediumPriority": {"count": 25, "status": "P3 - Medium"},
+            "lowPriority": {"count": 15, "status": "P4 - Low"},
+            "onTrack": {"count": 900, "status": "No Gaps"}
+        }
+        """
+        try:
+            main_table = self._get_main_table()
+            
+            # Get column names
+            column_check = self.conn.execute(f"SELECT * FROM {main_table} LIMIT 0").description
+            column_names = [col[0] for col in column_check]
+            
+            # Find gap column
+            gap_columns = ['Have_Gap', 'Gap_Y_N', 'Gap (Y/N)', 'Gap_YN', 'have_gap', 'gap_y_n', 'gap_yn', 'Have Gap', 'Gap Y/N']
+            gap_col = None
+            for col in gap_columns:
+                if col in column_names:
+                    gap_col = col
+                    break
+            
+            # Find priority column
+            priority_columns = ['Priority', 'PRIORITY', 'priority', 'Priority_Level', 'PRIORITY_LEVEL']
+            priority_col = None
+            for col in priority_columns:
+                if col in column_names:
+                    priority_col = col
+                    break
+            
+            print(f"[GAP ANALYSIS KPIs] Using gap column: {gap_col}, priority column: {priority_col}")
+            
+            if not gap_col:
+                print("[WARNING] No gap column found, returning empty KPIs")
+                return {
+                    "totalGaps": {"count": 0, "status": "No Gap Column"},
+                    "criticalPriority": {"count": 0, "status": "N/A"},
+                    "highPriority": {"count": 0, "status": "N/A"},
+                    "mediumPriority": {"count": 0, "status": "N/A"},
+                    "lowPriority": {"count": 0, "status": "N/A"},
+                    "onTrack": {"count": 0, "status": "N/A"}
+                }
+            
+            # Get total count
+            total_query = f'SELECT COUNT(*) FROM {main_table}'
+            total_count = self.conn.execute(total_query).fetchall()[0][0]
+            
+            # Get gap count
+            gap_query = f'SELECT COUNT(*) FROM {main_table} WHERE "{gap_col}" = \'Y\''
+            gap_count = self.conn.execute(gap_query).fetchall()[0][0]
+            
+            # Calculate gap percentage
+            gap_percentage = round((gap_count / total_count * 100), 2) if total_count > 0 else 0
+            
+            # Get on track count
+            on_track_count = total_count - gap_count
+            
+            kpis = {
+                "totalGaps": {
+                    "count": gap_count,
+                    "status": f"{gap_percentage}% Gap"
+                },
+                "onTrack": {
+                    "count": on_track_count,
+                    "status": "Meeting targets"
+                }
+            }
+            
+            # If priority column exists, break down by priority
+            if priority_col:
+                # Get counts by priority for gap records only
+                priority_query = f'''
+                    SELECT "{priority_col}", COUNT(*) 
+                    FROM {main_table} 
+                    WHERE "{gap_col}" = 'Y'
+                    GROUP BY "{priority_col}"
+                '''
+                priority_results = self.conn.execute(priority_query).fetchall()
+                
+                # Initialize priority counts
+                priority_counts = {
+                    'P1': 0,
+                    'P2': 0,
+                    'P3': 0,
+                    'P4': 0
+                }
+                
+                # Map results to priority levels
+                for row in priority_results:
+                    priority_value = str(row[0]).upper() if row[0] else 'UNKNOWN'
+                    count = row[1]
+                    
+                    # Map various priority formats to P1-P4
+                    if priority_value in ['P1', '1', 'CRITICAL', 'HIGH PRIORITY']:
+                        priority_counts['P1'] += count
+                    elif priority_value in ['P2', '2', 'HIGH']:
+                        priority_counts['P2'] += count
+                    elif priority_value in ['P3', '3', 'MEDIUM', 'MED']:
+                        priority_counts['P3'] += count
+                    elif priority_value in ['P4', '4', 'LOW']:
+                        priority_counts['P4'] += count
+                
+                kpis["criticalPriority"] = {
+                    "count": priority_counts['P1'],
+                    "status": "P1 - Past Due" if priority_counts['P1'] > 0 else "None"
+                }
+                kpis["highPriority"] = {
+                    "count": priority_counts['P2'],
+                    "status": "P2 - Due Soon" if priority_counts['P2'] > 0 else "None"
+                }
+                kpis["mediumPriority"] = {
+                    "count": priority_counts['P3'],
+                    "status": "P3 - Upcoming" if priority_counts['P3'] > 0 else "None"
+                }
+                kpis["lowPriority"] = {
+                    "count": priority_counts['P4'],
+                    "status": "P4 - Low Risk" if priority_counts['P4'] > 0 else "None"
+                }
+            else:
+                # No priority column, use default values
+                kpis["criticalPriority"] = {"count": 0, "status": "No Priority Data"}
+                kpis["highPriority"] = {"count": 0, "status": "No Priority Data"}
+                kpis["mediumPriority"] = {"count": 0, "status": "No Priority Data"}
+                kpis["lowPriority"] = {"count": 0, "status": "No Priority Data"}
+            
+            print(f"[GAP ANALYSIS KPIs] Total: {total_count}, Gaps: {gap_count}, On Track: {on_track_count}")
+            print(f"[GAP ANALYSIS KPIs] P1: {kpis.get('criticalPriority', {}).get('count', 0)}, P2: {kpis.get('highPriority', {}).get('count', 0)}, P3: {kpis.get('mediumPriority', {}).get('count', 0)}, P4: {kpis.get('lowPriority', {}).get('count', 0)}")
+            
+            return kpis
+            
+        except Exception as e:
+            print(f"[ERROR] Error getting gap analysis KPIs: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "totalGaps": {"count": 0, "status": "Error"},
+                "criticalPriority": {"count": 0, "status": "Error"},
+                "highPriority": {"count": 0, "status": "Error"},
+                "mediumPriority": {"count": 0, "status": "Error"},
+                "lowPriority": {"count": 0, "status": "Error"},
+                "onTrack": {"count": 0, "status": "Error"}
+            }
+    
     def close(self):
         """Close DuckDB connection"""
         if self.conn:

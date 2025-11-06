@@ -5,141 +5,150 @@
   <title>Gap Analysis Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Bootstrap 5 CDN -->
+<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"> -->
+<!-- <link rel="stylesheet" href="styles.css"> -->
+
+
   <style>
     /* Base Reset & Typography */
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+box-sizing: border-box;
 }
 
+
 html, body {
-  margin: 0;
-  padding: 0;
-  font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, 
-              rgba(0, 102, 204, 0.7) 0%,
-              rgba(0, 68, 153, 0.75) 20%,
-              rgba(0, 51, 102, 0.8) 40%,
-              rgba(0, 34, 68, 0.75) 60%,
-              rgba(26, 26, 26, 0.7) 80%,
-              rgba(32, 33, 36, 0.75) 100%),
-              url('src/images/slide1.jpg') no-repeat center center fixed;
-  background-size: cover;
-  background-attachment: fixed;
-  color: var(--gray-50);
-  font-size: 14px;
-  line-height: 1.4;
-  min-height: 100vh;
-  overflow-x: hidden;
+margin: 0;
+padding: 0;
+font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: linear-gradient(135deg, 
+            rgba(0, 102, 204, 0.7) 0%,
+            rgba(0, 68, 153, 0.75) 20%,
+            rgba(0, 51, 102, 0.8) 40%,
+            rgba(0, 34, 68, 0.75) 60%,
+            rgba(26, 26, 26, 0.7) 80%,
+            rgba(32, 33, 36, 0.75) 100%),
+            url('src/images/slide1.jpg') no-repeat center center fixed;
+background-size: cover;
+background-attachment: fixed;
+color: var(--gray-50);
+font-size: 14px;
+line-height: 1.4;
+min-height: 100vh;
+overflow-x: hidden;
 }
 
 /* Container */
 .container.dashboard {
-  max-width: 1400px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+max-width: 1200px;
+margin: 2rem auto;
+padding: 0 1rem;
 }
 
 /* KPI Grid */
 .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+display: flex;
+justify-content: space-around;
+flex-wrap: wrap;
+gap: 1.5rem;
+margin-bottom: 2rem;
 }
 
 /* KPI Cards */
 .kpi {
-  border-radius: 12px;
-  padding: 1.8rem 1.5rem;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  cursor: default;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+flex: 1 1 180px;
+border-radius: 10px;
+padding: 1.5rem 1.3rem;
+text-align: center;
+position: relative;
+overflow: hidden;
+cursor: default;
+box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+transition: transform 0.25s ease, box-shadow 0.25s ease;
+color: #003366; /* default dark blue text */
+padding-left: 12px; /* consistent left padding for border */
 }
 
 .kpi:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+transform: translateY(-6px);
+box-shadow: 0 12px 24px rgba(0,0,0,0.18);
 }
 
 .kpi h3 {
-  margin: 0;
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: inherit;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+margin: 0;
+font-size: 2.2rem;
+font-weight: 700;
+color: inherit; /* inherit from parent for variant colors */
 }
 
 .kpi span {
-  margin-top: 0.8rem;
-  font-size: 16px;
-  font-weight: 600;
-  display: block;
-  opacity: 0.9;
+margin-top: 0.5rem;
+font-size: 15px;
+font-weight: 600;
+color: #555;
 }
 
-/* KPI Variants - Modern gradient backgrounds */
+/* KPI Variants - background, text, and border */
 .kpi.demand {
-  background: linear-gradient(135deg, rgba(25, 135, 84, 0.9), rgba(40, 167, 69, 0.8));
-  color: #ffffff;
-  border-left: 5px solid #198754;
+
+
+background-color: #d1e7dd;  /* Soft green */
+color: #0f5132;             /* Dark green text */
+border-left: 6px solid #198754; /* Bootstrap Success Green */
+
 }
 
 .kpi.planned {
-  background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(255, 99, 132, 0.8));
-  color: #ffffff;
-  border-left: 5px solid #dc3545;
+  background-color: #fef2f2;           
+color: #fff3cd;
+border-left: 6px solid #cc0000; /* Bootstrap Warning Yellow */
 }
+
 
 .kpi.highPriority {
-  background: linear-gradient(135deg, rgba(255, 102, 0, 0.9), rgba(255, 140, 0, 0.8));
-  color: #ffffff;
-  border-left: 5px solid #ff6600;
+  background-color: #e9d9d4;           
+color: #fff3cd;
+border-left: 6px solid #ea580c; /* Bootstrap Warning Yellow */
 }
-
 .kpi.lowpriority {
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.9), rgba(255, 235, 59, 0.8));
-  color: #212529;
-  border-left: 5px solid #ffc107;
+  background-color: #fffbea;      /* very light yellow background */
+  color: #856404;                 /* dark golden text (good contrast) */
+  border-left: 6px solid #ffcc00; 
 }
 
 .kpi.confirmed {
-  background: linear-gradient(135deg, rgba(13, 110, 253, 0.9), rgba(54, 162, 235, 0.8));
-  color: #ffffff;
-  border-left: 5px solid #0d6efd;
+
+
+background-color: #cfe2ff;  /* Soft blue */
+color: #084298;             /* Dark blue text */
+border-left: 6px solid #0d6efd; /* Bootstrap Primary Blue */
 }
 
 .kpi.gap {
-  background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(255, 99, 132, 0.8));
-  color: #ffffff;
-  border-left: 5px solid #dc3545;
+background-color: #f8d7da;  /* Soft red */
+color: #842029;             /* Dark red text */
+border-left: 6px solid #dc3545; /* Bootstrap Danger Red */
 }
 
 /* ESN Display */
 .kpi-esn {
-  position: absolute;
-  top: 12px;
-  left: 15px;
-  font-size: 11px;
-  font-weight: 500;
-  opacity: 0.8;
-  text-align: left;
+position: absolute;
+top: 10px;
+left: 10px;
+font-size: 12px;
+color: #003366;
+text-align: left;
 }
 
 /* KPI Breakdown */
 .kpi-breakdown {
-  margin-top: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.9;
+/* margin-top: 6px; */
+font-size: 13px;
+color: #003366;
 }
 
 /* Filters */
@@ -206,39 +215,27 @@ margin-top: 25px;
 
 /* Cards */
 .card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  color: #222;
-  border-radius: 12px;
-  padding: 2rem 2.5rem;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+background: #f9f9f9;
+color: #222;
+border-radius: 10px;
+padding: 1.6rem 2rem;
+box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+transform: translateY(-6px);
+box-shadow: 0 15px 35px rgba(0,0,0,0.15);
 }
 
 .card h2 {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #0066cc;
-  border-left: 4px solid #0066cc;
-  padding-left: 1rem;
-  user-select: none;
-}
-
-.card h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #0066cc;
-  border-left: 4px solid #0066cc;
-  padding-left: 1rem;
+margin: 0 0 1rem 0;
+font-size: 1.5rem;
+/* color: #4dabf7; */
+border-left: 5px solid #4dabf7;
+padding-left: 0.8rem;
+/* font-weight: 700; */
+user-select: none;
 }
 
 /* Width Helpers */
@@ -261,7 +258,9 @@ flex: 1 1 45%;
 overflow-x: auto;
 margin-top: 1rem;
 }
-
+.section-title {
+  color: #004aad;
+}
 table.table {
 width: 100%;
 border-collapse: collapse;
@@ -289,37 +288,32 @@ background-color: #f4f8ff;
 
 /* Buttons */
 .btn-group {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+margin-top: 1rem;
+margin-bottom: 1rem;
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
 }
 
 .btn {
-  background: linear-gradient(135deg, #0066cc, #0052a3);
-  border: none;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  user-select: none;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+background-color: #004a80;
+border: none;
+color: white;
+padding: 8px 14px;
+border-radius: 6px;
+cursor: pointer;
+font-weight: 600;
+user-select: none;
+transition: background-color 0.25s ease;
 }
 
 .btn:hover {
-  background: linear-gradient(135deg, #ff6600, #e55a00);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 102, 0, 0.4);
+background-color: #003366;
 }
 
 .btn.active {
-  background: linear-gradient(135deg, #ff6600, #e55a00);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 102, 0, 0.4);
+background-color: #4dabf7;
+color: #003366;
 }
 
 /* Margin top helper */
@@ -369,24 +363,13 @@ max-height: 420px;
 }
 
 .filters-inline .form-select-sm {
-  height: 36px;
-  padding: 0 12px;
-  font-size: 14px;
-  min-width: 140px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #0066cc;
-  color: #0066cc;
-  font-weight: 600;
-  background-position: right 8px center;
-  background-size: 14px 14px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.filters-inline .form-select-sm:hover {
-  background: rgba(0, 102, 204, 0.1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 102, 204, 0.2);
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+  min-width: 120px;
+  background-position: right 6px center;
+  background-size: 12px 12px;
+  border-radius: 6px;
 }
 
 /* Search inputs styled like dark filter fields, square-cornered */
@@ -751,197 +734,6 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
 
 </style>
 
-
- <style>
-/* ===== Modal Backdrop ===== */
-#initialActionPopup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(15, 23, 42, 0.65);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  animation: fadeIn 0.3s ease-in-out;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-/* ===== Modal Box ===== */
-.modal-popup {
-  background: #ffffff;
-  border-radius: 12px;
-  width: 500px;
-  max-width: 100%;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  font-family: "Inter", "Segoe UI", sans-serif;
-  animation: slideUp 0.3s ease-in-out;
-  overflow: hidden;
-  align-items: center;
-}
-
-/* ===== Modal Content ===== */
-.modal-content {
-  padding: 28px 36px;
-  overflow-y: auto;
-  flex: 1;
-  width: 100%;
-}
-
-/* ===== Title ===== */
-.modal-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  /* color: #1e293b; */
-  text-align: center;
-  margin-bottom: 18px;
-  background: #dc2626;;
-  padding: 8px 12px;
-  border-radius: 8px;
-  /* display: inline-block; */
-}
-
-/* ===== Alert List ===== */
-.modal-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 20px 0;
-}
-
-.critical-alert {
-  background: #fef2f2;
-  border: 0.5px solid #dc2626;
-  border-radius: 8px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-}
-
-/* ===== Alert Header ===== */
-.alert-header {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #b91c1c;
-  margin-bottom: 8px;
-}
-
-/* ===== Badge Styles (P1/P2) ===== */
-.alert-badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.p1-critical {
-  background: #dc2626;
-}
-.p1-urgent {
-  background: #dc2626;
- 
-}
-.p2 {
-  /* background: #f97316; */
-  background: #dc2626;
-}
-
-/* ===== Details Box ===== */
-.alert-details-box {
-  background: #ffffff;
-  border-radius: 6px;
-  padding: 8px 10px;
-}
-
-.alert-inline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  font-size: 0.9rem;
-  color: #334155;
-}
-
-
-/* .alert-inline .span {
-  width: 62%;
-} */
-/* ===== Colored Texts ===== */
-.overdue-text,
-.red-link {
-  color: #dc2626;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.warning-text,
-.orange-link {
-  color: #dc2626;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.info-text,
-.blue-link {
-  /* color: #ea580c; */
-  color: #dc2626;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-/* ===== Close Button ===== */
-.modal-close-btn {
-  width: 50%;
-  padding: 12px;
-  background: #2563eb;
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  margin: 0 0 38px 0;
-}
-
-.modal-close-btn:hover {
-  background: #1d4ed8;
-}
-
-/* ===== Animations ===== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-
-
-.chart-container {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-  padding: 2rem;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-</style> 
-
   <style>
     /* === Layout + Theme === */
    
@@ -953,7 +745,7 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
 
     h2, h3 {
       margin: 0;
-      color: #004aad;
+      /* color: #004aad; */
     }
 
     .card {
@@ -986,7 +778,7 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
       background-color: #f0f4ff;
       border-radius: 10px;
       text-align: center;
-      padding: 20px;
+      padding: 7px;
       transition: transform 0.2s ease;
     }
 
@@ -1013,7 +805,7 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
 
     th, td {
       border: 1px solid #e1e1e1;
-      padding: 8px;
+      /* padding: 8px; */
       text-align: center;
     }
 
@@ -1057,33 +849,23 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
     }
 
     .toggle-btn {
-      background: rgba(255, 255, 255, 0.9);
-      border: 2px solid #0066cc;
-      color: #0066cc;
-      padding: 12px 24px;
-      border-radius: 8px;
+      background: #e7e9ef;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      transition: all 0.2s ease-in-out;
     }
 
     .toggle-btn.active {
-      background: linear-gradient(135deg, #0066cc, #0052a3);
+      background: #004aad;
       color: #fff;
-      border-color: #0066cc;
-      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
-      transform: translateY(-2px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
     .toggle-btn:hover {
-      background: linear-gradient(135deg, #ff6600, #e55a00);
-      color: #fff;
-      border-color: #ff6600;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+      background: #c7d3f5;
     }
 
     .summary {
@@ -1098,381 +880,13 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
       display: block;
       max-height: 350px;
     }
-  </style>
-  
-
-
-
-  <style>
-    .number {
-      font-size: 20px;
-      font-weight: bold;
-      padding: 5px 12px;
-      border-radius: 10px;
-      color: #fff;
-    }
-  
-    .section {
-      display: flex;
-      justify-content: space-between;
-      margin: 6px 0;
-      font-size: 14px;
-    }
-  
-    hr {
-      border: none;
-      border-top: 1px solid rgba(0,0,0,0.1);
-      margin: 8px 0;
-    }
-  
-    /* ===============================
-       CARD COLOR VARIANTS (KPI-aligned)
-       =============================== */
-  
-    /* CRITICAL / PLANNED */
-    .card1 {
-      background-color: #fef2f2;   /* Soft red (same as .kpi.planned) */
-      color: #842029;              /* Dark red for readability */
-      border: 1px solid #cc0000;
-      border-radius: 8px;
-    }
-    .card1 .number {
-      background-color: rgba(204, 0, 0, 0.2);
-      color: #842029;
-    }
-  
-    /* DEMAND / SUCCESS */
-    .card2 {
-      background-color: #e9d9d4;
-    /* color: #fff3cd; */
-    border: 1px solid #ea580c;
-    }
-    .card2 .number {
-      background-color: rgba(25, 135, 84, 0.2);
-      color: #0f5132;
-    }
-  
-    /* LOW PRIORITY / WARNING */
-    .card4 {
-      background-color: #fffbea;   /* Light yellow (same as .kpi.lowpriority) */
-      color: #856404;
-      border: 1px solid #ffcc00;
-      border-radius: 8px;
-    }
-    .card4 .number {
-      background-color: rgba(255, 204, 0, 0.2);
-      color: #856404;
-    }
-  
-    /* CONFIRMED / PRIMARY */
-    .card3{
-      background-color: #cfe2ff;   /* Soft blue (same as .kpi.confirmed) */
-      color: #084298;
-      border: 1px solid #0d6efd;
-      border-radius: 8px;
-    }
-    .card3 .number {
-      background-color: rgba(13, 110, 253, 0.2);
-      color: #084298;
-    }
-  
-    /* Optional: HOVER EFFECT (adds depth) */
-    .card.full-width > .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      transition: all 0.2s ease-in-out;
-    }
-  
-    /* CARD CONTAINER LAYOUT */
-    .card.full-width {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px; /* space between cards */
-      justify-content: space-between;
-    }
-  
-    .card.full-width > .card {
-      flex: 0 0 calc(50% - 10px); /* half-width layout */
-      box-sizing: border-box;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-
-  
-
-
-/* ===============================
-   COMPACT ROUND STATUS TRACKER
-   =============================== */
-   .status-tracker {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  position: relative;
-  margin-top: 10px;
-  padding: 10px 5px 0;
-}
-
-/* connecting line */
-.status-tracker::before {
-  content: "";
-  position: absolute;
-  top: 18px; /* center of circles */
-  left: 7%;
-  right: 7%;
-  height: 3px;
-  background-color: #e0e0e0;
-  z-index: 1;
-}
-
-/* each step */
-.step {
-  position: relative;
-  z-index: 2;
-  flex: 1;
-  text-align: center;
-  font-size: 12px;
-  color: #555;
-}
-
-/* circle style */
-.step .circle {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 6px;
-  font-size: 14px;
-  transition: all 0.3s ease-in-out;
-}
-
-/* label under each circle */
-.step .label {
-  margin-top: 2px;
-  font-weight: 500;
-}
-
-/* reason text for delays */
-.step .reason {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #842029;
-  font-style: italic;
-}
-
-/* ✅ Completed */
-.step.completed .circle {
-  background-color: #198754;
-  color: #fff;
-}
-
-/* 🔵 Active */
-.step.active .circle {
-  background-color: #0d6efd;
-  color: #fff;
-  box-shadow: 0 0 6px rgba(13, 110, 253, 0.6);
-}
-
-/* ❌ Delayed */
-.step.delayed .circle {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-/* Hover animation */
-.step:hover .circle {
-  transform: scale(1.1);
-}
-
-/* Smaller screens */
-@media (max-width: 600px) {
-  .step .label {
-    font-size: 10px;
-  }
-  .step .circle {
-    width: 22px;
-    height: 22px;
-    font-size: 12px;
-  }
-}
-
-/* ===============================
-   COMPACT ROUND STATUS TRACKER
-   =============================== */
-   .status-tracker {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  position: relative;
-  margin-top: 10px;
-  padding: 10px 5px 0;
-}
-
-/* connecting line */
-.status-tracker::before {
-  content: "";
-  position: absolute;
-  top: 18px;
-  left: 7%;
-  right: 7%;
-  height: 3px;
-  background-color: #e0e0e0;
-  z-index: 1;
-}
-
-/* each step */
-.step {
-  position: relative;
-  z-index: 2;
-  flex: 1;
-  text-align: center;
-  font-size: 12px;
-  color: #555;
-}
-
-/* circle style */
-.step .circle {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 6px;
-  font-size: 14px;
-  transition: all 0.3s ease-in-out;
-}
-
-/* label */
-.step .label {
-  margin-top: 2px;
-  font-weight: 500;
-}
-
-/* reason for delay */
-.step .reason {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #842029;
-  font-style: italic;
-}
-
-/* ✅ completed */
-.step.completed .circle {
-  background-color: #198754;
-  color: #fff;
-}
-
-/* 🔵 active */
-.step.active .circle {
-  background-color: #0d6efd;
-  color: #fff;
-  box-shadow: 0 0 6px rgba(13, 110, 253, 0.6);
-}
-
-/* ❌ delayed */
-.step.delayed .circle {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-/* hover animation */
-.step:hover .circle {
-  transform: scale(1.1);
-}
-
-/* small screen responsiveness */
-@media (max-width: 600px) {
-  .step .label {
-    font-size: 10px;
-  }
-  .step .circle {
-    width: 22px;
-    height: 22px;
-    font-size: 12px;
-  }
-}
-
-
-
-  </style>
-
-  <style>
-    #gapTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-
-
-
-#gapTable th, #gapTable td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-
-#gapTable th {
-  background-color: #0d6efd;
-  color: white;
-}
-
-.status-cell {
-  background-color: #fff3cd; /* light yellow */
-  color: #856404;
-  font-weight: bold;
-}
-
-.email-btn {
-  background-color: #0d6efd; /* blue */
-  color: #fff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.action-btn {
-  background-color: #198754; /* green */
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  margin-right: 5px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.comment-btn {
-  background-color: #6c757d; /* gray */
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.card.full-width {
-  max-height: 300px; /* Set your desired height */
-  overflow-y: auto;  /* Enables vertical scroll */
+    #chart3 {
+  margin-top: -10px; /* nudge up slightly */
 }
 
   </style>
   
-
-
-
-
-
-
-
-
-
+ 
   <style>
  
     .header h1 {
@@ -1536,19 +950,13 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         margin-bottom: 20px;
     }
     .chart-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: all 0.3s;
     }
-    .chart-card:hover { 
-      transform: translateY(-8px); 
-      box-shadow: 0 20px 40px rgba(0,0,0,0.18); 
-    }
+    .chart-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
     .chart-card h2 {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         -webkit-background-clip: text;
@@ -1557,7 +965,9 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         margin-bottom: 8px;
     }
     .chart-card p { color: #666; font-size: 12px; margin-bottom: 15px; }
-    .chart-wrapper { position: relative; height: 400px; }
+    .chart-wrapper { position: relative;
+     /* height: 400px; */
+      }
     
     /* Status Cards Container */
     .status-cards-container {
@@ -1782,172 +1192,105 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
   
     /* Action Items Table */
     .table-section {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border-radius: 12px;
-        padding: 2rem;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        margin-top: 2rem;
-    }
-    
-    .section-title {
-        margin: 0 0 1.5rem 0;
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: #0066cc;
-        border-left: 4px solid #0066cc;
-        padding-left: 1rem;
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
     .filter-info {
-        background: linear-gradient(135deg, rgba(0, 102, 204, 0.1), rgba(0, 153, 255, 0.1));
-        border: 2px solid #0066cc;
-        border-radius: 8px;
-        padding: 0.8rem 1rem;
-        margin-bottom: 1rem;
-        font-size: 0.9rem;
-        color: #0066cc;
+        background: #eff6ff;
+        border: 1px solid #3b82f6;
+        border-radius: 0.5rem;
+        padding: 0.6rem 0.85rem;
+        margin-bottom: 0.85rem;
+        font-size: 0.8rem;
+        color: #1e40af;
         font-weight: 600;
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
     .clear-filter {
-        background: linear-gradient(135deg, #ff6600, #e55a00);
+        background: #3b82f6;
         color: white;
         border: none;
-        padding: 0.4rem 0.8rem;
-        border-radius: 6px;
+        padding: 0.3rem 0.7rem;
+        border-radius: 0.35rem;
         cursor: pointer;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        transition: all 0.3s ease;
-    }
-    
-    .clear-filter:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(255, 102, 0, 0.3);
     }
     .table-wrap { 
         overflow-x: auto; 
-        border-radius: 8px; 
-        border: 1px solid rgba(0, 102, 204, 0.2);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 0.5rem; 
+        border: 1px solid #e5e7eb;
     }
-    table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        font-size: 0.85rem; 
-        color: #333;
-    }
-    thead { 
-        background: linear-gradient(135deg, #0066cc, #0052a3); 
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; 
+    color: black;}
+    thead { background: #f9fafb; }
     th {
-        padding: 1rem 0.8rem;
+        padding: 0.7rem 0.6rem;
         text-align: left;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        color: white;
+        /* color: #6b7280; */
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border-bottom: none;
+        letter-spacing: 0.03em;
+        border-bottom: 2px solid #e5e7eb;
     }
-    td { 
-        padding: 0.8rem; 
-        border-bottom: 1px solid rgba(0, 102, 204, 0.1); 
-    }
-    tbody tr { 
-        transition: all 0.3s ease; 
-        background: rgba(255, 255, 255, 0.8);
-    }
-    tbody tr:hover { 
-        background: rgba(0, 102, 204, 0.05);
-        transform: translateX(2px);
-    }
+    /* td {  */
+      /* padding: 0.7rem 0.6rem; */
+     /* border-bottom: 1px solid #f3f4f6; */
+      /* } */
+    tbody tr { transition: all 0.15s; }
+    tbody tr:hover { background: #f9fafb; }
     tbody tr.hidden { display: none; }
-    tr.overdue { 
-        background: rgba(220, 53, 69, 0.1);
-        border-left: 4px solid #dc3545;
-    }
-    tr.overdue:hover { 
-        background: rgba(220, 53, 69, 0.15); 
-    }
-    tr.highlight {
-        animation: highlightRow 2s ease;
-    }
-    @keyframes highlightRow {
-        0%, 100% { background: #f9fafb; }
-        50% { background: #dbeafe; }
-    }
+ 
+
+    /* Keep the selected row permanently highlighted */
+tr.highlight {
+    background-color: #df3737 !important;  /* Dark blue color */
+    color: white !important;               /* White text for contrast */
+    transition: background-color 0.3s ease;
+}
+
     .pill {
         display: inline-block;
-        padding: 0.3rem 0.7rem;
-        border-radius: 12px;
-        font-size: 0.75rem;
+        padding: 0.25rem 0.55rem;
+        border-radius: 0.4rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
-    .pill-red { 
-        background: linear-gradient(135deg, #dc3545, #c82333); 
-        color: white; 
-        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
-    }
-    .pill-yellow { 
-        background: linear-gradient(135deg, #ffc107, #e0a800); 
-        color: #212529; 
-        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
-    }
-    .pill-blue { 
-        background: linear-gradient(135deg, #0066cc, #0052a3); 
-        color: white; 
-        box-shadow: 0 2px 6px rgba(0, 102, 204, 0.3);
-    }
-    .pill-orange { 
-        background: linear-gradient(135deg, #ff6600, #e55a00); 
-        color: white; 
-        box-shadow: 0 2px 6px rgba(255, 102, 0, 0.3);
-    }
-    .pill-green { 
-        background: linear-gradient(135deg, #198754, #157347); 
-        color: white; 
-        box-shadow: 0 2px 6px rgba(25, 135, 84, 0.3);
-    }
-    .pill-purple { 
-        background: linear-gradient(135deg, #6f42c1, #5a32a3); 
-        color: white; 
-        box-shadow: 0 2px 6px rgba(111, 66, 193, 0.3);
-    }
+    .pill-red { background: #fee2e2; color: #991b1b; }
+    .pill-yellow { background: #fef3c7; color: #92400e; }
+    .pill-blue { background: #dbeafe; color: #1e40af; }
+    .pill-orange { background: #fed7aa; color: #9a3412; }
+    .pill-green { background: #dcfce7; color: #166534; }
+    .pill-purple { background: #e9d5ff; color: #6b21a8; }
     
     .action-buttons { display: flex; gap: 0.35rem; }
     .btn-close, .btn-comment {
-        padding: 0.5rem 0.8rem;
+        padding: 0.4rem 0.65rem;
         border: none;
-        border-radius: 6px;
-        font-size: 0.8rem;
+        border-radius: 0.35rem;
+        font-size: 0.75rem;
         font-weight: 700;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s;
     }
     .btn-close {
-        background: linear-gradient(135deg, #10b981, #059669);
+        background: #10b981;
         color: white;
-        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
     }
     .btn-close:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        background: #059669;
     }
     .btn-comment {
-        background: linear-gradient(135deg, #0066cc, #0052a3);
+        background: #3b82f6;
         color: white;
-        box-shadow: 0 2px 6px rgba(0, 102, 204, 0.3);
     }
     .btn-comment:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+        background: #2563eb;
     }
     
     .comment-section {
@@ -1999,9 +1342,7 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
     .modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.7);
         z-index: 9999;
         display: flex;
         align-items: center;
@@ -2009,23 +1350,21 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         padding: 1rem;
     }
     .modal {
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 12px;
+        background: white;
+        border-radius: 0.75rem;
         max-width: 700px;
         width: 100%;
         max-height: 90vh;
         overflow: hidden;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
     }
     .modal-header {
         background: linear-gradient(135deg, #ef4444, #dc2626);
         color: white;
-        padding: 1.25rem;
+        /* padding: 1.25rem; */
         display: flex;
         justify-content: space-between;
+        padding: 7px 20px 2px 20px;
     }
     .modal-header h2 { font-size: 1.15rem; }
     .close-x {
@@ -2061,12 +1400,12 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         font-size: 0.7rem; 
         font-weight: 700;
     }
-    .priority-p2 { background: #f97316; }
+    /* .priority-p2 { background: #f97316; } */
     .alert-title { font-size: 0.85rem; font-weight: 700; color: #991b1b; }
     .alert-text { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.4rem; }
     .alert-grid { 
         display: grid; 
-        grid-template-columns: repeat(2, 1fr); 
+        grid-template-columns: repeat(3, 1fr); 
         gap: 0.3rem; 
         background: white; 
         padding: 0.6rem; 
@@ -2074,9 +1413,11 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         font-size: 0.75rem;
         color: black;
     }
-    .modal-footer { padding: 1.25rem; background: #f9fafb; }
+    .modal-footer { 
+      padding: 0.25rem;
+       text-align: center; }
     .btn-primary {
-        width: 100%;
+        width: 20%;
         background: #3b82f6;
         color: white;
         padding: 0.75rem;
@@ -2118,6 +1459,91 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         font-size: 0.9rem; 
         line-height: 1.6; 
     }
+</style>
+
+<style>
+
+  /* White rectangular box */
+  .box {
+    background-color: #27ae60;
+    border: 1px solid #27ae60;
+    border-radius: 6px;
+    /* padding: 16px 20px; */
+    padding: 2px 26px;
+    display: inline-block;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    width: 16%;
+    margin-right: 54px;
+   
+  }
+
+  .box1 {
+    /* border: 1px solid #4e6156; */
+    border: 1px solid #fff;
+    border-radius: 6px;
+  }
+
+  .toggle-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  /* Switch styling */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+  }
+
+  .switch input {
+    display: none;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 20px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    /* background-color: #0d6efd; */
+    background-color: #ccc;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(16px);
+  }
+  #toggleLabel {
+    color: #ffff;
+  }
+</style>
+
+
+
+
+
+
 </style>
 </head>
 <body>
@@ -2208,71 +1634,114 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
 
 
 
-  <div class="container dashboard" style="margin-top: 0;">
-  
-
+  <div class="container dashboard">
     <!-- KPI Grid (Updated Layout) -->
-    <div class="kpi-grid" id="kpiGrid">
-      <div class="kpi demand">
-        <div class="kpi-esn">
-          <i class="fas fa-cogs"></i> All Programs
-        </div>
-        <h3 id="kpiTotalGaps">12</h3>
-        <span>Total Gaps</span>
-        <div class="kpi-breakdown">
-          Status: 12% Gap Rate
-        </div>
-      </div>
+<div class="container dashboard-mode">
+  <div class="kpi-grid" id="kpiGrid">
 
-      <div class="kpi planned">
-        <div class="kpi-esn">
-          <i class="fas fa-exclamation-triangle"></i> Critical
-        </div>
-        <h3 id="kpiCriticalPriority">3</h3>
-        <span>Critical Priority</span>
-        <div class="kpi-breakdown">
-          Status: Past Due
-        </div>
-      </div>
-
-      <div class="kpi highPriority">
-        <div class="kpi-esn">
-          <i class="fas fa-clock"></i> Urgent
-        </div>
-        <h3 id="kpiHighPriority">3</h3>
-        <span>High Priority</span>
-        <div class="kpi-breakdown">
-          Status: Due in 3 weeks
-        </div>
-      </div>
-
-      <div class="kpi confirmed">
-        <div class="kpi-esn">
-          <i class="fas fa-list-check"></i> Medium
-        </div>
-        <h3 id="kpiMediumPriority">3</h3>
-        <span>Medium Priority</span>
-        <div class="kpi-breakdown">
-          Status: Late commits
-        </div>
-      </div>
-
-      <div class="kpi lowpriority">
-        <div class="kpi-esn">
-          <i class="fas fa-info-circle"></i> Low
-        </div>
-        <h3 id="kpiLowPriority">3</h3>
-        <span>Low Priority</span>
-        <div class="kpi-breakdown">
-          Status: Missing commits
-        </div>
-      </div>
+    <!-- Total Gaps -->
+    <div class="kpi demand">
+      <span>Total Gaps</span>
+      <div class="kpi-esn"></div>
+      <h3 id="kpiTotalGaps">12</h3>
+      <div class="kpi-breakdown">Status: 12% Gap</div>
     </div>
 
+    <!-- Critical Priority -->
+    <div class="kpi planned">
+      <span>Critical Priority</span>
+      <div class="kpi-esn">
+        <!-- <strong>Engine program: XY2500</strong><br> -->
+      </div>
+      <h3 id="kpiCriticalPriority">2</h3>
+      <div class="kpi-breakdown">Status: Past Due</div>
+    </div>
+
+    <!-- High Priority -->
+    <div class="kpi highPriority">
+      <span>High Priority</span>
+      <div class="kpi-esn">
+        <!-- <strong>Engine program: XY2500</strong><br> -->
+      </div>
+      <h3 id="kpiHighPriority">3</h3>
+      <div class="kpi-breakdown">Status: Due in next 3 weeks</div>
+    </div>
+
+    <!-- Medium Priority -->
+    <div class="kpi lowpriority">
+      <span>Medium Priority</span>
+      <div class="kpi-esn">
+        <!-- <strong>Engine program: XY2500</strong><br> -->
+      </div>
+      <h3 id="kpiMediumPriority">4</h3>
+      <div class="kpi-breakdown">Status: Missing commits</div>
+    </div>
+
+    <!-- Low Priority -->
+    <div class="kpi confirmed">
+      <span>Low Priority</span>
+      <div class="kpi-esn">
+        <!-- <strong>Engine program: XY2500</strong><br> -->
+      </div>
+      <h3 id="kpiLowPriority">3</h3>
+      <div class="kpi-breakdown">Status: Late commits</div>
+    </div>
+
+  </div>
+</div>
+
+
+
   <!-- Filters Section -->
-  <div class="card" style="margin-bottom: 2rem;">
-    <h3><i class="fas fa-filter" style="margin-right: 0.5rem; color: #0066cc;"></i>Filters & Controls</h3>
-    <div class="filters-inline" style="width: 100%; justify-content: flex-start; display: flex; flex-wrap: wrap; gap: 1rem;">
+  <div class="d-flex gap-2 mb-3 justify-content-end">
+    <div class="filters-inline" style="width: 100%; justify-content: left; display: ruby;">
+
+      <!-- <div class="box">
+        <div class="toggle-item">
+          <div id="toggleLabel">Raw Material</div> 
+          <label class="switch">
+            <input type="checkbox" id="nameToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <script>
+        const toggle = document.getElementById('nameToggle');
+        const label = document.getElementById('toggleLabel');
+      
+        label.textContent = toggle.checked ? 'Level1' : 'Raw Material';
+      
+        toggle.addEventListener('change', function() {
+          label.textContent = this.checked ? 'Level1' : 'Raw Material';
+        });
+      </script> -->
+      <div class="box">
+        <div class="toggle-item">
+          <div id="toggleLabel">Level1</div> <!-- Default label text -->
+          <label class="switch">
+            <input type="checkbox" id="nameToggle" checked> <!-- Checked by default -->
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <script>
+        const toggle = document.getElementById('nameToggle');
+        const label = document.getElementById('toggleLabel');
+      
+        // Initialize on page load
+        label.textContent = toggle.checked ? 'Level1' : 'Raw Material';
+      
+        // Change label text when toggled
+        toggle.addEventListener('change', function() {
+          label.textContent = this.checked ? 'Level1' : 'Raw Material';
+        });
+      </script>
+
+
+      <div class="filters-section box1 d-flex flex-wrap gap-2">
+        
         <!-- 0: Product Line -->
         <div class="filter-item">
           <div class="dropdown-filter">
@@ -2280,19 +1749,19 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               aria-expanded="false">
               Product Line
             </button>
-            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
-              <div class="d-flex gap-2 mb-3">
+            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+              <div class="d-flex gap-1 mb-2">
                 <input type="text" class="form-control form-control-sm" id="productLineSearch" placeholder="Search..."
-                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
-                <button class="btn btn-sm py-1 px-3" id="selectAllProductLines"
-                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
-                <button class="btn btn-sm py-1 px-3" id="clearProductLines" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+                  style="flex: 1;">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllProductLines"
+                  title="Select All">All</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearProductLines" title="Clear">×</button>
               </div>
-              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
                 <!-- Options will be populated dynamically by JavaScript -->
               </div>
-              <div class="d-flex justify-content-end border-top pt-3">
-                <button class="btn btn-sm w-100" id="applyProductLines" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              <div class="d-flex justify-content-end border-top pt-2">
+                <button class="btn btn-sm btn-primary w-100" id="applyProductLines">Apply</button>
               </div>
             </div>
           </div>
@@ -2304,19 +1773,19 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               aria-expanded="false">
               Year
             </button>
-            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
-              <div class="d-flex gap-2 mb-3">
+            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+              <div class="d-flex gap-1 mb-2">
                 <input type="text" class="form-control form-control-sm" id="yearSearch" placeholder="Search..."
-                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
-                <button class="btn btn-sm py-1 px-3" id="selectAllYears"
-                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
-                <button class="btn btn-sm py-1 px-3" id="clearYears" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+                  style="flex: 1;">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllYears"
+                  title="Select All">All</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearYears" title="Clear">×</button>
               </div>
-              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
                 <!-- Options will be populated dynamically by JavaScript -->
               </div>
-              <div class="d-flex justify-content-end border-top pt-3">
-                <button class="btn btn-sm w-100" id="applyYears" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              <div class="d-flex justify-content-end border-top pt-2">
+                <button class="btn btn-sm btn-primary w-100" id="applyYears">Apply</button>
               </div>
             </div>
           </div>
@@ -2328,19 +1797,19 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               aria-expanded="false">
               Engine Config
             </button>
-            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
-              <div class="d-flex gap-2 mb-3">
+            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+              <div class="d-flex gap-1 mb-2">
                 <input type="text" class="form-control form-control-sm" id="engConfigSearch" placeholder="Search..."
-                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
-                <button class="btn btn-sm py-1 px-3" id="selectAllConfigs"
-                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
-                <button class="btn btn-sm py-1 px-3" id="clearConfigs" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+                  style="flex: 1;">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllConfigs"
+                  title="Select All">All</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearConfigs" title="Clear">×</button>
               </div>
-              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
                 <!-- Options will be populated dynamically by JavaScript -->
               </div>
-              <div class="d-flex justify-content-end border-top pt-3">
-                <button class="btn btn-sm w-100" id="applyConfigs" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              <div class="d-flex justify-content-end border-top pt-2">
+                <button class="btn btn-sm btn-primary w-100" id="applyConfigs">Apply</button>
               </div>
             </div>
           </div>
@@ -2352,20 +1821,20 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               aria-expanded="false">
               Supplier
             </button>
-            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
-              <div class="d-flex gap-2 mb-3">
+            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+              <div class="d-flex gap-1 mb-2">
                 <input type="text" class="form-control form-control-sm" id="supplierSearch" placeholder="Search..."
-                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
-                <button class="btn btn-sm py-1 px-3" id="selectAllSuppliers"
-                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
-                <button class="btn btn-sm py-1 px-3" id="clearSuppliers"
-                  title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+                  style="flex: 1;">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllSuppliers"
+                  title="Select All">All</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearSuppliers"
+                  title="Clear">×</button>
               </div>
-              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
                 <!-- Options will be populated dynamically by JavaScript -->
               </div>
-              <div class="d-flex justify-content-end border-top pt-3">
-                <button class="btn btn-sm w-100" id="applySuppliers" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              <div class="d-flex justify-content-end border-top pt-2">
+                <button class="btn btn-sm btn-primary w-100" id="applySuppliers">Apply</button>
               </div>
             </div>
           </div>
@@ -2377,19 +1846,19 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               aria-expanded="false">
               RM Supplier
             </button>
-            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
-              <div class="d-flex gap-2 mb-3">
+            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+              <div class="d-flex gap-1 mb-2">
                 <input type="text" class="form-control form-control-sm" id="rmSupplierSearch" placeholder="Search..."
-                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
-                <button class="btn btn-sm py-1 px-3" id="selectAllRmSuppliers"
-                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
-                <button class="btn btn-sm py-1 px-3" id="clearRmSuppliers" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+                  style="flex: 1;">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllRmSuppliers"
+                  title="Select All">All</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearRmSuppliers" title="Clear">×</button>
               </div>
-              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
                 <!-- Options will be populated dynamically by JavaScript -->
               </div>
-              <div class="d-flex justify-content-end border-top pt-3">
-                <button class="btn btn-sm w-100" id="applyRmSuppliers" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              <div class="d-flex justify-content-end border-top pt-2">
+                <button class="btn btn-sm btn-primary w-100" id="applyRmSuppliers">Apply</button>
               </div>
             </div>
           </div>
@@ -2401,19 +1870,19 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               aria-expanded="false">
               HW Owner
             </button>
-            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
-              <div class="d-flex gap-2 mb-3">
+            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+              <div class="d-flex gap-1 mb-2">
                 <input type="text" class="form-control form-control-sm" id="hwOwnerSearch" placeholder="Search..."
-                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
-                <button class="btn btn-sm py-1 px-3" id="selectAllHwOwners"
-                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
-                <button class="btn btn-sm py-1 px-3" id="clearHwOwners" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+                  style="flex: 1;">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllHwOwners"
+                  title="Select All">All</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearHwOwners" title="Clear">×</button>
               </div>
-              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
                 <!-- Options will be populated dynamically by JavaScript -->
               </div>
-              <div class="d-flex justify-content-end border-top pt-3">
-                <button class="btn btn-sm w-100" id="applyHwOwners" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              <div class="d-flex justify-content-end border-top pt-2">
+                <button class="btn btn-sm btn-primary w-100" id="applyHwOwners">Apply</button>
               </div>
             </div>
           </div>
@@ -2425,19 +1894,19 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               aria-expanded="false">
               Module
             </button>
-            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
-              <div class="d-flex gap-2 mb-3">
+            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+              <div class="d-flex gap-1 mb-2">
                 <input type="text" class="form-control form-control-sm" id="moduleSearch" placeholder="Search..."
-                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
-                <button class="btn btn-sm py-1 px-3" id="selectAllModules"
-                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
-                <button class="btn btn-sm py-1 px-3" id="clearModules" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+                  style="flex: 1;">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllModules"
+                  title="Select All">All</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearModules" title="Clear">×</button>
               </div>
-              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
                 <!-- Options will be populated dynamically by JavaScript -->
               </div>
-              <div class="d-flex justify-content-end border-top pt-3">
-                <button class="btn btn-sm w-100" id="applyModules" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              <div class="d-flex justify-content-end border-top pt-2">
+                <button class="btn btn-sm btn-primary w-100" id="applyModules">Apply</button>
               </div>
             </div>
           </div>
@@ -2449,19 +1918,19 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               aria-expanded="false">
               Part No
             </button>
-            <div class="dropdown-menu py-3 px-2" style="width: 280px; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(0,102,204,0.2); border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
-              <div class="d-flex gap-2 mb-3">
+            <div class="dropdown-menu py-2 px-1" style="width: 260px;">
+              <div class="d-flex gap-1 mb-2">
                 <input type="text" class="form-control form-control-sm" id="partNoSearch" placeholder="Search..."
-                  style="flex: 1; border: 2px solid #0066cc; border-radius: 6px; padding: 8px 12px;">
-                <button class="btn btn-sm py-1 px-3" id="selectAllPartNos"
-                  title="Select All" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; font-weight: 600;">All</button>
-                <button class="btn btn-sm py-1 px-3" id="clearPartNos" title="Clear" style="background: linear-gradient(135deg, #ff6600, #e55a00); color: white; border: none; border-radius: 6px; font-weight: 600;">×</button>
+                  style="flex: 1;">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="selectAllPartNos"
+                  title="Select All">All</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="clearPartNos" title="Clear">×</button>
               </div>
-              <div class="dropdown-options mb-3" style="max-height: 200px; overflow-y: auto;">
+              <div class="dropdown-options mb-2" style="max-height: 180px; overflow-y: auto;">
                 <!-- Options will be populated dynamically by JavaScript -->
               </div>
-              <div class="d-flex justify-content-end border-top pt-3">
-                <button class="btn btn-sm w-100" id="applyPartNos" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600;">Apply</button>
+              <div class="d-flex justify-content-end border-top pt-2">
+                <button class="btn btn-sm btn-primary w-100" id="applyPartNos">Apply</button>
               </div>
             </div>
           </div>
@@ -2469,6 +1938,7 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
        
       </div>
   </div>
+</div>
     
 
   <div class="kpi-container">
@@ -2489,66 +1959,33 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         <div class="value" id="kpi-gap-pct">0%</div>
     </div>
 </div>
-<div class="breadcrumb" id="breadcrumb" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2);">
-    <button onclick="resetDashboard()" style="background: linear-gradient(135deg, #0066cc, #0052a3); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">
-        <i class="fas fa-home" style="margin-right: 0.5rem;"></i>Reset All
-    </button>
-    <span style="color: #666; margin: 0 1rem;">/</span>
-    <span class="current" id="breadcrumb-text" style="color: #0066cc; font-weight: 600;"></span>
+<div class="breadcrumb" id="breadcrumb">
+    <button onclick="resetDashboard()">🏠 Reset All</button>
+    <span>/</span>
+    <span class="current" id="breadcrumb-text"></span>
 </div>
-
 <div class="charts-grid">
     <div class="chart-card">
-        <h2><i class="fas fa-layer-group" style="margin-right: 0.5rem; color: #0066cc;"></i>Level 1: Gap % by Raw Material</h2>
-        <p style="color: #666; margin-bottom: 1rem;">Click any bar to filter suppliers and parts →</p>
+        <h2>📊 Gap % by Raw Material</h2>
+        <p>Click any bar to filter suppliers and parts →</p>
         <div class="chart-wrapper"><canvas id="chart1"></canvas></div>
     </div>
     <div class="chart-card">
-        <h2><i class="fas fa-industry" style="margin-right: 0.5rem; color: #0066cc;"></i>Level 2: Gap % by Supplier</h2>
-        <p id="chart2-subtitle" style="color: #666; margin-bottom: 1rem;">All suppliers shown - Click any bar to filter parts →</p>
+        <h2>📊 Gap % by Supplier</h2>
+        <p id="chart2-subtitle">All suppliers shown - Click any bar to filter parts →</p>
         <div class="chart-wrapper"><canvas id="chart2"></canvas></div>
     </div>
     <div class="chart-card">
-        <h2><i class="fas fa-cog" style="margin-right: 0.5rem; color: #0066cc;"></i>Level 3: Parts - Past Due Analysis</h2>
-        <p id="chart3-subtitle" style="color: #666; margin-bottom: 1rem;">Click any bar to see detailed status & priority breakdown ↓</p>
+        <!-- <h2>📊 Parts - Past Due Analysis</h2> -->
+        <h2>📊  Engine Impacted by Problematic Parts</h2>
+        <p id="chart3-subtitle">Click any bar to see detailed status & priority breakdown ↓</p>
         <div class="chart-wrapper"><canvas id="chart3"></canvas></div>
     </div>
 </div>
-<!-- <div class="status-cards-container" id="status-cards-container">
-    <div class="status-cards-header">
-        <h3>📋 Status & Priority Analysis for Part: <span class="part-badge" id="selected-part-name"></span></h3>
-    </div>
-    <div class="status-cards-grid" id="status-cards-grid"></div>
-</div> -->
 
-
-
-
-
-    <!-- DETAILS TABLE
-    <div class="card full-width">
-      <h3>📋Action Items </h3>
-      <table id="gapTable">
-        <thead>
-       <tr>
-         <th>Priority</th>
-         <th>RM Part</th>
-         <th>Parent</th>
-         <th>Part Number</th>
-         <th>Status</th>
-         <th>Due Date</th>
-         <th>Email</th>
-         <th>Actions</th>
-       </tr>
-
-        </thead>
-        <tbody id="gapTableBody"></tbody>
-      </table>
-    </div> -->
-
-      <!-- Action Items Table with ALL Priority Levels -->
-      <div class="table-section">
-        <h2 class="section-title">📋 Priority Action Items (All Priorities)</h2>
+       <!-- Action Items Table with ALL Priority Levels -->
+       <div class="table-section">
+        <h2 class="section-title">📋 Priority Action Items</h2>
         <div id="filterInfo" class="filter-info" style="display: none;">
             Filtered by: <strong id="filterCarName"></strong>
             <button class="clear-filter" onclick="clearFilter()">Clear Filter</button>
@@ -2559,10 +1996,18 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                     <tr>
                         <th>Priority</th>
                         <th>RM Part</th>
+                        <th>RM Type</th>
+                        <th>RM Supplier</th>
+                        
                         <th>Parent Part Number</th>
+                        <th>Part Description</th>
+                        <th>Part Supplier</th>
+                        <th>HWO</th>
                         <th>ESN</th>
                         <th>Status</th>
-                        <th>Due Date</th>
+                        
+                        <th>Planned PO Date</th>
+                        
                         <th>Action Required</th>
                         <th>Email</th>
                         <th>Actions</th>
@@ -2573,19 +2018,29 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                     <tr class="overdue" id="row-1" data-car="CAR-2024-001">
                         <td><span class="pill pill-red">P1</span></td>
                         <td style="font-weight: 700;">RM-12345</td>
-                        <td>PP-5678</td>
+                        <td>Casting Structural</td>
+                        <td>RM Supplier12</td>
+                        
+                        <td >PN-16787</td>
+                        <td>Description 10</td>
+                        <td>Suppler 10</td>
+                        <td>HW1</td>
                         <td>ESN-001</td>
-                        <td><span class="pill pill-yellow">No PO</span></td>
+                        <td><span class="pill pill-red">Past Due</span></td>
+                        
                         <td>
-                            <div style="font-size: 0.75rem;">10/26</div>
-                            <div style="color: #dc2626; font-size: 0.7rem; font-weight: 700;">⏰ 3d</div>
+                            <div style="font-size: 0.75rem;">10/21/2025</div>
+                            <!-- <div style="color: #dc2626; font-size: 0.7rem; font-weight: 700;">⏰ 3d</div> -->
                         </td>
                         <td>Place PO immediately</td>
                         <td><span class="pill pill-blue">Daily</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(1)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                               
+                                
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2603,17 +2058,25 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                     
                     <tr id="row-2" data-car="CAR-2024-001">
                         <td><span class="pill pill-red">P1</span></td>
-                        <td style="font-weight: 700;">RM-34567</td>
-                        <td>PP-3456</td>
+                        <td style="font-weight: 700;">RM-3456</td>
+                        <td>Forging ring</td>
+                        <td>RM Supplier13</td>
+                       
+                        <td>PN-37643</td>
+                        <td>Description 11</td>
+                        <td>Suppler 11</td>
+                        <td>HW2</td>
                         <td>ESN-001</td>
-                        <td><span class="pill pill-yellow">No Fcst</span></td>
-                        <td style="font-size: 0.75rem;">11/15</td>
+                        <td><span class="pill pill-red">Past Due</span></td>
+                        
+                        <td style="font-size: 0.75rem;">1/22/2027</td>
                         <td>Add to forecast</td>
                         <td><span class="pill pill-blue">Alt</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(2)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(2)">Comment</button>
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2629,49 +2092,30 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                         </td>
                     </tr>
                     
-                    <!-- P1 Item -->
-                    <tr id="row-3" data-car="CAR-2024-002">
-                        <td><span class="pill pill-red">P1</span></td>
-                        <td style="font-weight: 700;">RM-67890</td>
-                        <td>PP-9012</td>
-                        <td>CAR-002</td>
-                        <td><span class="pill pill-yellow">Late</span></td>
-                        <td style="font-size: 0.75rem;">11/02</td>
-                        <td>Follow up with supplier</td>
-                        <td><span class="pill pill-blue">Daily</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(3)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(3)">Comment</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="9">
-                            <div id="comment-3" class="comment-section">
-                                <textarea class="comment-input" placeholder="Add comment..."></textarea>
-                                <div class="comment-actions">
-                                    <button class="btn-submit" onclick="submitComment(3)">Submit</button>
-                                    <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
+                   
                     
                     <!-- P2 Items -->
                     <tr id="row-4" data-car="CAR-2024-002">
                         <td><span class="pill pill-orange">P2</span></td>
                         <td style="font-weight: 700;">RM-45678</td>
-                        <td>PP-7890</td>
-                        <td>CAR-002</td>
-                        <td><span class="pill pill-yellow">Pending</span></td>
-                        <td style="font-size: 0.75rem;">11/20</td>
+                        <td>Plate</td>
+                        <td>RM Supplier14</td>
+                      
+                        <td>PN-45634</td>
+                        <td>Description 12</td>
+                        <td>Suppler 12</td>
+                        <td>HW4</td>
+                        <td>ESN-002</td>
+                        <td><span class="pill pill-orange">Due in next 3 weeks</span></td>
+                   
+                        <td style="font-size: 0.75rem;">6/21/2026</td>
                         <td>Review forecast</td>
                         <td><span class="pill pill-blue">Alt</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(4)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(4)">Comment</button>
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2690,16 +2134,24 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                     <tr id="row-5" data-car="CAR-2024-003">
                         <td><span class="pill pill-orange">P2</span></td>
                         <td style="font-weight: 700;">RM-78901</td>
-                        <td>PP-2345</td>
-                        <td>CAR-003</td>
-                        <td><span class="pill pill-yellow">No Commit</span></td>
-                        <td style="font-size: 0.75rem;">11/25</td>
+                        <td>Casting Airfail</td>
+                        <td>RM Supplier16</td>
+                      
+                        <td>PN-78164</td>
+                        <td>Description 12</td>
+                        <td>Suppler 12</td>
+                        <td>HW5</td>
+                        <td>ESN-003</td>
+                        <td><span class="pill pill-orange">Due in next 3 weeks</span></td>
+                       
+                        <td style="font-size: 0.75rem;">6/21/2026</td>
                         <td>Get supplier commit</td>
                         <td><span class="pill pill-blue">Alt</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(5)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(5)">Comment</button>
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2718,16 +2170,24 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                     <tr id="row-6" data-car="CAR-2024-004">
                         <td><span class="pill pill-orange">P2</span></td>
                         <td style="font-weight: 700;">RM-23456</td>
-                        <td>PP-6789</td>
-                        <td>CAR-004</td>
-                        <td><span class="pill pill-yellow">Delayed PO</span></td>
-                        <td style="font-size: 0.75rem;">11/05</td>
+                        <td>Forging ring</td>
+                        <td>RM Supplier17</td>
+                      
+                        <td >PN-23645</td>
+                        <td>Description 13</td>
+                        <td>Suppler 13</td>
+                        <td>HW6</td>
+                        <td>ESN-004</td>
+                        <td><span class="pill pill-orange">Due in next 3 weeks</span></td>
+                   
+                        <td style="font-size: 0.75rem;">6/21/2026</td>
                         <td>Expedite PO placement</td>
                         <td><span class="pill pill-blue">Daily</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(6)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(6)">Comment</button>
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2745,18 +2205,26 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                     
                     <!-- P3 Items -->
                     <tr id="row-7" data-car="CAR-2024-001">
-                        <td><span class="pill pill-yellow">P3</span></td>
+                        <td><span class="pill pill-blue">P3</span></td>
                         <td style="font-weight: 700;">RM-55555</td>
-                        <td>PP-1111</td>
+                        <td>Forging ring</td>
+                        <td>RM Supplier17</td>
+                       
+                        <td>PN-55764</td>
+                        <td>Description 14</td>
+                        <td>Suppler 14</td>
+                        <td>HW9</td>
                         <td>ESN-001</td>
-                        <td><span class="pill pill-blue">Forecasted</span></td>
-                        <td style="font-size: 0.75rem;">12/01</td>
+                        <td><span class="pill pill-blue">Late Commit</span></td>
+                      
+                        <td style="font-size: 0.75rem;">6/21/2028</td>
                         <td>Monitor delivery</td>
                         <td><span class="pill pill-blue">Weekly</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(7)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(7)">Comment</button>
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2773,18 +2241,26 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                     </tr>
                     
                     <tr id="row-8" data-car="CAR-2024-003">
-                        <td><span class="pill pill-yellow">P3</span></td>
+                        <td><span class="pill pill-blue">P3</span></td>
                         <td style="font-weight: 700;">RM-66666</td>
-                        <td>PP-2222</td>
+                        <td>Forging ring</td>
+                        <td>RM Supplier18</td>
+                        
+                        <td>PN-66436</td>
+                        <td>Description 15</td>
+                        <td>Suppler 15</td>
+                        <td>HW11</td>
                         <td>ESN-003</td>
-                        <td><span class="pill pill-blue">In Transit</span></td>
-                        <td style="font-size: 0.75rem;">12/05</td>
+                        <td><span class="pill pill-blue">Late Commit</span></td>
+                       
+                        <td style="font-size: 0.75rem;">7/21/2026</td>
                         <td>Track shipment</td>
                         <td><span class="pill pill-blue">Weekly</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(8)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(8)">Comment</button>
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2800,20 +2276,64 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                         </td>
                     </tr>
                     
+                     <!-- P3 Item -->
+                     <tr id="row-3" data-car="CAR-2024-002">
+                      <td><span class="pill pill-blue">P3</span></td>
+                      <td style="font-weight: 700;">RM-67890</td>
+                      <td>Forging ring</td>
+                      <td>RM Supplier21</td>
+                  
+                      <td>PN-69789</td>
+                      <td>Description 16</td>
+                        <td>Suppler 16</td>
+                        <td>HW13</td>
+                      <td>ESN-002</td>
+                      <td><span class="pill pill-blue">Late Commit</span></td>
+                    
+                      <td style="font-size: 0.75rem;">6/21/2025</td>
+                      <td>Follow up with supplier</td>
+                      <td><span class="pill pill-blue">Daily</span></td>
+                      <td>
+                          <div class="action-buttons">
+                            <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                            <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                            <button class="btn-close" onclick="closeAction(1)">Close</button>
+                          </div>
+                      </td>
+                  </tr>
+                  <tr>
+                      <td colspan="9">
+                          <div id="comment-3" class="comment-section">
+                              <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                              <div class="comment-actions">
+                                  <button class="btn-submit" onclick="submitComment(3)">Submit</button>
+                                  <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
+                              </div>
+                          </div>
+                      </td>
+                  </tr>
                     <!-- P4 Items -->
                     <tr id="row-9" data-car="CAR-2024-004">
-                        <td><span class="pill pill-blue">P4</span></td>
+                        <td><span class="pill pill-yellow">P4</span></td>
                         <td style="font-weight: 700;">RM-77777</td>
-                        <td>PP-3333</td>
+                        <td>Forging ring</td>
+                        <td>RM Supplier22</td>
+                       
+                        <td>PN-77834</td>
+                        <td>Description 17</td>
+                        <td>Suppler 17</td>
+                        <td>HW15</td>
                         <td>ESN-004</td>
-                        <td><span class="pill pill-green">On Track</span></td>
-                        <td style="font-size: 0.75rem;">12/10</td>
+                        <td><span class="pill pill-yellow">Missing Commit</span></td>
+                       
+                        <td style="font-size: 0.75rem;">5/21/2029</td>
                         <td>Regular follow-up</td>
                         <td><span class="pill pill-blue">Weekly</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(9)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(9)">Comment</button>
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2829,20 +2349,138 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
                         </td>
                     </tr>
                     
+                     <!-- P4 Item -->
+                     <tr id="row-3" data-car="CAR-2024-002">
+                      <td><span class="pill pill-yellow">P4</span></td>
+                      <td style="font-weight: 700;">RM-67890</td>
+                      <td>Forging ring</td>
+                      <td>RM Supplier23</td>
+                  
+                      <td>PN-67089</td>
+                      <td>Description 18</td>
+                        <td>Suppler 18</td>
+                        <td>HW16</td>
+                      <td>ESN-002</td>
+                      <td><span class="pill pill-yellow">Missing Commit</span></td>
+                   
+                      <td style="font-size: 0.75rem;">6/27/2028</td>
+                      <td>Follow up with supplier</td>
+                      <td><span class="pill pill-blue">Daily</span></td>
+                      <td>
+                          <div class="action-buttons">
+                            <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                            <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                            <button class="btn-close" onclick="closeAction(1)">Close</button>
+                          </div>
+                      </td>
+                  </tr>
+                  <tr>
+                      <td colspan="9">
+                          <div id="comment-3" class="comment-section">
+                              <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                              <div class="comment-actions">
+                                  <button class="btn-submit" onclick="submitComment(3)">Submit</button>
+                                  <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
+                              </div>
+                          </div>
+                      </td>
+                  </tr>
+
+                   <!-- P4 Item -->
+                   <tr id="row-3" data-car="CAR-2024-002">
+                    <td><span class="pill pill-yellow">P4</span></td>
+                    <td style="font-weight: 700;">RM-67890</td>
+                    <td>Forging ring</td>
+                    <td>RM Supplier24</td>
+                   
+                    <td>PN-67065</td>
+                    <td>Description 19</td>
+                        <td>Suppler 19</td>
+                        <td>HW18</td>
+                    <td>ESN-002</td>
+                    <td><span class="pill pill-yellow">Missing Commit</span></td>
+       
+                    <td style="font-size: 0.75rem;">6/21/2026</td>
+                    <td>Follow up with supplier</td>
+                    <td><span class="pill pill-blue">Daily</span></td>
+                    <td>
+                        <div class="action-buttons">
+                          <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                          <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                          <button class="btn-close" onclick="closeAction(1)">Close</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="9">
+                        <div id="comment-3" class="comment-section">
+                            <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                            <div class="comment-actions">
+                                <button class="btn-submit" onclick="submitComment(3)">Submit</button>
+                                <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                 <!-- P4 Item -->
+                 <tr id="row-3" data-car="CAR-2024-002">
+                  <td><span class="pill pill-yellow">P4</span></td>
+                  <td style="font-weight: 700;">RM-67890</td>
+                  <td>Forging ring</td>
+                  <td>RM Supplier25</td>
+                 
+                  <td>PN-67076</td>
+                  <td>Description 20</td>
+                        <td>Suppler 20</td>
+                        <td>HW21</td>
+                  <td>ESN-002</td>
+                  <td><span class="pill pill-yellow">Missing Commit</span></td>
+               
+                  <td style="font-size: 0.75rem;">6/21/2026</td>
+                  <td>Follow up with supplier</td>
+                  <td><span class="pill pill-blue">Daily</span></td>
+                  <td>
+                      <div class="action-buttons">
+                        <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                        <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                        <button class="btn-close" onclick="closeAction(1)">Close</button>
+                      </div>
+                  </td>
+              </tr>
+              <tr>
+                  <td colspan="9">
+                      <div id="comment-3" class="comment-section">
+                          <textarea class="comment-input" placeholder="Add comment..."></textarea>
+                          <div class="comment-actions">
+                              <button class="btn-submit" onclick="submitComment(3)">Submit</button>
+                              <button class="btn-cancel" onclick="toggleComment(3)">Cancel</button>
+                          </div>
+                      </div>
+                  </td>
+              </tr>
                     <!-- P5 Items -->
                     <tr id="row-10" data-car="CAR-2024-002">
-                        <td><span class="pill pill-purple">P5</span></td>
+                        <td><span class="pill pill-green">P5</span></td>
                         <td style="font-weight: 700;">RM-88888</td>
-                        <td>PP-4444</td>
+                        <td>Forging ring</td>
+                        <td>RM Supplier26</td>
+                       
+                        <td>PN-88758</td>
+                        <td>Description 21</td>
+                        <td>Suppler 21</td>
+                        <td>HW013</td>
                         <td>ESN-002</td>
                         <td><span class="pill pill-green">Good</span></td>
-                        <td style="font-size: 0.75rem;">12/15</td>
+                  
+                        <td style="font-size: 0.75rem;">6/21/2026</td>
                         <td>Status update</td>
                         <td><span class="pill pill-blue">Monthly</span></td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-close" onclick="closeAction(10)">Close</button>
-                                <button class="btn-comment" onclick="toggleComment(10)">Comment</button>
+                              <button class="btn-comment" onclick="toggleAction(1)">Action</button>
+                              <button class="btn-comment" onclick="toggleComment(1)">Comment</button>
+                              <button class="btn-close" onclick="closeAction(1)">Close</button>
                             </div>
                         </td>
                     </tr>
@@ -2862,56 +2500,15 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
         </div>
     </div>
 
+
+
   </div>
 
  
  
 
-
-
-
-
-
-
-        {
-          data: Object.values(pastDueData),
-          backgroundColor: ["#dc3545", "#fd7e14"], // Red for “Due in next 3 weeks”, Orange for “Past Due”
-          hoverOffset: 10,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: { font: { size: 14 } },
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => `${ctx.label}: ${ctx.formattedValue}`,
-          },
-        },
-        title: {
-          display: true,
-          // text: "Past Due Distribution",
-          font: { size: 16 },
-        },
-      },
-    },
-  });
-
-
-
-
-
-
-</script> 
-
-
-
  <!-- Alert Modal -->
-  <div id="alertModal" class="modal-backdrop">
+ <div id="alertModal" class="modal-backdrop">
   <div class="modal">
       <div class="modal-header">
           <h2>🚨 3 New Alerts</h2>
@@ -2925,8 +2522,10 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               </div>
               <p class="alert-text">PO not placed. Due date was 3 days ago.</p>
               <div class="alert-grid">
-                  <div><strong>Part Number:</strong> PN-2024-001</div>
-                  <div><strong>RM Part:</strong> RM-12345</div>
+                <div><strong>ESN :</strong> ESN-10</div>
+                <div><strong>Raw Material Supplier:</strong> Supplier10</div>
+                <div><strong>Raw Material:</strong> Casting Structural</div>
+                 
                   <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">🔴 3 days overdue - Click to view</div>
               </div>
           </div>
@@ -2937,9 +2536,11 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               </div>
               <p class="alert-text">Part delivery late. Follow up with supplier.</p>
               <div class="alert-grid">
-                  <div><strong>Part Number:</strong> PN-2024-002</div>
-                  <div><strong>RM Part:</strong> RM-67890</div>
-                  <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">⚠️ Click to view details</div>
+                <div><strong>ESN:</strong> ESN-11</div>
+                <div><strong>Raw Material Suplier:</strong> Description11</div>
+                <div><strong>Raw Material:</strong> Forging ring</div>
+                 
+                  <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">🔴 3 days overdue - Click to view</div>
               </div>
           </div>
           <div class="alert-card" onclick="goToRow('row-4')">
@@ -2949,9 +2550,11 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
               </div>
               <p class="alert-text">Review forecast for this part.</p>
               <div class="alert-grid">
-                  <div><strong>Part Number:</strong> PN-2024-002</div>
-                  <div><strong>RM Part:</strong> RM-45678</div>
-                  <div style="color: #f97316; font-weight: bold; grid-column: span 2;">📋 Click to view action</div>
+                  <div><strong>ESN :</strong> ESN-12</div>
+                  <div><strong>Raw Material Suplier:</strong> Description12</div>
+                  <div><strong>Raw Material:</strong> Casting Structural</div>
+                  <!-- <div style="color: #f97316; font-weight: bold; grid-column: span 2;">📋 Click to view action</div> -->
+                  <div style="color: #dc2626; font-weight: bold; grid-column: span 2;">📋 Click to view action</div>
               </div>
           </div>
       </div>
@@ -2976,143 +2579,55 @@ box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
 </script>
 
 <script>
-  const actionItems = [
-  {
-    "priority": "Critical",
-    "rmPart": "RM-001",
-    "parent": "Parent-01",
-    "partNumber": "XYZ-001",
-    "status": "Pending",
-    "dueDate": "2025-11-05",
-    "email": "user1@example.com"
-  },
-  {
-    "priority": "Critical",
-    "rmPart": "RM-001",
-    "parent": "Parent-01",
-    "partNumber": "XYZ-001",
-    "status": "Pending",
-    "dueDate": "2025-11-05",
-    "email": "user1@example.com"
-  },
-  {
-    "priority": "Critical",
-    "rmPart": "RM-001",
-    "parent": "Parent-01",
-    "partNumber": "XYZ-001",
-    "status": "Pending",
-    "dueDate": "2025-11-05",
-    "email": "user1@example.com"
-  },
-  {
-    "priority": "Medium",
-    "rmPart": "RM-002",
-    "parent": "Parent-02",
-    "partNumber": "XYZ-002",
-    "status": "In Progress",
-    "dueDate": "2025-11-10",
-    "email": "user2@example.com"
-  },
-  {
-    "priority": "Low",
-    "rmPart": "RM-003",
-    "parent": "Parent-03",
-    "partNumber": "XYZ-003",
-    "status": "Completed",
-    "dueDate": "2025-11-15",
-    "email": "user3@example.com"
-  }
-];
-const tableBody = document.getElementById("gapTableBody");
-
-actionItems.forEach(item => {
-  const row = document.createElement("tr");
-
-  row.innerHTML = `
-    <td>${item.priority}</td>
-    <td>${item.rmPart}</td>
-    <td>${item.parent}</td>
-    <td>${item.partNumber}</td>
-    <td class="status-cell">${item.status}</td>
-    <td>${item.dueDate}</td>
-    <td><button class="email-btn" onclick="sendEmail('${item.email}')">Send Email</button></td>
-    <td>
-      <button class="action-btn" onclick="performAction('${item.partNumber}')">Action</button>
-      <button class="comment-btn" onclick="addComment('${item.partNumber}')">Comment</button>
-    </td>
-  `;
-
-  tableBody.appendChild(row);
-});
-
-// Functions for buttons
-function sendEmail(email) {
-  window.location.href = `mailto:${email}`;
-}
-
-function performAction(partNumber) {
-  alert(`Performing action on part: ${partNumber}`);
-}
-
-function addComment(partNumber) {
-  const comment = prompt(`Add comment for part ${partNumber}:`);
-  if(comment) {
-    alert(`Comment added: ${comment}`);
-  }
-}
-
-</script>
-
-<script>
   const csvData = `Car Family,CSN,Configuration,Target Ship Date,Part Number,Quantity,Supplier,Owner,Raw Material Type,Total Lead Time,Raw Material Need By,Planned PO Date Target,RM PN,RM Supplier,PO Available (Y/N),PO Placed on Time (Y/N/NA),Status,Delivery Date of RM Part,Past Due,Due Days,Action Recommendation,Gap (Y/N)
-Model S,CSN-2025-001,Premium,2025-12-15,PN-4521,4,ABC Automotive,John Smith,Casting Structural,45,2025-10-31,2025-10-15,RM-AL-7075,RM Supplier 20,N,N,Forecasted,2025-11-15,Past Due,-15,Alert HWO,Y
-Model S,CSN-2025-001,Premium,2025-12-15,PN-8834,2,XYZ Electronics,Sarah Johnson,Casting Airfoil,60,2025-10-16,2025-09-30,RM-ST-304,RM Supplier 41,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
-Model S,CSN-2025-001,Premium,2025-12-15,PN-1205,8,RM Supplier 35,Mike Chen,Plate,30,2025-11-15,2025-10-30,RM-PL-ABS,RM Supplier 18,N,NA,Forecasted,2025-11-20,Due in next 3 weeks,12,Alert HWO,
-Model S,CSN-2025-001,Premium,2025-12-15,PN-3301,3,Tech Solutions,Anna Lee,Forging ring,40,2025-11-05,2025-10-20,RM-CU-101,RM Supplier 32,Y,Y,Good Commits,2025-11-03,NA,NA,No Action,
-Model S,CSN-2025-002,Standard,2025-12-10,PN-4521,4,ABC Automotive,John Smith,Casting Structural,45,2025-10-26,2025-10-10,RM-AL-7075,RM Supplier 20,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
-Model S,CSN-2025-002,Standard,2025-12-10,PN-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-11-19,2025-11-04,RM-CU-220,RM Supplier 26,N,N,Forecasted,2025-11-25,Not due in next 3,25,Alert HWO,
-Model S,CSN-2025-002,Standard,2025-12-10,PN-8834,2,XYZ Electronics,Sarah Johnson,Plate,60,2025-10-11,2025-09-25,RM-PL-HDPE,RM Supplier 18,Y,Y,No Forecast,NA,NA,NA,Execution,Y
-Model S,CSN-2025-002,Standard,2025-12-10,PN-5567,6,Quality Parts,Tom Wilson,Casting Airfoil,35,2025-11-05,2025-10-20,RM-ST-450,RM Supplier 35,Y,Y,Delivered On Time,2025-11-03,NA,NA,No Action,
-Model S,CSN-2025-003,Sport,2025-12-20,PN-4521,6,ABC Automotive,John Smith,Casting Airfoil,45,2025-11-05,2025-10-20,RM-ST-420,RM Supplier 41,Y,Y,Delivered On Time,2025-11-03,NA,NA,No Action,
-Model S,CSN-2025-003,Sport,2025-12-20,PN-7743,4,Performance Parts,David Lee,Forging Closed Die,50,2025-10-31,2025-10-10,RM-CF-300,RM Supplier 37,Y,Y,Good Commits,2025-10-29,NA,NA,No Action,
-Model S,CSN-2025-003,Sport,2025-12-20,PN-1205,10,RM Supplier 35,Mike Chen,Plate,30,2025-11-20,2025-11-05,RM-PL-ABS,RM Supplier 18,Y,Y,Delivered On Time,2025-11-18,NA,NA,No Action,
-Model S,CSN-2025-003,Sport,2025-12-20,PN-2234,5,Premium Components,Lisa Chen,Casting Structural,42,2025-11-08,2025-10-22,RM-AL-6063,RM Supplier 42,Y,N,Late Commits,2025-11-15,NA,NA,HWO Action,Y
-Model S,CSN-2025-004,Premium,2025-12-25,PN-8834,2,XYZ Electronics,Sarah Johnson,Casting Airfoil,60,2025-10-26,2025-10-10,RM-ST-304,RM Supplier 41,Y,N,Delivered Late,2025-11-20,Past Due,-25,Past Due Action,Y
-Model S,CSN-2025-004,Premium,2025-12-25,PN-5521,6,Premium Auto,Lisa Wang,Casting Structural,35,2025-11-20,2025-11-05,RM-AL-6061,RM Supplier 20,Y,Y,Good Commits,2025-11-18,NA,NA,No Action,
-Model S,CSN-2025-004,Premium,2025-12-25,PN-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-12-04,2025-11-19,RM-CU-220,RM Supplier 26,Y,Y,Late Commits,2025-12-06,NA,NA,Alert HWO,Y
-Model S,CSN-2025-004,Premium,2025-12-25,PN-6678,4,Elite Manufacturing,Robert Kim,Plate,28,2025-11-27,2025-11-12,RM-PL-PP,RM Supplier 40,Y,Y,Good Commits,2025-11-25,NA,NA,No Action,
-Model S,CSN-2025-005,Standard,2025-11-30,PN-7743,4,Performance Parts,David Lee,Forging Closed Die,50,2025-10-11,2025-09-26,RM-CF-300,RM Supplier 37,NA,NA,NA,NA,NA,NA,Connect SFL,
-Model S,CSN-2025-005,Standard,2025-11-30,PN-1205,8, RM Supplier 35,Mike Chen,Casting Airfoil,30,2025-10-31,2025-10-16,RM-ST-304,RM Supplier 41,Y,N,Delivered Late,2025-11-05,NA,NA,Tag as LATE,
-Model S,CSN-2025-005,Standard,2025-11-30,PN-4521,4,ABC Automotive,John Smith,Plate,45,2025-10-16,2025-10-01,RM-PL-PP,RM Supplier 18,Y,Y,Delivered On Time,2025-10-14,NA,NA,No Action,
-Model S,CSN-2025-005,Standard,2025-11-30,PN-3398,7,Precision Parts,Mark Davis,Casting Structural,38,2025-10-23,2025-10-08,RM-AL-5052,RM Supplier 42,Y,Y,Good Commits,2025-10-21,NA,NA,No Action,
-Model S,CSN-2025-006,Sport,2026-01-05,PN-5521,8,Premium Auto,Lisa Wang,Forging ring,35,2025-12-01,2025-11-16,RM-CU-110,RM Supplier 26,Y,Y,Late Commits,2025-12-03,NA,NA,Improve commits,Y
-Model S,CSN-2025-006,Sport,2026-01-05,PN-8834,3,XYZ Electronics,Sarah Johnson,Casting Structural,60,2025-11-06,2025-10-21,RM-AL-5052,RM Supplier 20,Y,Y,Missing Commits,2025-11-10,NA,NA,Update commits,Y
-Model S,CSN-2025-006,Sport,2026-01-05,PN-9912,2,Tech Components,Emily Davis,Plate,21,2025-12-15,2025-11-30,RM-PL-ABS,RM Supplier 18,Y,Y,Good Commits,2025-12-13,NA,NA,Execution,
-Model S,CSN-2025-006,Sport,2026-01-05,PN-7721,5,Industrial Supply,Kevin Zhang,Casting Airfoil,44,2025-11-21,2025-11-06,RM-ST-316,RM Supplier 35,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
-Model S,CSN-2025-007,Premium,2025-12-05,PN-4521,5,ABC Automotive,John Smith,Casting Structural,45,2025-10-21,2025-10-05,RM-AL-7075,RM Supplier 20,Y,N,Delivered Late,2025-11-08,Past Due,-18,Tag as LATE,
-Model S,CSN-2025-007,Premium,2025-12-05,PN-7743,6,Performance Parts,David Lee,Casting Airfoil,50,2025-10-16,2025-10-01,RM-ST-420,RM Supplier 41,Y,Y,Delivered On Time,2025-10-15,NA,NA,No Action,
-Model S,CSN-2025-007,Premium,2025-12-05,PN-1205,12,RM Supplier 35,Mike Chen,Plate,30,2025-11-05,2025-10-21,RM-PL-HDPE,RM Supplier 18,Y,Y,Good Commits,2025-11-03,NA,NA,No Action,
-Model S,CSN-2025-007,Premium,2025-12-05,PN-4456,3,Superior Parts,Jessica Brown,Forging Closed Die,55,2025-10-11,2025-09-26,RM-CF-700,RM Supplier 45,Y,Y,Good Commits,2025-10-09,NA,NA,No Action,
-Model S,CSN-2025-008,Standard,2025-12-18,PN-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-11-27,2025-11-12,RM-CU-220,RM Supplier 26,Y,Y,Late Commits,2025-11-29,NA,NA,Improve commits,Y
-Model S,CSN-2025-008,Standard,2025-12-18,PN-5521,4,Premium Auto,Lisa Wang,Casting Airfoil,35,2025-11-13,2025-10-29,RM-ST-304,RM Supplier 41,Y,Y,Missing Commits,2025-11-16,NA,NA,Update commits,Y
-Model S,CSN-2025-008,Standard,2025-12-18,PN-8834,2,XYZ Electronics,Sarah Johnson,Forging Closed Die,60,2025-10-19,2025-10-03,RM-CF-T700,RM Supplier 37,Y,Y,Delivered On Time,2025-10-17,NA,NA,No Action,
-Model S,CSN-2025-008,Standard,2025-12-18,PN-2298,6,Modern Manufacturing,Daniel Park,Casting Structural,33,2025-11-15,2025-10-30,RM-AL-2024,RM Supplier 42 ,Y,Y,Good Commits,2025-11-13,NA,NA,No Action,
-Model S,CSN-2025-009,Premium,2025-12-22,PN-4521,4,ABC Automotive,John Smith,Casting Airfoil,45,2025-11-07,2025-10-22,RM-ST-420,RM Supplier 41,Y,Y,Good Commits,2025-11-05,NA,NA,No Action,
-Model S,CSN-2025-009,Premium,2025-12-22,PN-8899,5,Advanced Tech,Chris Lee,Plate,25,2025-11-27,2025-11-12,RM-PL-HDPE,RM Supplier 40,Y,N,Late Commits,2025-12-02,NA,NA,Improve commits,Y
-Model S,CSN-2025-009,Premium,2025-12-22,PN-3345,8,Quality Systems,Amy Johnson,Forging ring,38,2025-11-14,2025-10-29,RM-CU-150,RM Supplier 32,Y,Y,Good Commits,2025-11-12,NA,NA,No Action,
-Model S,CSN-2025-009,Premium,2025-12-22,PN-7743,3,Performance Parts,David Lee,Forging Closed Die,50,2025-11-02,2025-10-17,RM-CF-300,RM Supplier 37,Y,Y,Delivered On Time,2025-10-31,NA,NA,No Action,
-Model S,CSN-2025-010,Sport,2026-01-10,PN-5567,7,Quality Parts,Tom Wilson,Casting Structural,35,2025-12-06,2025-11-21,RM-AL-7075,RM Supplier 20,Y,N,Missing Commits,2025-12-15,NA,NA,Update commits,Y
-Model S,CSN-2025-010,Sport,2026-01-10,PN-9912,2,Tech Components,Emily Davis,Casting Airfoil,21,2025-12-20,2025-12-05,RM-ST-304,RM Supplier 35,Y,Y,Good Commits,2025-12-18,NA,NA,No Action,
-Model S,CSN-2025-010,Sport,2026-01-10,PN-1205,9,RM Supplier 35,Mike Chen,Plate,30,2025-12-11,2025-11-26,RM-PL-ABS,RM Supplier 18,Y,Y,Good Commits,2025-12-09,NA,NA,No Action,
-Model S,CSN-2025-010,Sport,2026-01-10,PN-6701,4,Elite Parts,Nancy White,Forging ring,27,2025-12-14,2025-11-29,RM-CU-220,RM Supplier 26,N,N,Forecasted,2025-12-20,NA,NA,Alert HWO,
-Model S,CSN-2025-011,Standard,2025-12-28,PN-4521,6,ABC Automotive,John Smith,Forging ring,45,2025-11-13,2025-10-28,RM-CU-110,RM Supplier 32,Y,Y,Late Commits,2025-11-18,NA,NA,Improve commits,Y
-Model S,CSN-2025-011,Standard,2025-12-28,PN-8834,3,XYZ Electronics,Sarah Johnson,Plate,60,2025-10-29,2025-10-13,RM-PL-PP,RM Supplier 18,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
-Model S,CSN-2025-011,Standard,2025-12-28,PN-7788,5,Mega Parts,Frank Miller,Casting Structural,40,2025-11-18,2025-11-03,RM-AL-6061,RM Supplier 42,Y,Y,Good Commits,2025-11-16,NA,NA,No Action,
-Model S,CSN-2025-011,Standard,2025-12-28,PN-3310,7,Pro Manufacturing,Sandra Kim,Casting Airfoil,32,2025-11-26,2025-11-11,RM-ST-316,RM Supplier 41,Y,Y,Delivered On Time,2025-11-24,NA,NA,No Action,
-Model S,CSN-2025-012,Premium,2026-01-15,PN-5521,5,Premium Auto,Lisa Wang,Forging Closed Die,35,2025-12-11,2025-11-26,RM-CF-T700,RM Supplier 45,Y,Y,Good Commits,2025-12-09,NA,NA,No Action,
-Model S,CSN-2025-012,Premium,2026-01-15,PN-9912,1,Tech Components,Emily Davis,Casting Structural,21,2025-12-25,2025-12-10,RM-AL-5052,RM Supplier 20,Y,N,Delivered Late,2025-12-30,Past Due,-5,Past Due Action,Y
-Model S,CSN-2025-012,Premium,2026-01-15,PN-2245,8,Supreme Quality,Brian Taylor,Casting Airfoil,48,2025-11-28,2025-11-13,RM-ST-420,RM Supplier 35,Y,Y,Good Commits,2025-11-26,NA,NA,No Action,
-Model S,CSN-2025-012,Premium,2026-01-15,PN-4521,4,ABC Automotive,John Smith,Plate,45,2025-12-01,2025-11-16,RM-PL-ABS,RM Supplier 40,Y,Y,Delivered On Time,2025-11-29,NA,NA,No Action,`;
+Model S,CSN-2025-001,Premium,2025-12-15,RM-4521,4,ABC Automotive,John Smith,Casting Structural,45,2025-10-31,2025-10-15,RM-AL-7075,RM Supplier 20,N,N,Forecasted,2025-11-15,Past Due,-15,Alert HWO,Y
+Model S,CSN-2025-001,Premium,2025-12-15,RM-8834,2,XYZ Electronics,Sarah Johnson,Casting Airfoil,60,2025-10-16,2025-09-30,RM-ST-304,RM Supplier 41,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
+Model S,CSN-2025-001,Premium,2025-12-15,RM-1205,8,RM Supplier 35,Mike Chen,Plate,30,2025-11-15,2025-10-30,RM-PL-ABS,RM Supplier 18,N,NA,Forecasted,2025-11-20,Due in next 3 weeks,12,Alert HWO,
+Model S,CSN-2025-001,Premium,2025-12-15,RM-3301,3,Tech Solutions,Anna Lee,Forging ring,40,2025-11-05,2025-10-20,RM-CU-101,RM Supplier 32,Y,Y,Good Commits,2025-11-03,NA,NA,No Action,
+Model S,CSN-2025-002,Standard,2025-12-10,RM-4521,4,ABC Automotive,John Smith,Casting Structural,45,2025-10-26,2025-10-10,RM-AL-7075,RM Supplier 20,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
+Model S,CSN-2025-002,Standard,2025-12-10,RM-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-11-19,2025-11-04,RM-CU-220,RM Supplier 26,N,N,Forecasted,2025-11-25,Not due in next 3,25,Alert HWO,
+Model S,CSN-2025-002,Standard,2025-12-10,RM-8834,2,XYZ Electronics,Sarah Johnson,Plate,60,2025-10-11,2025-09-25,RM-PL-HDPE,RM Supplier 18,Y,Y,No Forecast,NA,NA,NA,Execution,Y
+Model S,CSN-2025-002,Standard,2025-12-10,RM-5567,6,Quality Parts,Tom Wilson,Casting Airfoil,35,2025-11-05,2025-10-20,RM-ST-450,RM Supplier 35,Y,Y,Delivered On Time,2025-11-03,NA,NA,No Action,
+Model S,CSN-2025-003,Sport,2025-12-20,RM-4521,6,ABC Automotive,John Smith,Casting Airfoil,45,2025-11-05,2025-10-20,RM-ST-420,RM Supplier 41,Y,Y,Delivered On Time,2025-11-03,NA,NA,No Action,
+Model S,CSN-2025-003,Sport,2025-12-20,RM-7743,4,Performance Parts,David Lee,Forging Closed Die,50,2025-10-31,2025-10-10,RM-CF-300,RM Supplier 37,Y,Y,Good Commits,2025-10-29,NA,NA,No Action,
+Model S,CSN-2025-003,Sport,2025-12-20,RM-1205,10,RM Supplier 35,Mike Chen,Plate,30,2025-11-20,2025-11-05,RM-PL-ABS,RM Supplier 18,Y,Y,Delivered On Time,2025-11-18,NA,NA,No Action,
+Model S,CSN-2025-003,Sport,2025-12-20,RM-2234,5,Premium Components,Lisa Chen,Casting Structural,42,2025-11-08,2025-10-22,RM-AL-6063,RM Supplier 42,Y,N,Late Commits,2025-11-15,NA,NA,HWO Action,Y
+Model S,CSN-2025-004,Premium,2025-12-25,RM-8834,2,XYZ Electronics,Sarah Johnson,Casting Airfoil,60,2025-10-26,2025-10-10,RM-ST-304,RM Supplier 41,Y,N,Delivered Late,2025-11-20,Past Due,-25,Past Due Action,Y
+Model S,CSN-2025-004,Premium,2025-12-25,RM-5521,6,Premium Auto,Lisa Wang,Casting Structural,35,2025-11-20,2025-11-05,RM-AL-6061,RM Supplier 20,Y,Y,Good Commits,2025-11-18,NA,NA,No Action,
+Model S,CSN-2025-004,Premium,2025-12-25,RM-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-12-04,2025-11-19,RM-CU-220,RM Supplier 26,Y,Y,Late Commits,2025-12-06,NA,NA,Alert HWO,Y
+Model S,CSN-2025-004,Premium,2025-12-25,RM-6678,4,Elite Manufacturing,Robert Kim,Plate,28,2025-11-27,2025-11-12,RM-PL-PP,RM Supplier 40,Y,Y,Good Commits,2025-11-25,NA,NA,No Action,
+Model S,CSN-2025-005,Standard,2025-11-30,RM-7743,4,Performance Parts,David Lee,Forging Closed Die,50,2025-10-11,2025-09-26,RM-CF-300,RM Supplier 37,NA,NA,NA,NA,NA,NA,Connect SFL,
+Model S,CSN-2025-005,Standard,2025-11-30,RM-1205,8, RM Supplier 35,Mike Chen,Casting Airfoil,30,2025-10-31,2025-10-16,RM-ST-304,RM Supplier 41,Y,N,Delivered Late,2025-11-05,NA,NA,Tag as LATE,
+Model S,CSN-2025-005,Standard,2025-11-30,RM-4521,4,ABC Automotive,John Smith,Plate,45,2025-10-16,2025-10-01,RM-PL-PP,RM Supplier 18,Y,Y,Delivered On Time,2025-10-14,NA,NA,No Action,
+Model S,CSN-2025-005,Standard,2025-11-30,RM-3398,7,Precision Parts,Mark Davis,Casting Structural,38,2025-10-23,2025-10-08,RM-AL-5052,RM Supplier 42,Y,Y,Good Commits,2025-10-21,NA,NA,No Action,
+Model S,CSN-2025-006,Sport,2026-01-05,RM-5521,8,Premium Auto,Lisa Wang,Forging ring,35,2025-12-01,2025-11-16,RM-CU-110,RM Supplier 26,Y,Y,Late Commits,2025-12-03,NA,NA,Improve commits,Y
+Model S,CSN-2025-006,Sport,2026-01-05,RM-8834,3,XYZ Electronics,Sarah Johnson,Casting Structural,60,2025-11-06,2025-10-21,RM-AL-5052,RM Supplier 20,Y,Y,Missing Commits,2025-11-10,NA,NA,Update commits,Y
+Model S,CSN-2025-006,Sport,2026-01-05,RM-9912,2,Tech Components,Emily Davis,Plate,21,2025-12-15,2025-11-30,RM-PL-ABS,RM Supplier 18,Y,Y,Good Commits,2025-12-13,NA,NA,Execution,
+Model S,CSN-2025-006,Sport,2026-01-05,RM-7721,5,Industrial Supply,Kevin Zhang,Casting Airfoil,44,2025-11-21,2025-11-06,RM-ST-316,RM Supplier 35,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
+Model S,CSN-2025-007,Premium,2025-12-05,RM-4521,5,ABC Automotive,John Smith,Casting Structural,45,2025-10-21,2025-10-05,RM-AL-7075,RM Supplier 20,Y,N,Delivered Late,2025-11-08,Past Due,-18,Tag as LATE,
+Model S,CSN-2025-007,Premium,2025-12-05,RM-7743,6,Performance Parts,David Lee,Casting Airfoil,50,2025-10-16,2025-10-01,RM-ST-420,RM Supplier 41,Y,Y,Delivered On Time,2025-10-15,NA,NA,No Action,
+Model S,CSN-2025-007,Premium,2025-12-05,RM-1205,12,RM Supplier 35,Mike Chen,Plate,30,2025-11-05,2025-10-21,RM-PL-HDPE,RM Supplier 18,Y,Y,Good Commits,2025-11-03,NA,NA,No Action,
+Model S,CSN-2025-007,Premium,2025-12-05,RM-4456,3,Superior Parts,Jessica Brown,Forging Closed Die,55,2025-10-11,2025-09-26,RM-CF-700,RM Supplier 45,Y,Y,Good Commits,2025-10-09,NA,NA,No Action,
+Model S,CSN-2025-008,Standard,2025-12-18,RM-9912,1,Tech Components,Emily Davis,Forging ring,21,2025-11-27,2025-11-12,RM-CU-220,RM Supplier 26,Y,Y,Late Commits,2025-11-29,NA,NA,Improve commits,Y
+Model S,CSN-2025-008,Standard,2025-12-18,RM-5521,4,Premium Auto,Lisa Wang,Casting Airfoil,35,2025-11-13,2025-10-29,RM-ST-304,RM Supplier 41,Y,Y,Missing Commits,2025-11-16,NA,NA,Update commits,Y
+Model S,CSN-2025-008,Standard,2025-12-18,RM-8834,2,XYZ Electronics,Sarah Johnson,Forging Closed Die,60,2025-10-19,2025-10-03,RM-CF-T700,RM Supplier 37,Y,Y,Delivered On Time,2025-10-17,NA,NA,No Action,
+Model S,CSN-2025-008,Standard,2025-12-18,RM-2298,6,Modern Manufacturing,Daniel Park,Casting Structural,33,2025-11-15,2025-10-30,RM-AL-2024,RM Supplier 42 ,Y,Y,Good Commits,2025-11-13,NA,NA,No Action,
+Model S,CSN-2025-009,Premium,2025-12-22,RM-4521,4,ABC Automotive,John Smith,Casting Airfoil,45,2025-11-07,2025-10-22,RM-ST-420,RM Supplier 41,Y,Y,Good Commits,2025-11-05,NA,NA,No Action,
+Model S,CSN-2025-009,Premium,2025-12-22,RM-8899,5,Advanced Tech,Chris Lee,Plate,25,2025-11-27,2025-11-12,RM-PL-HDPE,RM Supplier 40,Y,N,Late Commits,2025-12-02,NA,NA,Improve commits,Y
+Model S,CSN-2025-009,Premium,2025-12-22,RM-3345,8,Quality Systems,Amy Johnson,Forging ring,38,2025-11-14,2025-10-29,RM-CU-150,RM Supplier 32,Y,Y,Good Commits,2025-11-12,NA,NA,No Action,
+Model S,CSN-2025-009,Premium,2025-12-22,RM-7743,3,Performance Parts,David Lee,Forging Closed Die,50,2025-11-02,2025-10-17,RM-CF-300,RM Supplier 37,Y,Y,Delivered On Time,2025-10-31,NA,NA,No Action,
+Model S,CSN-2025-010,Sport,2026-01-10,RM-5567,7,Quality Parts,Tom Wilson,Casting Structural,35,2025-12-06,2025-11-21,RM-AL-7075,RM Supplier 20,Y,N,Missing Commits,2025-12-15,NA,NA,Update commits,Y
+Model S,CSN-2025-010,Sport,2026-01-10,RM-88888,2,Tech Components,Emily Davis,Casting Airfoil,21,2025-12-20,2025-12-05,RM-ST-304,RM Supplier 35,Y,Y,Good Commits,2025-12-18,NA,NA,No Action,
+Model S,CSN-2025-010,Sport,2026-01-10,RM-67890,9,RM Supplier 35,Mike Chen,Plate,30,2025-12-11,2025-11-26,RM-PL-ABS,RM Supplier 18,Y,Y,Good Commits,2025-12-09,NA,NA,No Action,
+Model S,CSN-2025-010,Sport,2026-01-10,RM-67890,4,Elite Parts,Nancy White,Forging ring,27,2025-12-14,2025-11-29,RM-CU-220,RM Supplier 26,N,N,Forecasted,2025-12-20,NA,NA,Alert HWO,
+Model S,CSN-2025-011,Standard,2025-12-28,RM-67890,6,ABC Automotive,John Smith,Forging ring,45,2025-11-13,2025-10-28,RM-CU-110,RM Supplier 32,Y,Y,Late Commits,2025-11-18,NA,NA,Improve commits,Y
+Model S,CSN-2025-011,Standard,2025-12-28,RM-77777,3,XYZ Electronics,Sarah Johnson,Plate,60,2025-10-29,2025-10-13,RM-PL-PP,RM Supplier 18,Y,N,No Forecast,NA,NA,NA,Alert HWO,Y
+Model S,CSN-2025-011,Standard,2025-12-28,	RM-3456,5,Mega Parts,Frank Miller,Casting Structural,40,2025-11-18,2025-11-03,RM-AL-6061,RM Supplier 42,Y,Y,Good Commits,2025-11-16,NA,NA,No Action,
+Model S,CSN-2025-011,Standard,2025-12-28,RM-3310,7,Pro Manufacturing,Sandra Kim,Casting Airfoil,32,2025-11-26,2025-11-11,RM-ST-316,RM Supplier 41,Y,Y,Delivered On Time,2025-11-24,NA,NA,No Action,
+Model S,CSN-2025-012,Premium,2026-01-15,RM-78901,5,Premium Auto,Lisa Wang,Forging Closed Die,35,2025-12-11,2025-11-26,RM-CF-T700,RM Supplier 45,Y,Y,Good Commits,2025-12-09,NA,NA,No Action,
+Model S,CSN-2025-012,Premium,2026-01-15,RM-45678,1,Tech Components,Emily Davis,Casting Structural,21,2025-12-25,2025-12-10,RM-AL-5052,RM Supplier 20,Y,N,Delivered Late,2025-12-30,Past Due,-5,Past Due Action,Y
+Model S,CSN-2025-012,Premium,2026-01-15,RM-34567,8,Supreme Quality,Brian Taylor,Casting Airfoil,48,2025-11-28,2025-11-13,RM-ST-420,RM Supplier 35,Y,Y,Good Commits,2025-11-26,NA,NA,No Action,
+Model S,CSN-2025-012,Premium,2026-01-15,RM-12345,4,ABC Automotive,John Smith,Plate,45,2025-12-01,2025-11-16,RM-PL-ABS,RM Supplier 40,Y,Y,Delivered On Time,2025-11-29,NA,NA,No Action,`;
   
   function parseCSV(csv){const lines=csv.trim().split('\n');const headers=lines[0].split(',');return lines.slice(1).map(line=>{const values=line.split(',');const obj={};headers.forEach((header,i)=>{obj[header]=values[i];});return obj;});}
   const data=parseCSV(csvData);
@@ -3150,12 +2665,234 @@ Model S,CSN-2025-012,Premium,2026-01-15,PN-4521,4,ABC Automotive,John Smith,Plat
   
   function updateKPIs(){const totalRecords=data.length;const uniqueCSNs=new Set(data.map(d=>d.CSN)).size;const gapRecords=data.filter(d=>d['Gap (Y/N)']==='Y').length;const gapPct=((gapRecords/totalRecords)*100).toFixed(1);document.getElementById('kpi-total').textContent=totalRecords;document.getElementById('kpi-csns').textContent=uniqueCSNs;document.getElementById('kpi-gaps').textContent=gapRecords;document.getElementById('kpi-gap-pct').textContent=gapPct+'%';}
   
-  function createChart1(){const materialStats={};data.forEach(row=>{const material=row['Raw Material Type'];if(!materialStats[material]){materialStats[material]={total:0,gaps:0};}materialStats[material].total++;if(row['Gap (Y/N)']==='Y'){materialStats[material].gaps++;}});const chartData=Object.entries(materialStats).map(([material,stats])=>({material,gapPct:parseFloat(((stats.gaps/stats.total)*100).toFixed(1)),noGapPct:parseFloat((((stats.total-stats.gaps)/stats.total)*100).toFixed(1))})).sort((a,b)=>b.gapPct-a.gapPct);const ctx=document.getElementById('chart1').getContext('2d');chart1=new Chart(ctx,{type:'bar',data:{labels:chartData.map(d=>d.material),datasets:[{label:'No Gap %',data:chartData.map(d=>d.noGapPct),backgroundColor:'#27ae60'},{label:'Gap %',data:chartData.map(d=>d.gapPct),backgroundColor:'#e74c3c'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:(event,elements)=>{if(elements.length>0){const index=elements[0].index;selectedMaterial=chartData[index].material;selectedSupplier=null;selectedPart=null;updateCharts();document.getElementById('breadcrumb').classList.add('active');document.getElementById('breadcrumb-text').textContent=selectedMaterial;document.getElementById('status-cards-container').classList.remove('active');}},scales:{x:{stacked:true,max:100,title:{display:true,text:'Percentage (%)'}},y:{stacked:true}},plugins:{legend:{display:true,position:'top'}}}});}
+  function createChart1() {
+  const materialStats = {};
+  data.forEach(row => {
+    const material = row['Raw Material Type'];
+    if (!materialStats[material]) {
+      materialStats[material] = { total: 0, gaps: 0 };
+    }
+    materialStats[material].total++;
+    if (row['Gap (Y/N)'] === 'Y') {
+      materialStats[material].gaps++;
+    }
+  });
+
+  const chartData = Object.entries(materialStats)
+    .map(([material, stats]) => ({
+      material,
+      gapPct: parseFloat(((stats.gaps / stats.total) * 100).toFixed(1)),
+      noGapPct: parseFloat((((stats.total - stats.gaps) / stats.total) * 100).toFixed(1))
+    }))
+    .sort((a, b) => b.gapPct - a.gapPct);
+
+  const ctx = document.getElementById('chart1').getContext('2d');
+  chart1 = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: chartData.map(d => d.material),
+      datasets: [
+        {
+          label: 'No Gap ',
+          data: chartData.map(d => d.noGapPct),
+          backgroundColor: '#27ae60'
+        },
+        {
+          label: 'Gap ',
+          data: chartData.map(d => d.gapPct),
+          backgroundColor: '#e74c3c'
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (event, elements) => {
+        if (elements.length > 0) {
+          const index = elements[0].index;
+          selectedMaterial = chartData[index].material;
+          selectedSupplier = null;
+          selectedPart = null;
+          updateCharts();
+          document.getElementById('breadcrumb').classList.add('active');
+          document.getElementById('breadcrumb-text').textContent = selectedMaterial;
+          document.getElementById('status-cards-container').classList.remove('active');
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          max: 100,
+          title: { display: true, text: 'Percentage (%)' }
+        },
+        y: {
+          stacked: true
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'center', // align to left
+          labels: {
+            font: {
+              size: 10 // 👈 Correctly set legend font size here
+            },
+            boxWidth: 20,
+            padding: 5
+          }
+        }
+      }
+    }
+  });
+}
+
   
-  function createChart2(){const filteredData=selectedMaterial?data.filter(d=>d['Raw Material Type']===selectedMaterial):data;const supplierStats={};filteredData.forEach(row=>{const supplier=row['RM Supplier'];if(!supplierStats[supplier]){supplierStats[supplier]={total:0,gaps:0};}supplierStats[supplier].total++;if(row['Gap (Y/N)']==='Y'){supplierStats[supplier].gaps++;}});const chartData=Object.entries(supplierStats).map(([supplier,stats])=>({supplier,gapPct:parseFloat(((stats.gaps/stats.total)*100).toFixed(1)),noGapPct:parseFloat((((stats.total-stats.gaps)/stats.total)*100).toFixed(1))})).sort((a,b)=>b.gapPct-a.gapPct);if(chart2)chart2.destroy();const ctx=document.getElementById('chart2').getContext('2d');chart2=new Chart(ctx,{type:'bar',data:{labels:chartData.map(d=>d.supplier),datasets:[{label:'No Gap %',data:chartData.map(d=>d.noGapPct),backgroundColor:'#27ae60'},{label:'Gap %',data:chartData.map(d=>d.gapPct),backgroundColor:'#e74c3c'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:(event,elements)=>{if(elements.length>0){const index=elements[0].index;selectedSupplier=chartData[index].supplier;selectedPart=null;updateCharts();const breadcrumbText=selectedMaterial?`${selectedMaterial} / ${selectedSupplier}`:`All Materials / ${selectedSupplier}`;document.getElementById('breadcrumb-text').textContent=breadcrumbText;document.getElementById('breadcrumb').classList.add('active');document.getElementById('status-cards-container').classList.remove('active');}},scales:{x:{stacked:true,max:100,title:{display:true,text:'Percentage (%)'}},y:{stacked:true}},plugins:{legend:{display:true,position:'top'}}}});const subtitle=selectedMaterial?`Suppliers for: ${selectedMaterial} - Click to filter parts →`:`All suppliers shown - Click any bar to filter parts →`;document.getElementById('chart2-subtitle').textContent=subtitle;}
+  function createChart2(){const filteredData=selectedMaterial?data.filter(d=>d['Raw Material Type']===selectedMaterial):data;const supplierStats={};filteredData.forEach(row=>{const supplier=row['RM Supplier'];if(!supplierStats[supplier]){supplierStats[supplier]={total:0,gaps:0};}supplierStats[supplier].total++;if(row['Gap (Y/N)']==='Y'){supplierStats[supplier].gaps++;}});const chartData=Object.entries(supplierStats).map(([supplier,stats])=>({supplier,gapPct:parseFloat(((stats.gaps/stats.total)*100).toFixed(1)),noGapPct:parseFloat((((stats.total-stats.gaps)/stats.total)*100).toFixed(1))})).sort((a,b)=>b.gapPct-a.gapPct);if(chart2)chart2.destroy();const ctx=document.getElementById('chart2').getContext('2d');chart2=new Chart(ctx,{type:'bar',data:{labels:chartData.map(d=>d.supplier),datasets:[{label:'No Gap ',data:chartData.map(d=>d.noGapPct),backgroundColor:'#27ae60'},{label:'Gap ',data:chartData.map(d=>d.gapPct),backgroundColor:'#e74c3c'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:(event,elements)=>{if(elements.length>0){const index=elements[0].index;selectedSupplier=chartData[index].supplier;selectedPart=null;updateCharts();const breadcrumbText=selectedMaterial?`${selectedMaterial} / ${selectedSupplier}`:`All Materials / ${selectedSupplier}`;document.getElementById('breadcrumb-text').textContent=breadcrumbText;document.getElementById('breadcrumb').classList.add('active');document.getElementById('status-cards-container').classList.remove('active');}},scales:{x:{stacked:true,max:100,title:{display:true,text:'Percentage (%)'}},y:{stacked:true}},plugins:{legend:{display:true,position:'top', labels: {
+      font: {
+        size: 10 // 👈 Set legend font size to 10px
+      },
+      boxWidth: 20,
+      padding: 5,}}}}});const subtitle=selectedMaterial?`Suppliers for: ${selectedMaterial}  →`:`Click any bar to filter supplier  →`;document.getElementById('chart2-subtitle').textContent=subtitle;}
   
-  function createChart3(){let filteredData=data;if(selectedMaterial&&selectedSupplier){filteredData=data.filter(d=>d['Raw Material Type']===selectedMaterial&&d['RM Supplier']===selectedSupplier);}else if(selectedMaterial){filteredData=data.filter(d=>d['Raw Material Type']===selectedMaterial);}else if(selectedSupplier){filteredData=data.filter(d=>d['RM Supplier']===selectedSupplier);}const partStats={};filteredData.forEach(row=>{const partNum=row['Part Number'];const pastDue=row['Past Due'];if(!partStats[partNum]){partStats[partNum]={pastDue:0,notPastDue:0};}if(pastDue==='Past Due'){partStats[partNum].pastDue++;}else{partStats[partNum].notPastDue++;}});const chartData=Object.entries(partStats).map(([part,stats])=>({part,pastDue:stats.pastDue,notPastDue:stats.notPastDue})).sort((a,b)=>b.pastDue-a.pastDue);if(chart3)chart3.destroy();const ctx=document.getElementById('chart3').getContext('2d');chart3=new Chart(ctx,{type:'bar',data:{labels:chartData.map(d=>d.part),datasets:[{label:'Not Past Due',data:chartData.map(d=>d.notPastDue),backgroundColor:'#27ae60'},{label:'Past Due',data:chartData.map(d=>d.pastDue),backgroundColor:'#e74c3c'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,onClick:(event,elements)=>{if(elements.length>0){const index=elements[0].index;selectedPart=chartData[index].part;showStatusCards(selectedPart);}},scales:{x:{stacked:true,title:{display:true,text:'Number of Records'}}},plugins:{legend:{display:true,position:'top'}}}});let subtitle='Click any bar to see detailed status & priority breakdown ↓';if(selectedMaterial&&selectedSupplier){subtitle=`Parts for: ${selectedSupplier} / ${selectedMaterial} - Click bar for details ↓`;}else if(selectedMaterial){subtitle=`Parts for: ${selectedMaterial} - Click bar for details ↓`;}else if(selectedSupplier){subtitle=`Parts for: ${selectedSupplier} - Click bar for details ↓`;}document.getElementById('chart3-subtitle').textContent=subtitle;}
-  
+      function createChart3() {
+  let filteredData = data;
+  if (selectedMaterial && selectedSupplier) {
+    filteredData = data.filter(
+      d => d['Raw Material Type'] === selectedMaterial && d['RM Supplier'] === selectedSupplier
+    );
+  } else if (selectedMaterial) {
+    filteredData = data.filter(d => d['Raw Material Type'] === selectedMaterial);
+  } else if (selectedSupplier) {
+    filteredData = data.filter(d => d['RM Supplier'] === selectedSupplier);
+  }
+
+  // Initialize stats
+  const partStats = {};
+
+  filteredData.forEach(row => {
+    const partNum = row['Part Number'];
+    const pastDue = row['Past Due'];
+
+    if (!partStats[partNum]) {
+      partStats[partNum] = { notPastDue: 0, pastDue: 0, dueSoon: 0 };
+    }
+
+    if (pastDue === 'Past Due') {
+      partStats[partNum].pastDue++;
+    } else if (pastDue === 'Due in next 3 weeks') {
+      partStats[partNum].dueSoon++;
+    } else {
+      partStats[partNum].notPastDue++;
+    }
+  });
+
+  // Prepare chart data with total for sorting (descending)
+  const chartData = Object.entries(partStats)
+    .map(([part, stats]) => ({
+      part,
+      notPastDue: stats.notPastDue,
+      dueSoon: stats.dueSoon,
+      pastDue: stats.pastDue,
+      total: stats.notPastDue + stats.dueSoon + stats.pastDue
+    }))
+    .sort((a, b) => b.total - a.total); // descending order
+
+  // Destroy previous chart if it exists
+  if (chart3) chart3.destroy();
+  const ctx = document.getElementById('chart3').getContext('2d');
+
+  // ✅ Do NOT reverse the arrays — Chart.js draws from top (first) to bottom (last)
+  const labels = chartData.map(d => d.part);
+  const notPastDueData = chartData.map(d => d.notPastDue);
+  const dueSoonData = chartData.map(d => d.dueSoon);
+  const pastDueData = chartData.map(d => d.pastDue);
+
+  chart3 = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Not Due in next 3 weeks',
+          data: notPastDueData,
+          backgroundColor: '#27ae60'
+        },
+        {
+          label: 'Due in next 3 weeks',
+          data: dueSoonData,
+          backgroundColor: '#f39c12'
+        },
+        {
+          label: 'Past Due',
+          data: pastDueData,
+          backgroundColor: '#e74c3c'
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (event, elements) => {
+        if (elements.length > 0) {
+          const index = elements[0].index;
+          selectedPart = labels[index];
+          showStatusCards(selectedPart);
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          title: { display: true, text: 'Number of Records' },
+          ticks: {
+            stepSize: 1,
+            callback: function (value) {
+              return Number.isInteger(value) ? value : '';
+            }
+          },
+          beginAtZero: true
+        },
+        y: {
+          stacked: true
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'start',
+          labels: {
+            boxWidth: 20,
+            padding: 8,
+            font: { size: 10 }
+          }
+        }
+      },
+      layout: {
+        padding: {
+          top: 10,
+          bottom: 20 // ✅ Adds consistent space below legend
+        }
+      }
+    }
+  });
+
+  // Subtitle logic
+  let subtitle = 'Click any bar to see detailed status & priority breakdown ↓';
+  if (selectedMaterial && selectedSupplier) {
+    subtitle = `Parts for: ${selectedSupplier}  ↓`;
+  } else if (selectedMaterial) {
+    subtitle = `Parts for: ${selectedMaterial}  ↓`;
+  } else if (selectedSupplier) {
+    subtitle = `Parts for: ${selectedSupplier}  ↓`;
+  }
+  document.getElementById('chart3-subtitle').textContent = subtitle;
+}
+
+
+
   function showStatusCards(partNumber) {
       let filteredData = data.filter(d => d['Part Number'] === partNumber);
       if (selectedMaterial) filteredData = filteredData.filter(d => d['Raw Material Type'] === selectedMaterial);
@@ -3258,7 +2995,7 @@ Model S,CSN-2025-012,Premium,2026-01-15,PN-4521,4,ABC Automotive,John Smith,Plat
               <div class="priority-distribution">
                   <div class="priority-distribution-title">Priority Distribution</div>
                   <div class="priority-items">
-                      ${priorityBadges || '<span style="color: #999; font-size: 12px;">No priorities</span>'}
+                      ${priorityBadges || '<span style="color: #999; font-size: 10px;">No priorities</span>'}
                   </div>
               </div>
               <div class="gap-indicator ${hasGap ? 'has-gap' : 'no-gap'}">
@@ -3280,6 +3017,82 @@ Model S,CSN-2025-012,Premium,2026-01-15,PN-4521,4,ABC Automotive,John Smith,Plat
   updateKPIs();createChart1();createChart2();createChart3();
 </script>
 
+<!-- filter for table -->
+
+        <script>
+          (function () {
+            // Keep any existing showStatusCards() behavior intact
+            const originalShowStatusCards = window.showStatusCards;
+          
+            // Replace showStatusCards() to also trigger RM Part filtering
+            window.showStatusCards = function (rmPartNumber) {
+              try {
+                if (typeof originalShowStatusCards === "function") {
+                  originalShowStatusCards(rmPartNumber);
+                }
+              } catch (err) {
+                console.warn("showStatusCards() error skipped:", err.message);
+              }
+          
+              filterByRMPart(rmPartNumber);
+            };
+          
+            function filterByRMPart(rmPartNumber) {
+              const tableSection = document.querySelector(".table-section");
+              if (!tableSection) return;
+          
+              const rows = Array.from(tableSection.querySelectorAll("tbody tr"));
+              let showNextComment = false;
+          
+              rows.forEach((row) => {
+                const rmPartCell = row.querySelector("td:nth-child(2)"); // 2nd column = RM Part
+                const isCommentRow = row.querySelector(".comment-section") !== null;
+          
+                if (isCommentRow) {
+                  if (showNextComment) {
+                    row.style.display = "";
+                    showNextComment = false;
+                  } else {
+                    row.style.display = "none";
+                  }
+                  return;
+                }
+          
+                // Match RM Part column (2nd column)
+                if (rmPartCell && rmPartCell.textContent.trim() === rmPartNumber) {
+                  row.style.display = "";
+                  showNextComment = true; // also show comment row right after
+                } else {
+                  row.style.display = "none";
+                  showNextComment = false;
+                }
+              });
+          
+              // Show info banner
+              const info = document.getElementById("filterInfo");
+              const carName = document.getElementById("filterCarName");
+              if (info && carName) {
+                info.style.display = "block";
+                carName.textContent = `RM Part: ${rmPartNumber}`;
+              }
+          
+              // Smooth scroll to table
+              tableSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          
+              // Allow clearing filter
+              window.clearFilter = function () {
+                rows.forEach((row) => (row.style.display = ""));
+                if (info) info.style.display = "none";
+              };
+            }
+          })();
+          </script>
+          
+<!-- filter for table -->
+
+
+
+
 <script>
 let currentFilter = null;
 
@@ -3291,25 +3104,21 @@ function hideModal(id) {
 document.getElementById(id).style.display = 'none'; 
 }
 
-function goToRow(rowId) {
-// Close the modal
-hideModal('alertModal');
 
-// Scroll to the row
-const row = document.getElementById(rowId);
-if (row) {
-    // Smooth scroll to the row
+function goToRow(rowId) {
+  hideModal('alertModal');
+
+  // Remove highlight from all rows first
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('highlight'));
+
+  // Find and highlight the new row
+  const row = document.getElementById(rowId);
+  if (row) {
     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    // Add highlight animation
     row.classList.add('highlight');
-    
-    // Remove highlight after animation
-    setTimeout(() => {
-        row.classList.remove('highlight');
-    }, 2000);
+  }
 }
-}
+
 
 function filterByCar(carName, element) {
 document.querySelectorAll('.car-card').forEach(card => {
@@ -3382,283 +3191,137 @@ if (e.target === this) hideModal('alertModal');
 document.getElementById('emailModal').addEventListener('click', function(e) {
 if (e.target === this) hideModal('emailModal');
 });
-</script> 
-<!-- NEW -->
-<script>
-  [
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "NA",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "NA",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Delivered On Time",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Delivered On Time",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "NA",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "NA",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Delivered On Time",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Good Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "NA",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "NA",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Plate",
-    "Status": "Forecasted",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Missing Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Missing Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Forging Ring",
-    "Status": "Missing Commits",
-    "Part Number": "PN18"
-  },
-  {
-    "Raw Material": "Casting Structural",
-    "Status": "Missing Commits",
-    "Part Number": "PN18"
-  }
-]
+</script>  
 
-</script> 
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script defer src="src/utils.js"></script>
+<script defer src="src/filters.js"></script>
+<script defer src="src/dropdowns.js"></script>
 
-<script defer src="src/part-walker-optimized.js?v=1"></script>
-
-<script defer src="src/utils.js?v=2"></script>
-<script defer src="src/filters.js?v=2"></script> 
-
-
-
-
-
+  <script>
+    // === KPI to priority mapping (with full names) ===
+    const kpiFilters = {
+      demand:        { label: "P1", name: "Critical Priority" }, // "Total Gaps" → show all rows
+      planned:       { label: "P1", name: "Critical Priority" },
+      highPriority:  { label: "P2", name: "High Priority" },
+      confirmed:     { label: "P3", name: "Low Priority" },
+      lowpriority:   { label: "P4", name: "Medium Priority" }
+    };
+  
+    // === Filter table by priority and limit rows ===
+    function filterTableByPriority(priorityLabel, limitCount, displayName) {
+      const rows = document.querySelectorAll("tbody tr[id^='row-']");
+      let shownCount = 0;
+  
+      rows.forEach(row => {
+        const nextRow = row.nextElementSibling; // comment row (paired)
+        const priorityCell = row.querySelector("td:first-child span");
+  
+        // Skip invalid or empty rows
+        if (!priorityCell || row.textContent.trim() === "") {
+          row.style.display = "none";
+          if (nextRow) nextRow.style.display = "none";
+          return;
+        }
+  
+        const match = priorityCell.textContent.trim() === priorityLabel;
+  
+        if (match && shownCount < limitCount) {
+          row.style.display = "";
+          if (nextRow) nextRow.style.display = ""; // show paired comment
+          shownCount++;
+        } else {
+          row.style.display = "none";
+          if (nextRow) nextRow.style.display = "none";
+        }
+      });
+  
+      // === Show filter info ===
+      const infoBox = document.getElementById("filterInfo");
+      const filterCarName = document.getElementById("filterCarName");
+      if (infoBox && filterCarName) {
+        infoBox.style.display = "block";
+        filterCarName.textContent = `${displayName} (${shownCount} rows shown)`;
+      }
+  
+      scrollToTable();
+    }
+  
+    // === Clear filter (show all rows again) ===
+    function clearFilter(showMessage = false) {
+      const rows = document.querySelectorAll("tbody tr");
+  
+      rows.forEach(row => {
+        // Hide truly empty rows
+        if (row.textContent.trim() === "") {
+          row.style.display = "none";
+        } else {
+          row.style.display = "";
+        }
+      });
+      
+      const infoBox = document.getElementById("filterInfo");
+      const filterCarName = document.getElementById("filterCarName");
+  
+      if (infoBox && filterCarName) {
+        if (showMessage) {
+          infoBox.style.display = "block";
+          filterCarName.textContent = "All Priorities (Full Table Displayed)";
+        } else {
+          infoBox.style.display = "none";
+        }
+      }
+  
+      document.querySelectorAll(".kpi").forEach(k => k.classList.remove("active"));
+    }
+  
+    // === Smooth scroll helper ===
+    function scrollToTable() {
+      const tableSection = document.querySelector(".table-section");
+      if (tableSection) {
+        tableSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  
+    // === Attach click events to KPI cards ===
+    document.addEventListener("DOMContentLoaded", () => {
+      const kpis = document.querySelectorAll(".kpi");
+  
+      kpis.forEach(kpi => {
+        kpi.addEventListener("click", () => {
+          kpis.forEach(k => k.classList.remove("active"));
+          kpi.classList.add("active");
+  
+          const kpiType =
+            kpi.classList.contains("demand") ? "demand" :
+            kpi.classList.contains("planned") ? "planned" :
+            kpi.classList.contains("highPriority") ? "highPriority" :
+            kpi.classList.contains("confirmed") ? "confirmed" :
+            "lowpriority";
+  
+          const priorityData = kpiFilters[kpiType];
+          const kpiValue = parseInt(kpi.querySelector("h3").textContent.trim()) || 0;
+  
+          // === NEW FEATURE: "Total Gaps" shows all rows ===
+          if (kpiType === "demand") {
+            clearFilter(true);
+            scrollToTable();
+            return;
+          }
+  
+          // === Apply filter normally for other KPIs ===
+          if (priorityData && kpiValue > 0) {
+            filterTableByPriority(priorityData.label, kpiValue, priorityData.name);
+          }
+        });
+      });
+    });
+  </script>
+  
 </body>
 </html>
