@@ -10,6 +10,7 @@ from data_service import DataService
 from demand_data_service import DemandDataService
 from duckdb_service import DuckDBService
 from duckdb_routes import router as duckdb_router
+from html_routes import router as html_router
 
 app = FastAPI(title="AEO Data Dashboard", version="1.0.0")
 
@@ -40,8 +41,9 @@ demand_service.df = data_service.df  # Share the same DataFrame
 import duckdb_routes
 duckdb_routes.duckdb_service = duckdb_service
 
-# Register DuckDB routes
-app.include_router(duckdb_router)
+# Register routers
+app.include_router(html_router)  # Frontend HTML routes (must be first for root route)
+app.include_router(duckdb_router)  # API routes
 
 print("[OK] DuckDB integration complete\n")
 
@@ -68,67 +70,6 @@ def get_cached_cdata():
         elapsed = __import__('time').time() - start_time
         print(f"✓ Cdata cached in {elapsed:.2f}s: {len(_cached_cdata)} entries")
     return _cached_cdata
-
-
-@app.get("/")
-async def read_root():
-    """Serve the frontend"""
-    return FileResponse("frontend/index.html")
-
-
-# Serve debug page
-@app.get("/debug.html")
-async def serve_debug():
-    """Serve debug page"""
-    return FileResponse("debug.html")
-
-
-# Serve individual HTML pages
-@app.get("/{page}.html")
-async def serve_html_page(page: str):
-    """Serve HTML pages from frontend"""
-    file_path = Path(f"frontend/{page}.html")
-    if file_path.exists():
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="Page not found")
-
-
-# Serve CSS files
-@app.get("/styles.css")
-async def serve_styles():
-    """Serve main styles.css"""
-    return FileResponse("frontend/styles.css")
-
-
-@app.get("/src/css/{filename}")
-async def serve_css(filename: str):
-    """Serve CSS files from src/css"""
-    file_path = Path(f"frontend/src/css/{filename}")
-    if file_path.exists():
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="CSS file not found")
-
-
-# Serve JavaScript files
-# Note: /scripts.js endpoint removed - not needed, using src/* endpoints instead
-
-@app.get("/src/{filename}")
-async def serve_js(filename: str):
-    """Serve JavaScript files from src"""
-    file_path = Path(f"frontend/src/{filename}")
-    if file_path.exists():
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="JS file not found")
-
-
-# Serve images
-@app.get("/src/images/{filename}")
-async def serve_images(filename: str):
-    """Serve image files"""
-    file_path = Path(f"frontend/src/images/{filename}")
-    if file_path.exists():
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="Image not found")
 
 
 # API Endpoints for demand dashboard (DEPRECATED - use /api/demand/* instead)

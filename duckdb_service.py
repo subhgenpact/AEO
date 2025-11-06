@@ -208,6 +208,24 @@ class DuckDBService:
                 print(f"[WARN] Cannot access table {main_table}: {e}")
                 return
             
+            # Get column names to determine naming convention (spaces vs underscores)
+            # IMPORTANT: This MUST happen BEFORE creating indexes
+            columns_result = self.conn.execute(f"SELECT * FROM {main_table} LIMIT 0").description
+            column_names = [col[0] for col in columns_result]
+            
+            # Determine which column naming convention is used and store as instance variables
+            self.program_col = "ENGINE_PROGRAM" if "ENGINE_PROGRAM" in column_names else "ENGINE PROGRAM"
+            self.config_col = "Configuration" if "Configuration" in column_names else "CONFIGURATION"
+            self.part_col = "Part_Number" if "Part_Number" in column_names else "Part Number"
+            self.rm_supplier_col = "Level_2_Raw_Material_Supplier" if "Level_2_Raw_Material_Supplier" in column_names else "Level 2 Raw Material Supplier"
+            self.supplier_col = "Parent_Part_Supplier" if "Parent_Part_Supplier" in column_names else "Parent Part Supplier"
+            self.hw_owner_col = "HW_OWNER" if "HW_OWNER" in column_names else "HW OWNER"
+            self.module_col = "Module" if "Module" in column_names else None
+            self.esn_col = "ESN" if "ESN" in column_names else "esn"
+            self.target_date_col = "Target_Ship_Date" if "Target_Ship_Date" in column_names else "Target Ship Date"
+            self.level2_pn_col = "Level_2_PN" if "Level_2_PN" in column_names else "Level 2 PN"
+            self.level2_raw_type_col = "Level_2_Raw_Type" if "Level_2_Raw_Type" in column_names else "Level 2 Raw Type"
+            
             # OPTIMIZATION #4: Create indexes on frequently queried columns
             try:
                 print("     Creating performance indexes...")
@@ -238,23 +256,6 @@ class DuckDBService:
             except Exception as e:
                 print(f"[WARN] Could not create indexes: {e}")
                 # Continue without indexes - queries will still work but slower
-            
-            # Get column names to determine naming convention (spaces vs underscores)
-            columns_result = self.conn.execute(f"SELECT * FROM {main_table} LIMIT 0").description
-            column_names = [col[0] for col in columns_result]
-            
-            # Determine which column naming convention is used and store as instance variables
-            self.program_col = "ENGINE_PROGRAM" if "ENGINE_PROGRAM" in column_names else "ENGINE PROGRAM"
-            self.config_col = "Configuration" if "Configuration" in column_names else "CONFIGURATION"
-            self.part_col = "Part_Number" if "Part_Number" in column_names else "Part Number"
-            self.rm_supplier_col = "Level_2_Raw_Material_Supplier" if "Level_2_Raw_Material_Supplier" in column_names else "Level 2 Raw Material Supplier"
-            self.supplier_col = "Parent_Part_Supplier" if "Parent_Part_Supplier" in column_names else "Parent Part Supplier"
-            self.hw_owner_col = "HW_OWNER" if "HW_OWNER" in column_names else "HW OWNER"
-            self.module_col = "Module" if "Module" in column_names else None
-            self.esn_col = "ESN" if "ESN" in column_names else "esn"
-            self.target_date_col = "Target_Ship_Date" if "Target_Ship_Date" in column_names else "Target Ship Date"
-            self.level2_pn_col = "Level_2_PN" if "Level_2_PN" in column_names else "Level 2 PN"
-            self.level2_raw_type_col = "Level_2_Raw_Type" if "Level_2_Raw_Type" in column_names else "Level 2 Raw Type"
             
             # Reference local variables for view creation
             program_col = self.program_col
@@ -384,30 +385,34 @@ class DuckDBService:
         try:
             main_table = self._get_main_table()
             
+            # Map underscore column names to actual column names (with spaces)
+            column_map = {
+                "ENGINE_PROGRAM": self.program_col,
+                "Configuration": self.config_col,
+                "Part_Number": self.part_col,
+                "Level_2_Raw_Material_Supplier": self.rm_supplier_col,
+                "Parent_Part_Supplier": self.supplier_col,
+                "HW_OWNER": self.hw_owner_col,
+                "Module": self.level2_raw_type_col,
+                "Level_2_Raw_Type": self.level2_raw_type_col,
+                "Level_2_PN": self.level2_pn_col,
+                "Target_Ship_Date": self.target_date_col,
+                "ESN": self.esn_col
+            }
+            
+            # Use mapped column name if available, otherwise use as-is
+            actual_column = column_map.get(column, column)
+            
             # Special case: Module maps to Level_2_Raw_Type
             if column == "Module":
-                column = self.level2_raw_type_col
+                actual_column = self.level2_raw_type_col
             
-            # Special case: Configuration - just get from main table, not from separate Config table
-            if column == "Configuration":
-                # Try different possible column names
-                if "Configuration" in [self.config_col]:
-                    result = self.conn.execute(f"""
-                        SELECT DISTINCT "{self.config_col}" as value
-                        FROM {main_table}
-                        WHERE "{self.config_col}" IS NOT NULL AND "{self.config_col}" != ''
-                        ORDER BY value
-                    """).fetchall()
-                else:
-                    # Fallback to empty list if column doesn't exist
-                    return []
-            else:
-                result = self.conn.execute(f"""
-                    SELECT DISTINCT "{column}" as value
-                    FROM {main_table}
-                    WHERE "{column}" IS NOT NULL AND "{column}" != ''
-                    ORDER BY value
-                """).fetchall()
+            result = self.conn.execute(f"""
+                SELECT DISTINCT "{actual_column}" as value
+                FROM {main_table}
+                WHERE "{actual_column}" IS NOT NULL AND "{actual_column}" != ''
+                ORDER BY value
+            """).fetchall()
             return [row[0] for row in result]
         except Exception as e:
             print(f"✗ Error getting unique values for {column}: {e}")

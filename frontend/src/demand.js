@@ -5954,8 +5954,8 @@ function renderEngineProgramSummaryTableForView(processedData, selectedView) {
       total += values[p];
     });
 
-    // Calculate growth indicators for each program (only for year view)
-    const showGrowthIndicators = selectedView === 'year';
+    // Calculate growth indicators for each program (for year and quarter views)
+    const showGrowthIndicators = selectedView === 'year' || selectedView === 'quarter';
     const growthIndicators = {};
     programs.forEach(p => {
       growthIndicators[p] = showGrowthIndicators && index > 0 ? calculateGrowthIndicator(values[p], previousValues[p]) : '';
