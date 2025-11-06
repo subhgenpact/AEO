@@ -55,6 +55,9 @@ class GapAnalysisDashboard {
       console.log('Step 5: Updating KPIs...');
       this.updateKPIs();
       
+      console.log('Step 6: Showing critical alerts...');
+      this.showCriticalAlertsPopup();
+      
       console.log('Dashboard initialization complete!');
       this.showLoading(false);
     } catch (error) {
@@ -1460,6 +1463,125 @@ class GapAnalysisDashboard {
     const hwOwner = row['HW_OWNER'] || row['HW OWNER'] || 'owner';
     alert(`Email notification sent to ${hwOwner}`);
     // In a real implementation, you would make an API call here
+  }
+
+  showCriticalAlertsPopup() {
+    // Get top 3 P1 (Critical) items from allTableData
+    if (!this.allTableData || this.allTableData.length === 0) {
+      console.log('No data available for critical alerts');
+      return;
+    }
+
+    // Filter for P1/Critical priority items
+    const criticalItems = this.allTableData.filter(row => {
+      const priority = String(row['Priority'] || row['PRIORITY'] || row['priority'] || '').toUpperCase().trim();
+      return priority === 'P1' || priority === '1' || priority === 'CRITICAL';
+    });
+
+    // Get top 3
+    const top3Critical = criticalItems.slice(0, 3);
+
+    if (top3Critical.length === 0) {
+      console.log('No critical alerts to display');
+      return;
+    }
+
+    // Update alert count
+    const alertsCount = document.getElementById('alertsCount');
+    if (alertsCount) {
+      alertsCount.textContent = `${top3Critical.length} New Alert${top3Critical.length > 1 ? 's' : ''}`;
+    }
+
+    // Populate alerts list
+    const alertsList = document.getElementById('criticalAlertsList');
+    if (!alertsList) return;
+
+    alertsList.innerHTML = '';
+
+    top3Critical.forEach((item, index) => {
+      const rmPart = item['Level_2_PN'] || item['Level 2 PN'] || 'N/A';
+      const esn = item['ESN'] || 'N/A';
+      const rmSupplier = item['Level_2_Raw_Material_Supplier'] || item['Level 2 Raw Material Supplier'] || 'N/A';
+      const rmType = item['Level_2_Raw_Type'] || item['Level 2 Raw Type'] || 'N/A';
+      const status = item['Status'] || item['STATUS'] || 'N/A';
+      const targetDate = this.formatDate(item['Target_Ship_Date'] || item['Target Ship Date']);
+      
+      // Calculate overdue days
+      const targetDateObj = new Date(item['Target_Ship_Date'] || item['Target Ship Date']);
+      const now = new Date();
+      const daysDiff = Math.ceil((now - targetDateObj) / (1000 * 60 * 60 * 24));
+      const isOverdue = daysDiff > 0;
+
+      // Determine alert title based on status or overdue
+      let alertTitle = '';
+      let alertDescription = '';
+      
+      if (isOverdue) {
+        alertTitle = `Critical: RM Part ${rmPart} Past Due`;
+        alertDescription = `PO not placed. Due date was ${daysDiff} day${daysDiff > 1 ? 's' : ''} ago.`;
+      } else {
+        alertTitle = `Urgent: RM Part ${rmPart}`;
+        alertDescription = `Part delivery late. Follow up with supplier.`;
+      }
+
+      const alertItem = document.createElement('div');
+      alertItem.className = 'critical-alert-item';
+      alertItem.innerHTML = `
+        <div class="d-flex align-items-start">
+          <div class="alert-priority-badge">P1</div>
+          <div class="alert-content">
+            <div class="alert-header">
+              <h6 class="alert-title-text">${alertTitle}</h6>
+              ${isOverdue ? `<span class="alert-overdue"><i class="fas fa-circle"></i> ${daysDiff} day${daysDiff > 1 ? 's' : ''} overdue</span>` : ''}
+            </div>
+            <p class="alert-description-text">${alertDescription}</p>
+            <div class="alert-meta">
+              <div class="alert-meta-item">
+                <i class="fas fa-hashtag"></i>
+                <span class="alert-meta-label">ESN:</span>
+                <span class="alert-meta-value">${esn}</span>
+              </div>
+              <div class="alert-meta-item">
+                <i class="fas fa-industry"></i>
+                <span class="alert-meta-label">Supplier:</span>
+                <span class="alert-meta-value">${rmSupplier}</span>
+              </div>
+              <div class="alert-meta-item">
+                <i class="fas fa-cubes"></i>
+                <span class="alert-meta-label">Material:</span>
+                <span class="alert-meta-value">${rmType}</span>
+              </div>
+            </div>
+            <div class="alert-action-text">
+              <i class="fas fa-arrow-right"></i>
+              Click to view details
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add click handler to navigate to the row in the table
+      alertItem.addEventListener('click', () => {
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('criticalAlertsModal'));
+        if (modal) modal.hide();
+        
+        // Filter table to show this item
+        this.priorityFilter = ['Critical', 'P1', '1', 'CRITICAL'];
+        this.highlightActiveKPI('criticalPriority');
+        this.updateClearAllButtonVisibility();
+        this.applyTableFilters(false);
+      });
+
+      alertsList.appendChild(alertItem);
+    });
+
+    // Show the modal
+    const modalElement = document.getElementById('criticalAlertsModal');
+    if (modalElement) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    }
   }
 
 }
