@@ -432,8 +432,19 @@ class GapAnalysisDashboard {
     this.filters[filterKey] = Array.from(checkboxes).map(cb => cb.value);
     
     this.currentPage = 1; // Reset to first page when filters change
-    this.updateKPIs();
     this.loadTableData();
+    
+    // Close the dropdown
+    const dropdownElement = document.querySelector(`#${filterType}Dropdown`).closest('.dropdown');
+    const dropdownMenu = dropdownElement.querySelector('.dropdown-menu');
+    if (dropdownMenu && dropdownMenu.classList.contains('show')) {
+      dropdownMenu.classList.remove('show');
+      const dropdownButton = dropdownElement.querySelector('.dropdown-toggle');
+      if (dropdownButton) {
+        dropdownButton.classList.remove('show');
+        dropdownButton.setAttribute('aria-expanded', 'false');
+      }
+    }
   }
 
   clearFilter(filterType) {
@@ -445,8 +456,19 @@ class GapAnalysisDashboard {
     this.filters[filterKey] = [];
     
     this.currentPage = 1; // Reset to first page when filters change
-    this.updateKPIs();
     this.loadTableData();
+    
+    // Close the dropdown
+    const dropdownElement = document.querySelector(`#${filterType}Dropdown`).closest('.dropdown');
+    const dropdownMenu = dropdownElement.querySelector('.dropdown-menu');
+    if (dropdownMenu && dropdownMenu.classList.contains('show')) {
+      dropdownMenu.classList.remove('show');
+      const dropdownButton = dropdownElement.querySelector('.dropdown-toggle');
+      if (dropdownButton) {
+        dropdownButton.classList.remove('show');
+        dropdownButton.setAttribute('aria-expanded', 'false');
+      }
+    }
   }
 
   selectAllFilter(filterType) {
@@ -483,29 +505,50 @@ class GapAnalysisDashboard {
     });
     
     this.currentPage = 1; // Reset to first page when filters change
-    this.updateKPIs();
     this.loadTableData();
   }
 
-  updateKPIs() {
-    // Use the KPI data loaded from the API
-    const kpis = this.kpiData;
-    
-    // Update KPI displays
-    this.updateKPIDisplay('totalGapsCount', kpis.totalGaps.count);
-    this.updateKPIDisplay('totalGapsStatus', `Status: ${kpis.totalGaps.status}`);
-    
-    this.updateKPIDisplay('criticalPriorityCount', kpis.criticalPriority.count);
-    this.updateKPIDisplay('criticalPriorityStatus', `Status: ${kpis.criticalPriority.status}`);
-    
-    this.updateKPIDisplay('highPriorityCount', kpis.highPriority.count);
-    this.updateKPIDisplay('highPriorityStatus', `Status: ${kpis.highPriority.status}`);
-    
-    this.updateKPIDisplay('mediumPriorityCount', kpis.mediumPriority.count);
-    this.updateKPIDisplay('mediumPriorityStatus', `Status: ${kpis.mediumPriority.status}`);
-    
-    this.updateKPIDisplay('lowPriorityCount', kpis.lowPriority.count);
-    this.updateKPIDisplay('lowPriorityStatus', `Status: ${kpis.lowPriority.status}`);
+  updateKPIs(filteredData = null) {
+    // If filtered data is provided, calculate KPIs from it
+    // Otherwise use the original API data
+    if (filteredData && filteredData.length >= 0) {
+      const kpis = this.calculateKPIsFromFilteredData(filteredData);
+      
+      // Update KPI displays with filtered data
+      this.updateKPIDisplay('totalGapsCount', kpis.totalGaps.count);
+      this.updateKPIDisplay('totalGapsStatus', `Status: ${kpis.totalGaps.status}`);
+      
+      this.updateKPIDisplay('criticalPriorityCount', kpis.criticalPriority.count);
+      this.updateKPIDisplay('criticalPriorityStatus', `Status: ${kpis.criticalPriority.status}`);
+      
+      this.updateKPIDisplay('highPriorityCount', kpis.highPriority.count);
+      this.updateKPIDisplay('highPriorityStatus', `Status: ${kpis.highPriority.status}`);
+      
+      this.updateKPIDisplay('mediumPriorityCount', kpis.mediumPriority.count);
+      this.updateKPIDisplay('mediumPriorityStatus', `Status: ${kpis.mediumPriority.status}`);
+      
+      this.updateKPIDisplay('lowPriorityCount', kpis.lowPriority.count);
+      this.updateKPIDisplay('lowPriorityStatus', `Status: ${kpis.lowPriority.status}`);
+    } else {
+      // Use the KPI data loaded from the API (default/original)
+      const kpis = this.kpiData;
+      
+      // Update KPI displays
+      this.updateKPIDisplay('totalGapsCount', kpis.totalGaps.count);
+      this.updateKPIDisplay('totalGapsStatus', `Status: ${kpis.totalGaps.status}`);
+      
+      this.updateKPIDisplay('criticalPriorityCount', kpis.criticalPriority.count);
+      this.updateKPIDisplay('criticalPriorityStatus', `Status: ${kpis.criticalPriority.status}`);
+      
+      this.updateKPIDisplay('highPriorityCount', kpis.highPriority.count);
+      this.updateKPIDisplay('highPriorityStatus', `Status: ${kpis.highPriority.status}`);
+      
+      this.updateKPIDisplay('mediumPriorityCount', kpis.mediumPriority.count);
+      this.updateKPIDisplay('mediumPriorityStatus', `Status: ${kpis.mediumPriority.status}`);
+      
+      this.updateKPIDisplay('lowPriorityCount', kpis.lowPriority.count);
+      this.updateKPIDisplay('lowPriorityStatus', `Status: ${kpis.lowPriority.status}`);
+    }
   }
 
   updateKPIDisplay(elementId, value) {
@@ -513,6 +556,61 @@ class GapAnalysisDashboard {
     if (element) {
       element.textContent = value;
     }
+  }
+
+  calculateKPIsFromFilteredData(filteredData) {
+    // Calculate KPIs based on filtered table data (not gap analysis format)
+    const totalGaps = filteredData.length;
+    
+    // Count by priority from the database Priority column
+    const criticalGaps = filteredData.filter(row => {
+      const priority = String(row['Priority'] || row['PRIORITY'] || row['priority'] || '').toUpperCase().trim();
+      return priority === 'CRITICAL' || priority === 'P1' || priority === '1';
+    }).length;
+    
+    const highPriorityGaps = filteredData.filter(row => {
+      const priority = String(row['Priority'] || row['PRIORITY'] || row['priority'] || '').toUpperCase().trim();
+      return priority === 'HIGH' || priority === 'P2' || priority === '2';
+    }).length;
+    
+    const mediumPriorityGaps = filteredData.filter(row => {
+      const priority = String(row['Priority'] || row['PRIORITY'] || row['priority'] || '').toUpperCase().trim();
+      return priority === 'MEDIUM' || priority === 'P3' || priority === '3';
+    }).length;
+    
+    const lowPriorityGaps = filteredData.filter(row => {
+      const priority = String(row['Priority'] || row['PRIORITY'] || row['priority'] || '').toUpperCase().trim();
+      return priority === 'LOW' || priority === 'P4' || priority === '4';
+    }).length;
+    
+    // Calculate status messages based on filtered data
+    const criticalStatus = criticalGaps > 0 ? 'Past Due' : 'None';
+    const highStatus = highPriorityGaps > 0 ? 'Due in next 3 weeks' : 'None';
+    const mediumStatus = mediumPriorityGaps > 0 ? 'Missing commits' : 'None';
+    const lowStatus = lowPriorityGaps > 0 ? 'Late commits' : 'None';
+    
+    return {
+      totalGaps: {
+        count: totalGaps,
+        status: `${totalGaps} Total Gaps`
+      },
+      criticalPriority: {
+        count: criticalGaps,
+        status: criticalStatus
+      },
+      highPriority: {
+        count: highPriorityGaps,
+        status: highStatus
+      },
+      mediumPriority: {
+        count: mediumPriorityGaps,
+        status: mediumStatus
+      },
+      lowPriority: {
+        count: lowPriorityGaps,
+        status: lowStatus
+      }
+    };
   }
 
   calculateKPIsFromData(filteredData) {
@@ -603,8 +701,8 @@ class GapAnalysisDashboard {
     // Highlight active KPI card
     this.highlightActiveKPI(kpiType);
     
-    // Reload table with filter
-    this.applyTableFilters();
+    // Reload table with filter (but don't update KPIs - Level 2 filter)
+    this.applyTableFilters(false);
   }
 
   highlightActiveKPI(activeType) {
@@ -627,7 +725,7 @@ class GapAnalysisDashboard {
     }
   }
 
-  applyTableFilters() {
+  applyTableFilters(updateKPIs = true) {
     // Apply priority filter to table data
     if (!this.allTableData || this.allTableData.length === 0) {
       // If no data loaded yet and not currently loading, load it first
@@ -639,7 +737,77 @@ class GapAnalysisDashboard {
     
     let filteredData = [...this.allTableData];
     
-    // Apply priority filter
+    // Apply dropdown filters
+    // Product Lines filter
+    if (this.filters.productLines && this.filters.productLines.length > 0) {
+      filteredData = filteredData.filter(row => {
+        const program = row['ENGINE_PROGRAM'] || row['Engine Program'] || row['Program'] || '';
+        return this.filters.productLines.includes(program);
+      });
+    }
+    
+    // Years filter
+    if (this.filters.years && this.filters.years.length > 0) {
+      filteredData = filteredData.filter(row => {
+        const targetDate = row['Target_Ship_Date'] || row['Target Ship Date'] || '';
+        if (targetDate) {
+          const year = new Date(targetDate).getFullYear().toString();
+          return this.filters.years.includes(year);
+        }
+        return false;
+      });
+    }
+    
+    // Configs filter
+    if (this.filters.configs && this.filters.configs.length > 0) {
+      filteredData = filteredData.filter(row => {
+        const config = row['Configuration'] || row['Config'] || '';
+        return this.filters.configs.includes(config);
+      });
+    }
+    
+    // Suppliers filter (Parent Part Supplier)
+    if (this.filters.suppliers && this.filters.suppliers.length > 0) {
+      filteredData = filteredData.filter(row => {
+        const supplier = row['Parent_Part_Supplier'] || row['Parent Part Supplier'] || '';
+        return this.filters.suppliers.includes(supplier);
+      });
+    }
+    
+    // RM Suppliers filter
+    if (this.filters.rmSuppliers && this.filters.rmSuppliers.length > 0) {
+      filteredData = filteredData.filter(row => {
+        const rmSupplier = row['Level_2_Raw_Material_Supplier'] || row['Level 2 Raw Material Supplier'] || '';
+        return this.filters.rmSuppliers.includes(rmSupplier);
+      });
+    }
+    
+    // HW Owners filter
+    if (this.filters.hwOwners && this.filters.hwOwners.length > 0) {
+      filteredData = filteredData.filter(row => {
+        const hwOwner = row['HW_OWNER'] || row['HW OWNER'] || '';
+        return this.filters.hwOwners.includes(hwOwner);
+      });
+    }
+    
+    // Modules filter (Raw Type)
+    if (this.filters.modules && this.filters.modules.length > 0) {
+      filteredData = filteredData.filter(row => {
+        const rawType = row['Level_2_Raw_Type'] || row['Level 2 Raw Type'] || '';
+        return this.filters.modules.includes(rawType);
+      });
+    }
+    
+    // Part Numbers filter
+    if (this.filters.partNumbers && this.filters.partNumbers.length > 0) {
+      filteredData = filteredData.filter(row => {
+        const partNumber = row['Part_Number'] || row['Part Number'] || '';
+        const level2PN = row['Level_2_PN'] || row['Level 2 PN'] || '';
+        return this.filters.partNumbers.includes(partNumber) || this.filters.partNumbers.includes(level2PN);
+      });
+    }
+    
+    // Apply priority filter (from KPI clicks)
     if (this.priorityFilter && this.priorityFilter.length > 0) {
       filteredData = filteredData.filter(row => {
         const priority = String(row['Priority'] || row['PRIORITY'] || row['priority'] || '').toUpperCase().trim();
@@ -666,6 +834,11 @@ class GapAnalysisDashboard {
     
     // Sort by priority
     filteredData = this.sortByPriority(filteredData);
+    
+    // Update KPIs only if this is a Level 1 filter (dropdown filters)
+    if (updateKPIs) {
+      this.updateKPIs(filteredData);
+    }
     
     // Update total records and current page data
     this.totalRecords = filteredData.length;
