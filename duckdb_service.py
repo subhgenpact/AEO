@@ -986,6 +986,79 @@ class DuckDBService:
             traceback.print_exc()
             return []
     
+    def get_hw_owner_by_part_complexity(self) -> List[Dict[str, Any]]:
+        """
+        Get HW Owner distribution grouped by Part_Complexity (High, Low, Moderate)
+        Returns data for stacked horizontal bar chart
+        """
+        try:
+            main_table = self._get_main_table()
+            
+            # Check if Part_Complexity column exists
+            columns_result = self.conn.execute(f"SELECT * FROM {main_table} LIMIT 0").description
+            column_names = [col[0] for col in columns_result]
+            
+            part_complexity_col = "Part_Complexity" if "Part_Complexity" in column_names else None
+            
+            if not part_complexity_col:
+                print("[WARN] Part_Complexity column not found in database")
+                return []
+            
+            # Get distinct part numbers grouped by HW_OWNER and Part_Complexity
+            query = f"""
+                SELECT 
+                    "{self.hw_owner_col}" as hw_owner,
+                    "{part_complexity_col}" as part_complexity,
+                    COUNT(DISTINCT "{self.part_col}") as count
+                FROM {main_table}
+                WHERE "{part_complexity_col}" IS NOT NULL 
+                    AND "{part_complexity_col}" != ''
+                    AND "{self.hw_owner_col}" IS NOT NULL
+                    AND "{self.hw_owner_col}" != ''
+                    AND "{self.part_col}" IS NOT NULL
+                    AND "{self.part_col}" != ''
+                GROUP BY "{self.hw_owner_col}", "{part_complexity_col}"
+                ORDER BY "{self.hw_owner_col}", "{part_complexity_col}"
+            """
+            
+            result = self.conn.execute(query).fetchall()
+            
+            # Structure data for frontend
+            hw_owner_data = {}
+            for row in result:
+                hw_owner = row[0]
+                complexity = row[1]
+                count = row[2]
+                
+                if hw_owner not in hw_owner_data:
+                    hw_owner_data[hw_owner] = {
+                        "hw_owner": hw_owner,
+                        "High": 0,
+                        "Low": 0,
+                        "Moderate": 0,
+                        "total": 0
+                    }
+                
+                hw_owner_data[hw_owner][complexity] = count
+                hw_owner_data[hw_owner]["total"] += count
+            
+            # Convert to list and sort by total (descending)
+            distribution = sorted(
+                list(hw_owner_data.values()),
+                key=lambda x: x["total"],
+                reverse=True
+            )
+            
+            print(f"[DUCKDB] ✓ HW Owner by Part Complexity: {len(distribution)} HW Owners")
+            
+            return distribution
+            
+        except Exception as e:
+            print(f"[ERROR] Error getting HW owner by part complexity: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
     def close(self):
         """Close DuckDB connection"""
         if self.conn:

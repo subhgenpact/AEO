@@ -694,3 +694,49 @@ async def get_supplier_type_distribution():
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/hw-owner-by-part-complexity")
+async def get_hw_owner_by_part_complexity():
+    """
+    Get HW Owner distribution grouped by Part_Complexity (High, Low, Moderate)
+    Returns data for stacked horizontal bar chart
+    
+    Example response:
+    {
+      "status": "success",
+      "data": [
+        {
+          "hw_owner": "HW2",
+          "High": 150,
+          "Low": 240,
+          "Moderate": 179,
+          "total": 569
+        },
+        ...
+      ]
+    }
+    """
+    try:
+        if not duckdb_service:
+            raise HTTPException(status_code=500, detail="DuckDB service not initialized")
+        
+        start_time = time.time()
+        
+        distribution = duckdb_service.get_hw_owner_by_part_complexity()
+        
+        elapsed = time.time() - start_time
+        
+        return {
+            "status": "success",
+            "data": distribution,
+            "execution_time_ms": f"{elapsed*1000:.2f}"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] HW owner by part complexity endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

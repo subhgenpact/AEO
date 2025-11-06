@@ -4931,6 +4931,15 @@ function updateProgramSuppliersPaginationUI() {
 
 // Render HW Owner Chart
 function renderHWOwnerChart() {
+  // Use new HW Owner Part Complexity chart
+  if (typeof window.renderHWOwnerComplexityChart === 'function') {
+    window.renderHWOwnerComplexityChart();
+    return;
+  } else {
+    console.warn('⚠️ renderHWOwnerComplexityChart not loaded yet, falling back to old chart');
+  }
+  
+  // Fallback to old chart if new one is not loaded
   // Use filtered data from DataFilterManager instead of RAW_DATA
   const filteredData = window.dataFilterManager ? window.dataFilterManager.getFilteredData() : RAW_DATA;
   if (!Array.isArray(filteredData)) return;
