@@ -1344,6 +1344,18 @@ class DuckDBService:
         try:
             main_table = self._get_main_table()
             
+            # Find gap column
+            column_names = [desc[0] for desc in self.conn.execute(f'DESCRIBE {main_table}').fetchall()]
+            gap_columns = ['Have_Gap', 'Gap_Y_N', 'Gap (Y/N)', 'Gap_YN', 'have_gap', 'gap_y_n', 'gap_yn', 'Have Gap', 'Gap Y/N']
+            gap_col = None
+            for col in gap_columns:
+                if col in column_names:
+                    gap_col = col
+                    break
+            
+            # Build gap column select
+            gap_select = f'"{gap_col}" as gap_status,' if gap_col else "'N/A' as gap_status,"
+            
             # Query to get HW Owner details with quarterly aggregation by supplier
             query = f"""
                 WITH quarterly_data AS (
@@ -1353,6 +1365,7 @@ class DuckDBService:
                         "Part_Description" as part_description,
                         "{self.hw_owner_col}" as hwo,
                         'L1' as level,
+                        {gap_select}
                         CAST(EXTRACT(YEAR FROM CAST("{self.target_date_col}" AS DATE)) AS INTEGER) as year,
                         CAST(CEIL(EXTRACT(MONTH FROM CAST("{self.target_date_col}" AS DATE)) / 3.0) AS INTEGER) as quarter,
                         COUNT(*) as count
@@ -1369,6 +1382,7 @@ class DuckDBService:
                         "{self.part_col}",
                         "Part_Description",
                         "{self.hw_owner_col}",
+                        gap_status,
                         year,
                         quarter
                 )
@@ -1386,9 +1400,10 @@ class DuckDBService:
                 part_description = row[2]
                 hwo = row[3]
                 level = row[4]
-                year = row[5]
-                quarter = row[6]
-                count = row[7]
+                gap_status = row[5]
+                year = row[6]
+                quarter = row[7]
+                count = row[8]
                 
                 key = f"{supplier}|{part_number}"
                 
@@ -1399,6 +1414,7 @@ class DuckDBService:
                         "description": part_description or "Part",
                         "hwo": hwo or hw_owner,
                         "level": level,
+                        "gapStatus": gap_status if gap_status else "N/A",
                         "quarters": {}
                     }
                 

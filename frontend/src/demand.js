@@ -6941,10 +6941,12 @@ function showHWOwnerDetailsModal(hwoName) {
   const modalHWOwnerSupplierSearch = document.getElementById('modalHWOwnerSupplierSearch');
   const modalHWOwnerPartNumberSearch = document.getElementById('modalHWOwnerPartNumberSearch');
   const modalHWOwnerPartDescSearch = document.getElementById('modalHWOwnerPartDescSearch');
+  const modalHWOwnerGapStatusFilter = document.getElementById('modalHWOwnerGapStatusFilter');
   
   if (modalHWOwnerSupplierSearch) modalHWOwnerSupplierSearch.value = '';
   if (modalHWOwnerPartNumberSearch) modalHWOwnerPartNumberSearch.value = '';
   if (modalHWOwnerPartDescSearch) modalHWOwnerPartDescSearch.value = '';
+  if (modalHWOwnerGapStatusFilter) modalHWOwnerGapStatusFilter.value = '';
   
   // Set modal title
   const modalLabel = document.getElementById('hwOwnerModalLabel');
@@ -7271,12 +7273,30 @@ function renderHWOwnerModalTablePage(pageData) {
 
   pageData.forEach(item => {
     const row = document.createElement('tr');
+    
+    // Determine gap status styling
+    const gapStatus = item.gapStatus || 'N/A';
+    let gapClass = '';
+    let gapDisplay = gapStatus;
+    
+    if (gapStatus === 'Y' || gapStatus === 'YES' || gapStatus === 'yes') {
+      gapClass = 'badge bg-danger';
+      gapDisplay = 'Gap';
+    } else if (gapStatus === 'N' || gapStatus === 'NO' || gapStatus === 'no') {
+      gapClass = 'badge bg-success';
+      gapDisplay = 'No Gap';
+    } else {
+      gapClass = 'badge bg-secondary';
+      gapDisplay = 'N/A';
+    }
+    
     row.innerHTML = `
       <td>${item.name}</td>
       <td>${item.partNumber}</td>
       <td>${item.description}</td>
       <td>${item.hwo}</td>
       <td>${item.level || '-'}</td>
+      <td><span class="${gapClass}">${gapDisplay}</span></td>
       <td>${item.quarters['2025-Q4'] || '-'}</td>
       <td>${item.quarters['2026-Q1'] || '-'}</td>
       <td>${item.quarters['2026-Q2'] || '-'}</td>
@@ -7371,6 +7391,7 @@ function setupHWOwnerSearchFilters(allData) {
   const supplierSearch = document.getElementById('modalHWOwnerSupplierSearch');
   const partNumberSearch = document.getElementById('modalHWOwnerPartNumberSearch');
   const partDescSearch = document.getElementById('modalHWOwnerPartDescSearch');
+  const gapStatusFilter = document.getElementById('modalHWOwnerGapStatusFilter');
   
   if (!window.modalHWOwnerTablePagination) return;
   
@@ -7383,13 +7404,25 @@ function setupHWOwnerSearchFilters(allData) {
     const supplierFilter = supplierSearch?.value.toLowerCase() || '';
     const partNumberFilter = partNumberSearch?.value.toLowerCase() || '';
     const partDescFilter = partDescSearch?.value.toLowerCase() || '';
+    const gapFilter = gapStatusFilter?.value || '';
     
     const filtered = window.originalHWOwnerData.filter(item => {
       const matchesSupplier = !supplierFilter || (item.name && item.name.toLowerCase().includes(supplierFilter));
       const matchesPartNumber = !partNumberFilter || (item.partNumber && item.partNumber.toLowerCase().includes(partNumberFilter));
       const matchesPartDesc = !partDescFilter || (item.description && item.description.toLowerCase().includes(partDescFilter));
       
-      return matchesSupplier && matchesPartNumber && matchesPartDesc;
+      // Gap status filter
+      let matchesGap = true;
+      if (gapFilter) {
+        const gapStatus = (item.gapStatus || '').toUpperCase();
+        if (gapFilter === 'gap') {
+          matchesGap = gapStatus === 'Y' || gapStatus === 'YES';
+        } else if (gapFilter === 'nogap') {
+          matchesGap = gapStatus === 'N' || gapStatus === 'NO';
+        }
+      }
+      
+      return matchesSupplier && matchesPartNumber && matchesPartDesc && matchesGap;
     });
     
     window.modalHWOwnerTablePagination.setData(filtered);
@@ -7409,6 +7442,9 @@ function setupHWOwnerSearchFilters(allData) {
   }
   if (partDescSearch) {
     partDescSearch.addEventListener('input', filterData);
+  }
+  if (gapStatusFilter) {
+    gapStatusFilter.addEventListener('change', filterData);
   }
 }
 

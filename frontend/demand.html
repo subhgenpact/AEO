@@ -714,7 +714,7 @@
   <script defer src="src/hw-owner-complexity-chart.js?v=2"></script>
   <script defer src="src/supplier-popup.js?v=5"></script>
   <script defer src="src/rm-supplier-popup.js?v=9"></script>
-  <script defer src="src/demand.js?v=44"></script>
+  <script defer src="src/demand.js?v=45"></script>
   <script defer src="src/dropdowns.js?v=2"></script>
 
   <!-- Chatbot Icon -->
@@ -864,17 +864,25 @@
           <div class="card mb-3">
             <div class="card-body">
               <div class="row g-2">
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <label for="modalHWOwnerSupplierSearch" class="form-label">Search Supplier</label>
                   <input type="text" class="form-control form-control-sm" id="modalHWOwnerSupplierSearch" placeholder="Filter by supplier...">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <label for="modalHWOwnerPartNumberSearch" class="form-label">Search Part Number</label>
                   <input type="text" class="form-control form-control-sm" id="modalHWOwnerPartNumberSearch" placeholder="Filter by part number...">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <label for="modalHWOwnerPartDescSearch" class="form-label">Search Part Description</label>
                   <input type="text" class="form-control form-control-sm" id="modalHWOwnerPartDescSearch" placeholder="Filter by description...">
+                </div>
+                <div class="col-md-3">
+                  <label for="modalHWOwnerGapStatusFilter" class="form-label">Gap Status</label>
+                  <select class="form-select form-select-sm" id="modalHWOwnerGapStatusFilter">
+                    <option value="">All</option>
+                    <option value="gap">Gap</option>
+                    <option value="nogap">No Gap</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -918,12 +926,14 @@
                       <th>Part Description</th>
                       <th>HWO</th>
                       <th>Level</th>
+                      <th>Gap Status</th>
                       <th colspan="1" class="text-center">2025</th>
                       <th colspan="4" class="text-center">2026</th>
                       <th colspan="4" class="text-center">2027</th>
                       <th colspan="4" class="text-center">2028</th>
                     </tr>
                     <tr>
+                      <th></th>
                       <th></th>
                       <th></th>
                       <th></th>
