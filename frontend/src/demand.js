@@ -6250,8 +6250,11 @@ function filterSupplierTypeTableBySupplier(supplierName) {
   
   console.log(`Filtered to ${filteredData.length} rows for supplier: ${supplierName}`);
   
-  // Re-render the table with filtered data
-  renderSupplierTypeDetailsTable(filteredData);
+  // Update the table pagination with filtered data
+  if (window.modalSupplierTypeTablePagination) {
+    window.modalSupplierTypeTablePagination.setData(filteredData);
+    window.modalSupplierTypeTablePagination.renderTable();
+  }
 }
 
 // Helper function to update supplier type chart with filtered data
