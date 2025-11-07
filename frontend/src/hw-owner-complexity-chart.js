@@ -199,6 +199,22 @@ function renderHWOwnerComplexityChart() {
                             align: 'center',
                             clip: true
                         }
+                    },
+                    // Add click handler to open HW Owner details modal
+                    onClick: (event, activeElements, chart) => {
+                        if (activeElements.length > 0) {
+                            const clickedIndex = activeElements[0].index;
+                            const hwOwnerName = chart.data.labels[clickedIndex];
+                            
+                            console.log('🖱️ Clicked HW Owner:', hwOwnerName);
+                            
+                            // Call the modal function
+                            if (typeof showHWOwnerDetailsModal === 'function') {
+                                showHWOwnerDetailsModal(hwOwnerName);
+                            } else {
+                                console.error('❌ showHWOwnerDetailsModal function not found');
+                            }
+                        }
                     }
                 }
             });

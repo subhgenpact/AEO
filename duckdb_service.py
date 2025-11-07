@@ -1336,6 +1336,87 @@ class DuckDBService:
             traceback.print_exc()
             return []
     
+    def get_hw_owner_details(self, hw_owner: str) -> List[Dict[str, Any]]:
+        """
+        Get detailed HW Owner information with quarterly demand by supplier
+        Returns list of suppliers for this HW Owner with their part numbers and quarterly breakdown
+        """
+        try:
+            main_table = self._get_main_table()
+            
+            # Query to get HW Owner details with quarterly aggregation by supplier
+            query = f"""
+                WITH quarterly_data AS (
+                    SELECT 
+                        "{self.supplier_col}" as supplier,
+                        "{self.part_col}" as part_number,
+                        "Part_Description" as part_description,
+                        "{self.hw_owner_col}" as hwo,
+                        'L1' as level,
+                        CAST(EXTRACT(YEAR FROM CAST("{self.target_date_col}" AS DATE)) AS INTEGER) as year,
+                        CAST(CEIL(EXTRACT(MONTH FROM CAST("{self.target_date_col}" AS DATE)) / 3.0) AS INTEGER) as quarter,
+                        COUNT(*) as count
+                    FROM {main_table}
+                    WHERE "{self.hw_owner_col}" = '{hw_owner}'
+                        AND "{self.supplier_col}" IS NOT NULL
+                        AND "{self.supplier_col}" != ''
+                        AND "{self.supplier_col}" != 'NaN'
+                        AND "{self.supplier_col}" != 'nan'
+                        AND "{self.part_col}" IS NOT NULL
+                        AND "{self.part_col}" != ''
+                    GROUP BY 
+                        "{self.supplier_col}",
+                        "{self.part_col}",
+                        "Part_Description",
+                        "{self.hw_owner_col}",
+                        year,
+                        quarter
+                )
+                SELECT * FROM quarterly_data
+                ORDER BY supplier, part_number, year, quarter
+            """
+            
+            result = self.conn.execute(query).fetchall()
+            
+            # Group by supplier and part number
+            supplier_map = {}
+            for row in result:
+                supplier = row[0]
+                part_number = row[1]
+                part_description = row[2]
+                hwo = row[3]
+                level = row[4]
+                year = row[5]
+                quarter = row[6]
+                count = row[7]
+                
+                key = f"{supplier}|{part_number}"
+                
+                if key not in supplier_map:
+                    supplier_map[key] = {
+                        "name": supplier,
+                        "partNumber": part_number,
+                        "description": part_description or "Part",
+                        "hwo": hwo or hw_owner,
+                        "level": level,
+                        "quarters": {}
+                    }
+                
+                quarter_key = f"{year}-Q{quarter}"
+                supplier_map[key]["quarters"][quarter_key] = count
+            
+            details_list = list(supplier_map.values())
+            
+            print(f"[DUCKDB] ✓ HW Owner details for {hw_owner}: {len(details_list)} unique supplier-part combinations")
+            
+            return details_list
+            
+        except Exception as e:
+            print(f"[ERROR] Error getting HW Owner details: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
     def get_gap_analysis_kpis(self):
         """
         Get KPI data for gap analysis based on Priority and Have_Gap columns

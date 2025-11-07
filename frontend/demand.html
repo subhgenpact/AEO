@@ -697,10 +697,10 @@
   <script defer src="src/filters.js?v=2"></script>
   <script defer src="src/supplier-type-chart.js?v=4"></script>
   <script defer src="src/rm-supplier-raw-material-chart.js?v=4"></script>
-  <script defer src="src/hw-owner-complexity-chart.js?v=1"></script>
+  <script defer src="src/hw-owner-complexity-chart.js?v=2"></script>
   <script defer src="src/supplier-popup.js?v=4"></script>
   <script defer src="src/rm-supplier-popup.js?v=9"></script>
-  <script defer src="src/demand.js?v=42"></script>
+  <script defer src="src/demand.js?v=43"></script>
   <script defer src="src/dropdowns.js?v=2"></script>
 
   <!-- Chatbot Icon -->
@@ -832,6 +832,133 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" id="exportSupplierTypeModalData">Export Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HW Owner Details Modal -->
+  <div class="modal fade" id="hwOwnerModal" tabindex="-1" aria-labelledby="hwOwnerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="hwOwnerModalLabel" style="color: #000000 !important;">HW Owner Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Search Filters -->
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label for="modalHWOwnerSupplierSearch" class="form-label">Search Supplier</label>
+                  <input type="text" class="form-control form-control-sm" id="modalHWOwnerSupplierSearch" placeholder="Filter by supplier...">
+                </div>
+                <div class="col-md-4">
+                  <label for="modalHWOwnerPartNumberSearch" class="form-label">Search Part Number</label>
+                  <input type="text" class="form-control form-control-sm" id="modalHWOwnerPartNumberSearch" placeholder="Filter by part number...">
+                </div>
+                <div class="col-md-4">
+                  <label for="modalHWOwnerPartDescSearch" class="form-label">Search Part Description</label>
+                  <input type="text" class="form-control form-control-sm" id="modalHWOwnerPartDescSearch" placeholder="Filter by description...">
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Demand Chart -->
+          <div class="card chart-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h6 class="mb-0" id="modalHWOwnerChartTitle">Supplier Demand per Part</h6>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" id="showAllHWOwner" title="Show all suppliers">
+                  <i class="bi bi-eye"></i> Show All
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="resetHWOwnerZoom" title="Reset to top 5">
+                  <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height: 300px;">
+                <canvas id="modalHWOwnerChart"></canvas>
+              </div>
+              <div class="text-muted small text-center mt-2">
+                💡 <strong>Tip:</strong> Scroll to pan vertically • Click bar to filter table • Double-click to reset to top 5
+              </div>
+            </div>
+          </div>
+
+          <!-- Details Table -->
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Details</h6>
+              <div id="modalHWOwnerTablePaginationInfo" class="small text-muted"></div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm" id="modalHWOwnerDetailsTable">
+                  <thead>
+                    <tr>
+                      <th>Supplier</th>
+                      <th>Part Number</th>
+                      <th>Part Description</th>
+                      <th>HWO</th>
+                      <th>Level</th>
+                      <th colspan="1" class="text-center">2025</th>
+                      <th colspan="4" class="text-center">2026</th>
+                      <th colspan="4" class="text-center">2027</th>
+                      <th colspan="4" class="text-center">2028</th>
+                    </tr>
+                    <tr>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th>Q4</th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                      <th>Q1</th>
+                      <th>Q2</th>
+                      <th>Q3</th>
+                      <th>Q4</th>
+                    </tr>
+                  </thead>
+                  <tbody id="modalHWOwnerDetailsTableBody">
+                    <!-- Data will be populated by JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+              <!-- Pagination Controls -->
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-muted small">
+                  <span id="hwOwnerDetailsRecordInfo">Showing 0-0 of 0 records</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <label for="hwOwnerDetailsPageSize" class="form-label mb-0 small">Page size:</label>
+                  <select class="form-select form-select-sm" id="hwOwnerDetailsPageSize" style="width: 80px;">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                  <span id="hwOwnerDetailsPageInfo" class="text-muted small"></span>
+                  <button class="btn btn-sm btn-outline-secondary" id="hwOwnerDetailsPrevBtn">Previous</button>
+                  <button class="btn btn-sm btn-outline-secondary" id="hwOwnerDetailsNextBtn">Next</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="exportHWOwnerModalData">Export Data</button>
         </div>
       </div>
     </div>

@@ -944,6 +944,62 @@ async def get_supplier_details(supplier_type: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/hw-owner-details/{hw_owner}")
+async def get_hw_owner_details(hw_owner: str):
+    """
+    Get detailed HW Owner information with quarterly demand by supplier
+    
+    Args:
+        hw_owner: The HW Owner name (e.g., "HW1", "HW2")
+    
+    Example response:
+    {
+      "status": "success",
+      "data": [
+        {
+          "name": "Supplier A",
+          "partNumber": "PN123",
+          "description": "Part Description",
+          "hwo": "HW1",
+          "level": "L1",
+          "quarters": {
+            "2025-Q4": 5,
+            "2026-Q1": 3,
+            "2026-Q2": 8
+          }
+        },
+        ...
+      ]
+    }
+    """
+    try:
+        if not duckdb_service:
+            raise HTTPException(status_code=500, detail="DuckDB service not initialized")
+        
+        start_time = time.time()
+        
+        details = duckdb_service.get_hw_owner_details(hw_owner)
+        
+        elapsed = time.time() - start_time
+        
+        print(f"[API] HW Owner details for '{hw_owner}': {len(details)} records in {elapsed*1000:.2f}ms")
+        
+        return {
+            "status": "success",
+            "data": details,
+            "hw_owner": hw_owner,
+            "execution_time_ms": f"{elapsed*1000:.2f}"
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ERROR] HW Owner details endpoint error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/gap-analysis/all")
 async def get_gap_analysis_data(skip: int = 0, limit: int = 1000):
     """
