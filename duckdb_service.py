@@ -1110,13 +1110,62 @@ class DuckDBService:
             traceback.print_exc()
             return []
     
-    def get_rm_supplier_details_by_raw_material(self, raw_material_type: str) -> List[Dict[str, Any]]:
+    def get_rm_supplier_details_by_raw_material(self, raw_material_type: str, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         """
         Get detailed RM supplier information with quarterly demand for a specific raw material type
         Returns list of RM suppliers with their part numbers and quarterly breakdown
+        
+        Args:
+            raw_material_type: The raw material type to filter by
+            filters: Optional dictionary of filters to apply:
+                - product_lines: List of product lines
+                - years: List of years
+                - configs: List of configurations
+                - suppliers: List of parent part suppliers
+                - hw_owners: List of HW owners
+                - part_numbers: List of part numbers
         """
         try:
             main_table = self._get_main_table()
+            filters = filters or {}
+            
+            # Build WHERE clause with filters
+            where_clauses = [
+                f'"{self.level2_raw_type_col}" = \'{raw_material_type}\'',
+                f'"{self.rm_supplier_col}" IS NOT NULL',
+                f'"{self.rm_supplier_col}" != \'\'',
+                f'"{self.rm_supplier_col}" != \'NaN\'',
+                f'"{self.rm_supplier_col}" != \'nan\'',
+                f'"{self.level2_pn_col}" IS NOT NULL',
+                f'"{self.level2_pn_col}" != \'\''
+            ]
+            
+            # Add filter conditions
+            if filters.get('product_lines'):
+                programs_list = "', '".join(filters['product_lines'])
+                where_clauses.append(f'"{self.program_col}" IN (\'{programs_list}\')')
+            
+            if filters.get('years'):
+                years_list = "', '".join(filters['years'])
+                where_clauses.append(f'CAST(EXTRACT(YEAR FROM CAST("{self.target_date_col}" AS DATE)) AS VARCHAR) IN (\'{years_list}\')')
+            
+            if filters.get('configs'):
+                configs_list = "', '".join(filters['configs'])
+                where_clauses.append(f'"{self.config_col}" IN (\'{configs_list}\')')
+            
+            if filters.get('suppliers'):
+                suppliers_list = "', '".join(filters['suppliers'])
+                where_clauses.append(f'"{self.supplier_col}" IN (\'{suppliers_list}\')')
+            
+            if filters.get('hw_owners'):
+                hw_list = "', '".join(filters['hw_owners'])
+                where_clauses.append(f'"{self.hw_owner_col}" IN (\'{hw_list}\')')
+            
+            if filters.get('part_numbers'):
+                parts_list = "', '".join(filters['part_numbers'])
+                where_clauses.append(f'"{self.part_col}" IN (\'{parts_list}\')')
+            
+            where_clause = ' AND '.join(where_clauses)
             
             # Query to get RM supplier details with quarterly aggregation
             query = f"""
@@ -1125,28 +1174,26 @@ class DuckDBService:
                         "{self.rm_supplier_col}" as rm_supplier,
                         "{self.level2_pn_col}" as rm_part_number,
                         "{self.part_col}" as parent_part_no,
+                        "{self.supplier_col}" as parent_part_supplier,
                         "Part_Description" as part_description,
                         "{self.hw_owner_col}" as hwo,
                         'L2' as level,
                         "QPE" as qpe,
+                        "Total_LT" as total_lt,
                         CAST(EXTRACT(YEAR FROM CAST("{self.target_date_col}" AS DATE)) AS INTEGER) as year,
                         CAST(CEIL(EXTRACT(MONTH FROM CAST("{self.target_date_col}" AS DATE)) / 3.0) AS INTEGER) as quarter,
                         COUNT(*) as count
                     FROM {main_table}
-                    WHERE "{self.level2_raw_type_col}" = '{raw_material_type}'
-                        AND "{self.rm_supplier_col}" IS NOT NULL
-                        AND "{self.rm_supplier_col}" != ''
-                        AND "{self.rm_supplier_col}" != 'NaN'
-                        AND "{self.rm_supplier_col}" != 'nan'
-                        AND "{self.level2_pn_col}" IS NOT NULL
-                        AND "{self.level2_pn_col}" != ''
+                    WHERE {where_clause}
                     GROUP BY 
                         "{self.rm_supplier_col}",
                         "{self.level2_pn_col}",
                         "{self.part_col}",
+                        "{self.supplier_col}",
                         "Part_Description",
                         "{self.hw_owner_col}",
                         "QPE",
+                        "Total_LT",
                         year,
                         quarter
                 )
@@ -1162,13 +1209,15 @@ class DuckDBService:
                 rm_supplier = row[0]
                 rm_part_number = row[1]
                 parent_part_no = row[2]
-                part_description = row[3]
-                hwo = row[4]
-                level = row[5]
-                qpe = row[6]
-                year = row[7]
-                quarter = row[8]
-                count = row[9]
+                parent_part_supplier = row[3]
+                part_description = row[4]
+                hwo = row[5]
+                level = row[6]
+                qpe = row[7]
+                total_lt = row[8]
+                year = row[9]
+                quarter = row[10]
+                count = row[11]
                 
                 key = f"{rm_supplier}|{rm_part_number}"
                 
@@ -1177,11 +1226,12 @@ class DuckDBService:
                         "name": rm_supplier,
                         "partNumber": rm_part_number,
                         "parentPartNo": parent_part_no or "-",
+                        "parentPartSupplier": parent_part_supplier or "-",
                         "description": part_description or "Raw Material Component",
                         "hwo": hwo or "HW1",
                         "level": level,
                         "qpe": qpe or "-",
-                        "mfgLT": "-",
+                        "mfgLT": str(total_lt) if total_lt is not None and str(total_lt).strip() not in ['', 'nan', 'NaN', 'None'] else "-",
                         "quarters": {}
                     }
                 

@@ -796,12 +796,27 @@ async def get_rm_supplier_by_raw_material():
 
 
 @router.get("/rm-supplier-details/{raw_material_type}")
-async def get_rm_supplier_details(raw_material_type: str):
+async def get_rm_supplier_details(
+    raw_material_type: str,
+    product_lines: Optional[List[str]] = Query(None),
+    years: Optional[List[str]] = Query(None),
+    configs: Optional[List[str]] = Query(None),
+    suppliers: Optional[List[str]] = Query(None),
+    hw_owners: Optional[List[str]] = Query(None),
+    part_numbers: Optional[List[str]] = Query(None)
+):
     """
     Get detailed RM supplier information with quarterly demand for a specific raw material type
+    Supports filtering by product lines, years, configs, suppliers, hw owners, and part numbers
     
     Args:
         raw_material_type: The raw material type (e.g., "Casting Structural", "Forging Ring")
+        product_lines: Optional list of product lines to filter by
+        years: Optional list of years to filter by
+        configs: Optional list of configurations to filter by
+        suppliers: Optional list of parent part suppliers to filter by
+        hw_owners: Optional list of HW owners to filter by
+        part_numbers: Optional list of part numbers to filter by
     
     Example response:
     {
@@ -811,11 +826,12 @@ async def get_rm_supplier_details(raw_material_type: str):
           "name": "RM Supplier 18",
           "partNumber": "RM PN8",
           "parentPartNo": "PN18",
+          "parentPartSupplier": "Supplier A",
           "description": "Part Desc16",
           "hwo": "HW1",
           "level": "L2",
           "qpe": "2",
-          "mfgLT": "-",
+          "mfgLT": "45",
           "quarters": {
             "2025-Q1": 5,
             "2025-Q2": 3,
@@ -832,7 +848,22 @@ async def get_rm_supplier_details(raw_material_type: str):
         
         start_time = time.time()
         
-        details = duckdb_service.get_rm_supplier_details_by_raw_material(raw_material_type)
+        # Build filters dictionary
+        filters = {}
+        if product_lines:
+            filters['product_lines'] = product_lines
+        if years:
+            filters['years'] = years
+        if configs:
+            filters['configs'] = configs
+        if suppliers:
+            filters['suppliers'] = suppliers
+        if hw_owners:
+            filters['hw_owners'] = hw_owners
+        if part_numbers:
+            filters['part_numbers'] = part_numbers
+        
+        details = duckdb_service.get_rm_supplier_details_by_raw_material(raw_material_type, filters)
         
         elapsed = time.time() - start_time
         
@@ -842,6 +873,7 @@ async def get_rm_supplier_details(raw_material_type: str):
             "status": "success",
             "data": details,
             "raw_material_type": raw_material_type,
+            "filters_applied": filters,
             "execution_time_ms": f"{elapsed*1000:.2f}"
         }
     
