@@ -7211,6 +7211,26 @@ function renderHWOwnerDetailsChart(hwoName) {
     });
 }
 
+function filterHWOwnerTableBySupplier(supplierName) {
+  if (!window.originalHWOwnerData) {
+    console.warn('No original data available for filtering');
+    return;
+  }
+  
+  // Filter the data by supplier name
+  const filteredData = window.originalHWOwnerData.filter(row => 
+    row.supplier === supplierName
+  );
+  
+  console.log(`Filtered to ${filteredData.length} rows for supplier: ${supplierName}`);
+  
+  // Update the table pagination with filtered data
+  if (window.modalHWOwnerTablePagination) {
+    window.modalHWOwnerTablePagination.setData(filteredData);
+    window.modalHWOwnerTablePagination.renderTable();
+  }
+}
+
 function renderHWOwnerDetailsTable(hwoName) {
   console.log('📋 renderHWOwnerDetailsTable called for:', hwoName);
   const tableBody = document.getElementById('modalHWOwnerDetailsTableBody');
