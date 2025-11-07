@@ -54,12 +54,23 @@ function showProgramSuppliersModal(programName, suppliers, details) {
 
             <!-- Demand Chart -->
             <div class="card chart-card mb-4">
-              <div class="card-header">
+              <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0" id="programModalChartTitle">${programName} Supplier Demand</h6>
+                <div>
+                  <button class="btn btn-sm btn-outline-primary me-2" id="showAllProgramSuppliers" title="Show all suppliers">
+                    <i class="bi bi-list"></i> Show All
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" id="resetProgramSupplierZoom" title="Reset to top 5">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                  </button>
+                </div>
               </div>
               <div class="card-body">
                 <div class="chart-container" style="height: 300px;">
                   <canvas id="programModalChart"></canvas>
+                </div>
+                <div class="text-muted small text-center mt-2">
+                  💡 <strong>Tip:</strong> Scroll to navigate, Click bar to filter table, Double-click to reset
                 </div>
               </div>
             </div>
@@ -192,24 +203,39 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
     return totalB - totalA;
   });
 
+  const data2025 = labels.map(supplier => supplierData[supplier]['2025']);
+  const data2026 = labels.map(supplier => supplierData[supplier]['2026']);
+  const data2027 = labels.map(supplier => supplierData[supplier]['2027']);
+
+  // Store full data for zoom/pan
+  window.fullProgramSupplierChartData = {
+    labels: labels,
+    data2025: data2025,
+    data2026: data2026,
+    data2027: data2027
+  };
+
+  // Show only top 5 by default
+  const top5Data = getProgramTop5Suppliers(window.fullProgramSupplierChartData);
+
   const datasets = [
     {
       label: '2025',
-      data: labels.map(supplier => supplierData[supplier]['2025']),
+      data: top5Data.data2025,
       backgroundColor: 'rgba(59, 130, 246, 0.8)',
       borderColor: '#3b82f6',
       borderWidth: 1
     },
     {
       label: '2026',
-      data: labels.map(supplier => supplierData[supplier]['2026']),
+      data: top5Data.data2026,
       backgroundColor: 'rgba(245, 158, 11, 0.8)',
       borderColor: '#f59e0b',
       borderWidth: 1
     },
     {
       label: '2027',
-      data: labels.map(supplier => supplierData[supplier]['2027']),
+      data: top5Data.data2027,
       backgroundColor: 'rgba(16, 185, 129, 0.8)',
       borderColor: '#10b981',
       borderWidth: 1
@@ -218,7 +244,7 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
 
   programModalChart = new Chart(ctx, {
     type: 'bar',
-    data: { labels: labels, datasets: datasets },
+    data: { labels: top5Data.labels, datasets: datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -228,7 +254,30 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
         tooltip: {
           callbacks: {
             label: function (context) {
+              if (context.parsed.x === 0) return null;
               return `${context.dataset.label}: ${context.parsed.x}`;
+            }
+          }
+        },
+        zoom: {
+          zoom: {
+            wheel: {
+              enabled: true,
+              modifierKey: 'ctrl'
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'y'
+          },
+          pan: {
+            enabled: true,
+            mode: 'y'
+          },
+          limits: {
+            y: {
+              min: 0,
+              max: labels.length - 1
             }
           }
         }
@@ -241,11 +290,65 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
         },
         y: {
           stacked: true,
-          title: { display: true, text: 'Supplier' }
+          title: { display: true, text: 'Supplier' },
+          min: 0,
+          max: 4  // Show 5 items (0-4)
+        }
+      },
+      onClick: (event, activeElements, chart) => {
+        if (event.type === 'dblclick') {
+          // Reset to show top 5
+          chart.data.labels = top5Data.labels;
+          chart.data.datasets[0].data = top5Data.data2025;
+          chart.data.datasets[1].data = top5Data.data2026;
+          chart.data.datasets[2].data = top5Data.data2027;
+          chart.options.scales.y.min = 0;
+          chart.options.scales.y.max = 4;
+          chart.update();
+        } else if (activeElements.length > 0) {
+          // Get the clicked supplier name
+          const clickedIndex = activeElements[0].index;
+          const supplierName = chart.data.labels[clickedIndex];
+          
+          // Filter the table by this supplier
+          filterProgramTableBySupplier(supplierName);
         }
       }
     }
   });
+
+  // Setup reset button
+  const resetBtn = document.getElementById('resetProgramSupplierZoom');
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      if (programModalChart) {
+        // Reset to show top 5
+        programModalChart.data.labels = top5Data.labels;
+        programModalChart.data.datasets[0].data = top5Data.data2025;
+        programModalChart.data.datasets[1].data = top5Data.data2026;
+        programModalChart.data.datasets[2].data = top5Data.data2027;
+        programModalChart.options.scales.y.min = 0;
+        programModalChart.options.scales.y.max = 4;
+        programModalChart.update();
+      }
+    };
+  }
+
+  // Setup show all button
+  const showAllBtn = document.getElementById('showAllProgramSuppliers');
+  if (showAllBtn) {
+    showAllBtn.onclick = () => {
+      if (programModalChart && window.fullProgramSupplierChartData) {
+        programModalChart.data.labels = window.fullProgramSupplierChartData.labels;
+        programModalChart.data.datasets[0].data = window.fullProgramSupplierChartData.data2025;
+        programModalChart.data.datasets[1].data = window.fullProgramSupplierChartData.data2026;
+        programModalChart.data.datasets[2].data = window.fullProgramSupplierChartData.data2027;
+        programModalChart.options.scales.y.min = 0;
+        programModalChart.options.scales.y.max = Math.min(9, window.fullProgramSupplierChartData.labels.length - 1);
+        programModalChart.update();
+      }
+    };
+  }
 }
 
 /**
@@ -255,8 +358,9 @@ function renderProgramSuppliersTable(programName, details) {
   const tbody = document.getElementById('programSuppliersTableBody');
   if (!tbody) return;
 
-  // Store all details globally for pagination
+  // Store all details globally for pagination and filtering
   window.currentProgramDetails = details;
+  window.originalProgramDetails = [...details]; // Store original copy for filtering
   
   // Initialize pagination state
   if (!window.programSuppliersPagination) {
@@ -330,24 +434,36 @@ function renderProgramSuppliersPage() {
  * Filter Program Suppliers Table
  */
 function filterProgramSuppliersTable() {
-  const supplierSearch = document.getElementById('programSupplierSearch').value.toLowerCase();
-  const partNumberSearch = document.getElementById('programPartNumberSearch').value.toLowerCase();
-  const hwoSearch = document.getElementById('programHWOSearch').value.toLowerCase();
-  const tbody = document.getElementById('programSuppliersTableBody');
-  const rows = tbody.querySelectorAll('tr');
-
-  rows.forEach(row => {
-    const cells = row.querySelectorAll('td');
-    const supplierName = cells[0].textContent.toLowerCase();
-    const partNumber = cells[1].textContent.toLowerCase();
-    const hwo = cells[4].textContent.toLowerCase();
-
-    const matchesSupplier = supplierName.includes(supplierSearch);
-    const matchesPartNumber = partNumber.includes(partNumberSearch);
-    const matchesHWO = hwo.includes(hwoSearch);
-
-    row.style.display = (matchesSupplier && matchesPartNumber && matchesHWO) ? '' : 'none';
+  if (!window.currentProgramDetails || !window.programSuppliersPagination) return;
+  
+  const supplierSearch = document.getElementById('programSupplierSearch')?.value.toLowerCase() || '';
+  const partNumberSearch = document.getElementById('programPartNumberSearch')?.value.toLowerCase() || '';
+  const hwoSearch = document.getElementById('programHWOSearch')?.value.toLowerCase() || '';
+  
+  // Store original data if not already stored
+  if (!window.originalProgramDetails) {
+    window.originalProgramDetails = [...window.currentProgramDetails];
+  }
+  
+  // Filter the data
+  const filtered = window.originalProgramDetails.filter(detail => {
+    const matchesSupplier = !supplierSearch || (detail.supplier && detail.supplier.toLowerCase().includes(supplierSearch));
+    const matchesPartNumber = !partNumberSearch || (detail.partNumber && detail.partNumber.toLowerCase().includes(partNumberSearch));
+    const matchesHWO = !hwoSearch || (detail.hwo && detail.hwo.toLowerCase().includes(hwoSearch));
+    
+    return matchesSupplier && matchesPartNumber && matchesHWO;
   });
+  
+  // Update current details and reset pagination
+  window.currentProgramDetails = filtered;
+  window.programSuppliersPagination.totalRecords = filtered.length;
+  window.programSuppliersPagination.currentPage = 1;
+  
+  // Re-render the table
+  renderProgramSuppliersPage();
+  
+  // Update the chart with filtered data
+  updateProgramChartWithFilteredData(filtered);
 }
 
 /**
@@ -413,6 +529,86 @@ function updateProgramSuppliersPaginationUI() {
   
   prevBtn.disabled = currentPage === 1;
   nextBtn.disabled = currentPage === totalPages;
+}
+
+/**
+ * Get top 5 suppliers from program supplier data
+ */
+function getProgramTop5Suppliers(supplierData) {
+  const top5Count = Math.min(5, supplierData.labels.length);
+  
+  return {
+    labels: supplierData.labels.slice(0, top5Count),
+    data2025: supplierData.data2025.slice(0, top5Count),
+    data2026: supplierData.data2026.slice(0, top5Count),
+    data2027: supplierData.data2027.slice(0, top5Count)
+  };
+}
+
+/**
+ * Update program chart with filtered data
+ */
+function updateProgramChartWithFilteredData(filteredDetails) {
+  if (!programModalChart) return;
+  
+  // Rebuild supplier data from filtered details
+  const supplierData = {};
+  filteredDetails.forEach(detail => {
+    if (!supplierData[detail.supplier]) {
+      supplierData[detail.supplier] = { '2025': 0, '2026': 0, '2027': 0 };
+    }
+    supplierData[detail.supplier]['2025'] += detail.data2025 || 0;
+    supplierData[detail.supplier]['2026'] += detail.data2026 || 0;
+    supplierData[detail.supplier]['2027'] += detail.data2027 || 0;
+  });
+
+  const labels = Object.keys(supplierData).sort((a, b) => {
+    const totalA = supplierData[a]['2025'] + supplierData[a]['2026'] + supplierData[a]['2027'];
+    const totalB = supplierData[b]['2025'] + supplierData[b]['2026'] + supplierData[b]['2027'];
+    return totalB - totalA;
+  });
+
+  const data2025 = labels.map(supplier => supplierData[supplier]['2025']);
+  const data2026 = labels.map(supplier => supplierData[supplier]['2026']);
+  const data2027 = labels.map(supplier => supplierData[supplier]['2027']);
+
+  // Store full filtered data
+  window.fullProgramSupplierChartData = {
+    labels: labels,
+    data2025: data2025,
+    data2026: data2026,
+    data2027: data2027
+  };
+
+  // Show top 5 of filtered data
+  const top5Data = getProgramTop5Suppliers(window.fullProgramSupplierChartData);
+
+  // Update chart data
+  programModalChart.data.labels = top5Data.labels;
+  programModalChart.data.datasets[0].data = top5Data.data2025;
+  programModalChart.data.datasets[1].data = top5Data.data2026;
+  programModalChart.data.datasets[2].data = top5Data.data2027;
+
+  // Reset scale to show top 5
+  programModalChart.options.scales.y.min = 0;
+  programModalChart.options.scales.y.max = Math.min(4, top5Data.labels.length - 1);
+
+  // Update zoom limits
+  programModalChart.options.plugins.zoom.limits.y.max = labels.length - 1;
+
+  // Update the chart
+  programModalChart.update();
+}
+
+/**
+ * Filter table by supplier name (from chart click)
+ */
+function filterProgramTableBySupplier(supplierName) {
+  const supplierSearch = document.getElementById('programSupplierSearch');
+  if (supplierSearch) {
+    supplierSearch.value = supplierName;
+    filterProgramSuppliersTable();
+  }
 }
 
 // Make functions globally available

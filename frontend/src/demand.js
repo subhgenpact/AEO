@@ -6213,6 +6213,118 @@ function extractSupplierDetailData(parts, targetSupplier, details) {
 // Moved to rm-supplier-popup.js for better code organization
 
 // ===== SUPPLIER TYPE DETAILS MODAL FUNCTIONS =====
+
+// Helper function to get top 5 suppliers for supplier type modal
+function getSupplierTypeTop5(fullData) {
+  if (!fullData || !fullData.labels || fullData.labels.length === 0) {
+    return {
+      labels: [],
+      data2025: [],
+      data2026: [],
+      data2027: [],
+      data2028: []
+    };
+  }
+  
+  const top5Count = Math.min(5, fullData.labels.length);
+  return {
+    labels: fullData.labels.slice(0, top5Count),
+    data2025: fullData.data2025.slice(0, top5Count),
+    data2026: fullData.data2026.slice(0, top5Count),
+    data2027: fullData.data2027.slice(0, top5Count),
+    data2028: fullData.data2028.slice(0, top5Count)
+  };
+}
+
+// Helper function to filter supplier type table by supplier name
+function filterSupplierTypeTableBySupplier(supplierName) {
+  if (!window.originalSupplierTypeData) {
+    console.warn('No original data available for filtering');
+    return;
+  }
+  
+  // Filter the data by supplier name
+  const filteredData = window.originalSupplierTypeData.filter(row => 
+    row.supplier === supplierName
+  );
+  
+  console.log(`Filtered to ${filteredData.length} rows for supplier: ${supplierName}`);
+  
+  // Re-render the table with filtered data
+  renderSupplierTypeDetailsTable(filteredData);
+}
+
+// Helper function to update supplier type chart with filtered data
+function updateSupplierTypeChartWithFilteredData() {
+  if (!window.modalSupplierTypeChart || !window.originalSupplierTypeData) {
+    return;
+  }
+  
+  // Get current search filters
+  const supplierFilter = document.getElementById('modalSupplierTypeSupplierSearch')?.value.toLowerCase() || '';
+  const partNumberFilter = document.getElementById('modalSupplierTypePartNumberSearch')?.value.toLowerCase() || '';
+  const hwOwnerFilter = document.getElementById('modalSupplierTypeHWOSearch')?.value.toLowerCase() || '';
+  
+  // Filter the original data
+  let filteredData = window.originalSupplierTypeData.filter(row => {
+    const matchesSupplier = !supplierFilter || (row.supplier && row.supplier.toLowerCase().includes(supplierFilter));
+    const matchesPartNumber = !partNumberFilter || (row.partNumber && row.partNumber.toLowerCase().includes(partNumberFilter));
+    const matchesHWO = !hwOwnerFilter || (row.hwOwner && row.hwOwner.toLowerCase().includes(hwOwnerFilter));
+    
+    return matchesSupplier && matchesPartNumber && matchesHWO;
+  });
+  
+  // Rebuild chart data from filtered data
+  const supplierMap = new Map();
+  
+  filteredData.forEach(row => {
+    if (!supplierMap.has(row.supplier)) {
+      supplierMap.set(row.supplier, { '2025': 0, '2026': 0, '2027': 0, '2028': 0 });
+    }
+    
+    const yearData = supplierMap.get(row.supplier);
+    if (row.year2025) yearData['2025'] += row.year2025;
+    if (row.year2026) yearData['2026'] += row.year2026;
+    if (row.year2027) yearData['2027'] += row.year2027;
+    if (row.year2028) yearData['2028'] += row.year2028;
+  });
+  
+  // Sort suppliers by total demand
+  const suppliers = Array.from(supplierMap.keys()).sort((a, b) => {
+    const totalA = supplierMap.get(a)['2025'] + supplierMap.get(a)['2026'] + supplierMap.get(a)['2027'] + supplierMap.get(a)['2028'];
+    const totalB = supplierMap.get(b)['2025'] + supplierMap.get(b)['2026'] + supplierMap.get(b)['2027'] + supplierMap.get(b)['2028'];
+    return totalB - totalA;
+  });
+  
+  const data2025 = suppliers.map(s => supplierMap.get(s)['2025'] || 0);
+  const data2026 = suppliers.map(s => supplierMap.get(s)['2026'] || 0);
+  const data2027 = suppliers.map(s => supplierMap.get(s)['2027'] || 0);
+  const data2028 = suppliers.map(s => supplierMap.get(s)['2028'] || 0);
+  
+  // Update full data
+  window.fullSupplierTypeChartData = {
+    labels: suppliers,
+    data2025: data2025,
+    data2026: data2026,
+    data2027: data2027,
+    data2028: data2028
+  };
+  
+  // Show top 5 of filtered data
+  const top5Data = getSupplierTypeTop5(window.fullSupplierTypeChartData);
+  
+  // Update chart
+  window.modalSupplierTypeChart.data.labels = top5Data.labels;
+  window.modalSupplierTypeChart.data.datasets[0].data = top5Data.data2025;
+  window.modalSupplierTypeChart.data.datasets[1].data = top5Data.data2026;
+  window.modalSupplierTypeChart.data.datasets[2].data = top5Data.data2027;
+  window.modalSupplierTypeChart.data.datasets[3].data = top5Data.data2028;
+  window.modalSupplierTypeChart.options.scales.y.min = 0;
+  window.modalSupplierTypeChart.options.scales.y.max = Math.min(4, suppliers.length - 1);
+  window.modalSupplierTypeChart.options.plugins.zoom.limits.y.max = suppliers.length - 1;
+  window.modalSupplierTypeChart.update();
+}
+
 function showSupplierTypeDetailsModal(supplierType) {
   console.log('🔵 Showing modal for supplier type:', supplierType);
   
@@ -6330,6 +6442,18 @@ function renderModalSupplierTypeChart(supplierType) {
         data2026Sample: data2026[0]
       });
       
+      // Store full data for zoom/pan
+      window.fullSupplierTypeChartData = {
+        labels: suppliers,
+        data2025: data2025,
+        data2026: data2026,
+        data2027: data2027,
+        data2028: data2028
+      };
+      
+      // Show only top 5 by default
+      const top5Data = getSupplierTypeTop5(window.fullSupplierTypeChartData);
+      
       // Destroy existing chart
       if (window.modalSupplierTypeChart && typeof window.modalSupplierTypeChart.destroy === 'function') {
         console.log('🗑️ Destroying existing chart');
@@ -6340,32 +6464,32 @@ function renderModalSupplierTypeChart(supplierType) {
       window.modalSupplierTypeChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: suppliers,
+          labels: top5Data.labels,
           datasets: [
             {
               label: '2025',
-              data: data2025,
+              data: top5Data.data2025,
               backgroundColor: 'rgba(59, 130, 246, 0.8)',
               borderColor: '#3b82f6',
               borderWidth: 1
             },
             {
               label: '2026',
-              data: data2026,
+              data: top5Data.data2026,
               backgroundColor: 'rgba(245, 158, 11, 0.8)',
               borderColor: '#f59e0b',
               borderWidth: 1
             },
             {
               label: '2027',
-              data: data2027,
+              data: top5Data.data2027,
               backgroundColor: 'rgba(16, 185, 129, 0.8)',
               borderColor: '#10b981',
               borderWidth: 1
             },
             {
               label: '2028',
-              data: data2028,
+              data: top5Data.data2028,
               backgroundColor: 'rgba(132, 204, 22, 0.8)',
               borderColor: '#84cc16',
               borderWidth: 1
@@ -6395,19 +6519,17 @@ function renderModalSupplierTypeChart(supplierType) {
                 pinch: {
                   enabled: true
                 },
-                mode: 'xy',
-                onZoomComplete: function({chart}) {
-                  console.log('Zoom level changed');
-                }
+                mode: 'y'
               },
               pan: {
                 enabled: true,
-                mode: 'xy',
-                modifierKey: 'shift'
+                mode: 'y'
               },
               limits: {
-                x: {min: 'original', max: 'original'},
-                y: {min: 'original', max: 'original'}
+                y: {
+                  min: 0,
+                  max: suppliers.length - 1
+                }
               }
             }
           },
@@ -6419,13 +6541,29 @@ function renderModalSupplierTypeChart(supplierType) {
             },
             y: {
               stacked: true,
-              title: { display: true, text: 'Supplier' }
+              title: { display: true, text: 'Supplier' },
+              min: 0,
+              max: 4  // Show 5 items (0-4)
             }
           },
-          // Add reset zoom on double click
           onClick: (event, activeElements, chart) => {
             if (event.type === 'dblclick') {
-              chart.resetZoom();
+              // Reset to show top 5
+              chart.data.labels = top5Data.labels;
+              chart.data.datasets[0].data = top5Data.data2025;
+              chart.data.datasets[1].data = top5Data.data2026;
+              chart.data.datasets[2].data = top5Data.data2027;
+              chart.data.datasets[3].data = top5Data.data2028;
+              chart.options.scales.y.min = 0;
+              chart.options.scales.y.max = 4;
+              chart.update();
+            } else if (activeElements.length > 0) {
+              // Get the clicked supplier name
+              const clickedIndex = activeElements[0].index;
+              const supplierName = chart.data.labels[clickedIndex];
+              
+              // Filter the table by this supplier
+              filterSupplierTypeTableBySupplier(supplierName);
             }
           }
         }
@@ -6438,7 +6576,32 @@ function renderModalSupplierTypeChart(supplierType) {
       if (resetBtn) {
         resetBtn.onclick = () => {
           if (window.modalSupplierTypeChart) {
-            window.modalSupplierTypeChart.resetZoom();
+            // Reset to show top 5
+            window.modalSupplierTypeChart.data.labels = top5Data.labels;
+            window.modalSupplierTypeChart.data.datasets[0].data = top5Data.data2025;
+            window.modalSupplierTypeChart.data.datasets[1].data = top5Data.data2026;
+            window.modalSupplierTypeChart.data.datasets[2].data = top5Data.data2027;
+            window.modalSupplierTypeChart.data.datasets[3].data = top5Data.data2028;
+            window.modalSupplierTypeChart.options.scales.y.min = 0;
+            window.modalSupplierTypeChart.options.scales.y.max = 4;
+            window.modalSupplierTypeChart.update();
+          }
+        };
+      }
+      
+      // Setup show all button
+      const showAllBtn = document.getElementById('showAllSupplierType');
+      if (showAllBtn) {
+        showAllBtn.onclick = () => {
+          if (window.modalSupplierTypeChart && window.fullSupplierTypeChartData) {
+            window.modalSupplierTypeChart.data.labels = window.fullSupplierTypeChartData.labels;
+            window.modalSupplierTypeChart.data.datasets[0].data = window.fullSupplierTypeChartData.data2025;
+            window.modalSupplierTypeChart.data.datasets[1].data = window.fullSupplierTypeChartData.data2026;
+            window.modalSupplierTypeChart.data.datasets[2].data = window.fullSupplierTypeChartData.data2027;
+            window.modalSupplierTypeChart.data.datasets[3].data = window.fullSupplierTypeChartData.data2028;
+            window.modalSupplierTypeChart.options.scales.y.min = 0;
+            window.modalSupplierTypeChart.options.scales.y.max = Math.min(9, window.fullSupplierTypeChartData.labels.length - 1);
+            window.modalSupplierTypeChart.update();
           }
         };
       }
@@ -6472,6 +6635,17 @@ function renderSupplierTypeDetailsTable(supplierType) {
       });
       
       const supplierDetails = result.data;
+      
+      // Store original data with properly formatted structure for chart filtering
+      window.originalSupplierTypeData = supplierDetails.map(item => ({
+        ...item,
+        supplier: item.name,  // Chart uses 'supplier', table uses 'name'
+        hwOwner: item.hwo,    // Chart uses 'hwOwner', table uses 'hwo'
+        year2025: (item.quarters['2025-Q1'] || 0) + (item.quarters['2025-Q2'] || 0) + (item.quarters['2025-Q3'] || 0) + (item.quarters['2025-Q4'] || 0),
+        year2026: (item.quarters['2026-Q1'] || 0) + (item.quarters['2026-Q2'] || 0) + (item.quarters['2026-Q3'] || 0) + (item.quarters['2026-Q4'] || 0),
+        year2027: (item.quarters['2027-Q1'] || 0) + (item.quarters['2027-Q2'] || 0) + (item.quarters['2027-Q3'] || 0) + (item.quarters['2027-Q4'] || 0),
+        year2028: (item.quarters['2028-Q1'] || 0) + (item.quarters['2028-Q2'] || 0) + (item.quarters['2028-Q3'] || 0) + (item.quarters['2028-Q4'] || 0)
+      }));
       
       // Initialize pagination manager for supplier type modal table
       if (!window.modalSupplierTypeTablePagination) {
@@ -6511,11 +6685,6 @@ function renderSupplierTypeModalTablePage(pageData) {
       <td>${supplier.description}</td>
       <td>${supplier.hwo}</td>
       <td>${supplier.level || '-'}</td>
-      <td>${supplier.qpe || '-'}</td>
-      <td>${supplier.mfgLT}</td>
-      <td>${supplier.quarters['2025-Q1'] || '-'}</td>
-      <td>${supplier.quarters['2025-Q2'] || '-'}</td>
-      <td>${supplier.quarters['2025-Q3'] || '-'}</td>
       <td>${supplier.quarters['2025-Q4'] || '-'}</td>
       <td>${supplier.quarters['2026-Q1'] || '-'}</td>
       <td>${supplier.quarters['2026-Q2'] || '-'}</td>
@@ -6632,6 +6801,9 @@ function setupSupplierTypeSearchFilters(allData) {
     window.modalSupplierTypeTablePagination.currentPage = 1;
     window.modalSupplierTypeTablePagination.renderTable();
     updateSupplierTypeModalTablePaginationUI();
+    
+    // Also update the chart with filtered data
+    updateSupplierTypeChartWithFilteredData();
   };
   
   if (supplierSearch) {

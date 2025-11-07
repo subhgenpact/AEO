@@ -698,9 +698,9 @@
   <script defer src="src/supplier-type-chart.js?v=4"></script>
   <script defer src="src/rm-supplier-raw-material-chart.js?v=4"></script>
   <script defer src="src/hw-owner-complexity-chart.js?v=1"></script>
-  <script defer src="src/supplier-popup.js?v=2"></script>
+  <script defer src="src/supplier-popup.js?v=4"></script>
   <script defer src="src/rm-supplier-popup.js?v=9"></script>
-  <script defer src="src/demand.js?v=40"></script>
+  <script defer src="src/demand.js?v=42"></script>
   <script defer src="src/dropdowns.js?v=2"></script>
 
   <!-- Chatbot Icon -->
@@ -743,16 +743,21 @@
           <div class="card chart-card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h6 class="mb-0" id="modalSupplierTypeChartTitle">Supplier Demand per Part</h6>
-              <button class="btn btn-sm btn-outline-secondary" id="resetSupplierTypeZoom" title="Reset zoom">
-                <i class="bi bi-arrow-counterclockwise"></i> Reset Zoom
-              </button>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" id="showAllSupplierType" title="Show all suppliers">
+                  <i class="bi bi-eye"></i> Show All
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="resetSupplierTypeZoom" title="Reset to top 5">
+                  <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+              </div>
             </div>
             <div class="card-body">
               <div class="chart-container" style="height: 300px;">
                 <canvas id="modalSupplierTypeChart"></canvas>
               </div>
               <div class="text-muted small text-center mt-2">
-                💡 <strong>Tip:</strong> Ctrl+Scroll to zoom, Shift+Drag to pan, Double-click to reset
+                💡 <strong>Tip:</strong> Scroll to pan vertically • Click bar to filter table • Double-click to reset to top 5
               </div>
             </div>
           </div>
@@ -773,9 +778,7 @@
                       <th>Part Description</th>
                       <th>HWO</th>
                       <th>Level</th>
-                      <th>QPE</th>
-                      <th>MFG LT (Start-CTB)</th>
-                      <th colspan="4" class="text-center">2025</th>
+                      <th colspan="1" class="text-center">2025</th>
                       <th colspan="4" class="text-center">2026</th>
                       <th colspan="4" class="text-center">2027</th>
                       <th colspan="4" class="text-center">2028</th>
@@ -786,11 +789,6 @@
                       <th></th>
                       <th></th>
                       <th></th>
-                      <th></th>
-                      <th></th>
-                      <th>Q1</th>
-                      <th>Q2</th>
-                      <th>Q3</th>
                       <th>Q4</th>
                       <th>Q1</th>
                       <th>Q2</th>
