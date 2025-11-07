@@ -82,6 +82,12 @@ function renderModalRawMaterialChart(data, rawType) {
       const supplierDetails = result.data;
       const supplierData = buildModalRawMaterialSupplierDataFromAPI(supplierDetails);
       
+      // Store full data for zoom/pan
+      window.fullSupplierChartData = supplierData;
+      
+      // Show only top 5 by default
+      const top5Data = getTop5Suppliers(supplierData);
+      
       // Destroy existing chart
       if (modalChart) {
         modalChart.destroy();
@@ -91,32 +97,32 @@ function renderModalRawMaterialChart(data, rawType) {
       modalChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: supplierData.suppliers,
+          labels: top5Data.suppliers,
           datasets: [
             {
               label: '2025',
-              data: supplierData.data2025,
+              data: top5Data.data2025,
               backgroundColor: 'rgba(59, 130, 246, 0.8)',
               borderColor: '#3b82f6',
               borderWidth: 1
             },
             {
               label: '2026',
-              data: supplierData.data2026,
+              data: top5Data.data2026,
               backgroundColor: 'rgba(245, 158, 11, 0.8)',
               borderColor: '#f59e0b',
               borderWidth: 1
             },
             {
               label: '2027',
-              data: supplierData.data2027,
+              data: top5Data.data2027,
               backgroundColor: 'rgba(16, 185, 129, 0.8)',
               borderColor: '#10b981',
               borderWidth: 1
             },
             {
               label: '2028',
-              data: supplierData.data2028,
+              data: top5Data.data2028,
               backgroundColor: 'rgba(132, 204, 22, 0.8)',
               borderColor: '#84cc16',
               borderWidth: 1
@@ -153,16 +159,17 @@ function renderModalRawMaterialChart(data, rawType) {
                 pinch: {
                   enabled: true
                 },
-                mode: 'xy'
+                mode: 'y'
               },
               pan: {
                 enabled: true,
-                mode: 'xy',
-                modifierKey: 'shift'
+                mode: 'y'
               },
               limits: {
-                x: {min: 'original', max: 'original'},
-                y: {min: 'original', max: 'original'}
+                y: {
+                  min: 0,
+                  max: supplierData.suppliers.length - 1
+                }
               }
             }
           },
@@ -180,12 +187,22 @@ function renderModalRawMaterialChart(data, rawType) {
               title: {
                 display: true,
                 text: `${rawType} Supplier`
-              }
+              },
+              min: 0,
+              max: 4  // Show 5 items (0-4)
             }
           },
           onClick: (event, activeElements, chart) => {
             if (event.type === 'dblclick') {
-              chart.resetZoom();
+              // Reset to show top 5
+              chart.data.labels = top5Data.suppliers;
+              chart.data.datasets[0].data = top5Data.data2025;
+              chart.data.datasets[1].data = top5Data.data2026;
+              chart.data.datasets[2].data = top5Data.data2027;
+              chart.data.datasets[3].data = top5Data.data2028;
+              chart.options.scales.y.min = 0;
+              chart.options.scales.y.max = 4;
+              chart.update();
             } else if (activeElements.length > 0) {
               // Get the clicked supplier name
               const clickedIndex = activeElements[0].index;
@@ -203,7 +220,32 @@ function renderModalRawMaterialChart(data, rawType) {
       if (resetBtn) {
         resetBtn.onclick = () => {
           if (modalChart) {
-            modalChart.resetZoom();
+            // Reset to show top 5
+            modalChart.data.labels = top5Data.suppliers;
+            modalChart.data.datasets[0].data = top5Data.data2025;
+            modalChart.data.datasets[1].data = top5Data.data2026;
+            modalChart.data.datasets[2].data = top5Data.data2027;
+            modalChart.data.datasets[3].data = top5Data.data2028;
+            modalChart.options.scales.y.min = 0;
+            modalChart.options.scales.y.max = 4;
+            modalChart.update();
+          }
+        };
+      }
+      
+      // Add "Show All" button functionality
+      const showAllBtn = document.getElementById('showAllRMSuppliers');
+      if (showAllBtn) {
+        showAllBtn.onclick = () => {
+          if (modalChart && window.fullSupplierChartData) {
+            modalChart.data.labels = window.fullSupplierChartData.suppliers;
+            modalChart.data.datasets[0].data = window.fullSupplierChartData.data2025;
+            modalChart.data.datasets[1].data = window.fullSupplierChartData.data2026;
+            modalChart.data.datasets[2].data = window.fullSupplierChartData.data2027;
+            modalChart.data.datasets[3].data = window.fullSupplierChartData.data2028;
+            modalChart.options.scales.y.min = 0;
+            modalChart.options.scales.y.max = Math.min(9, window.fullSupplierChartData.suppliers.length - 1);
+            modalChart.update();
           }
         };
       }
@@ -211,6 +253,21 @@ function renderModalRawMaterialChart(data, rawType) {
     .catch(error => {
       console.error('Error fetching data for chart:', error);
     });
+}
+
+/**
+ * Get top 5 suppliers from supplier data
+ */
+function getTop5Suppliers(supplierData) {
+  const top5Count = Math.min(5, supplierData.suppliers.length);
+  
+  return {
+    suppliers: supplierData.suppliers.slice(0, top5Count),
+    data2025: supplierData.data2025.slice(0, top5Count),
+    data2026: supplierData.data2026.slice(0, top5Count),
+    data2027: supplierData.data2027.slice(0, top5Count),
+    data2028: supplierData.data2028.slice(0, top5Count)
+  };
 }
 
 /**
@@ -583,12 +640,25 @@ function updateModalChartWithFilteredData(filteredData) {
   
   const supplierData = buildModalRawMaterialSupplierDataFromAPI(filteredData);
   
+  // Store full filtered data
+  window.fullSupplierChartData = supplierData;
+  
+  // Show top 5 of filtered data
+  const top5Data = getTop5Suppliers(supplierData);
+  
   // Update chart data
-  modalChart.data.labels = supplierData.suppliers;
-  modalChart.data.datasets[0].data = supplierData.data2025;
-  modalChart.data.datasets[1].data = supplierData.data2026;
-  modalChart.data.datasets[2].data = supplierData.data2027;
-  modalChart.data.datasets[3].data = supplierData.data2028;
+  modalChart.data.labels = top5Data.suppliers;
+  modalChart.data.datasets[0].data = top5Data.data2025;
+  modalChart.data.datasets[1].data = top5Data.data2026;
+  modalChart.data.datasets[2].data = top5Data.data2027;
+  modalChart.data.datasets[3].data = top5Data.data2028;
+  
+  // Reset scale to show top 5
+  modalChart.options.scales.y.min = 0;
+  modalChart.options.scales.y.max = Math.min(4, top5Data.suppliers.length - 1);
+  
+  // Update zoom limits
+  modalChart.options.plugins.zoom.limits.y.max = supplierData.suppliers.length - 1;
   
   // Update the chart
   modalChart.update();
