@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dependency Test - Modular Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Modular Dashboard Dependency Test</h1>
+  <p>This page tests if all required dependencies load correctly.</p>
+  
+  <div id="results"></div>
+  
+  <!-- Load scripts in the same order as demand-modular.html -->
+  <script src="src/chunk-loader.js?v=1"></script>
+  <script src="src/part-walker-optimized.js?v=1"></script>
+  <script src="src/utils.js?v=2"></script>
+  <script src="src/data-filter-manager.js?v=1"></script>
+  <script src="src/pagination-manager.js?v=1"></script>
+  <script src="src/filter-chips.js?v=1"></script>
+  <script src="src/filters.js?v=2"></script>
+  <script src="src/filter-initializers.js?v=1"></script>
+  
+  <script src="src/sections/engine-program/engine-program.js?v=1"></script>
+  <script src="src/sections/supplier/supplier.js?v=1"></script>
+  <script src="src/sections/rm-supplier/rm-supplier.js?v=1"></script>
+  <script src="src/sections/hw-owner/hw-owner.js?v=1"></script>
+  
+  <script src="src/sections/section-manager.js?v=1"></script>
+  
+  <script>
+    // Test dependencies after page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      const results = document.getElementById('results');
+      
+      const tests = [
+        { name: 'ChunkLoader', check: () => typeof window.ChunkLoader !== 'undefined' },
+        { name: 'DataFilterManager (class)', check: () => typeof window.DataFilterManager !== 'undefined' },
+        { name: 'dataFilterManager (instance)', check: () => typeof window.dataFilterManager !== 'undefined' },
+        { name: 'TablePaginationManager', check: () => typeof window.TablePaginationManager !== 'undefined' },
+        { name: 'paginationManagers', check: () => typeof window.paginationManagers !== 'undefined' },
+        { name: 'updateFilterChips', check: () => typeof window.updateFilterChips === 'function' },
+        { name: 'chartCache', check: () => typeof window.chartCache !== 'undefined' },
+        { name: 'getYearFromDate', check: () => typeof window.getYearFromDate === 'function' },
+        { name: 'initProductLineFilter', check: () => typeof window.initProductLineFilter === 'function' },
+        { name: 'initYearFilter', check: () => typeof window.initYearFilter === 'function' },
+        { name: 'EngineProgramSection', check: () => typeof window.EngineProgramSection !== 'undefined' },
+        { name: 'SupplierSection', check: () => typeof window.SupplierSection !== 'undefined' },
+        { name: 'RMSupplierSection', check: () => typeof window.RMSupplierSection !== 'undefined' },
+        { name: 'HWOwnerSection', check: () => typeof window.HWOwnerSection !== 'undefined' },
+        { name: 'SectionManager (class)', check: () => typeof window.SectionManager !== 'undefined' },
+        { name: 'sectionManager (instance)', check: () => typeof window.sectionManager !== 'undefined' },
+      ];
+      
+      let passCount = 0;
+      let failCount = 0;
+      
+      tests.forEach(test => {
+        const passed = test.check();
+        const statusClass = passed ? 'success' : 'error';
+        const icon = passed ? '✅' : '❌';
+        
+        if (passed) passCount++;
+        else failCount++;
+        
+        results.innerHTML += `
+          <div class="status ${statusClass}">
+            ${icon} <strong>${test.name}</strong>: ${passed ? 'Loaded' : 'Missing'}
+          </div>
+        `;
+      });
+      
+      // Summary
+      const summaryClass = failCount === 0 ? 'success' : 'error';
+      results.innerHTML += `
+        <div class="status ${summaryClass}">
+          <h3>Summary</h3>
+          <p>✅ Passed: ${passCount} / ${tests.length}</p>
+          <p>❌ Failed: ${failCount} / ${tests.length}</p>
+        </div>
+      `;
+      
+      // Show window object for debugging
+      results.innerHTML += `
+        <div class="status info">
+          <h3>Debug Info</h3>
+          <p>Check browser console for detailed information</p>
+          <button onclick="console.log('window.dataFilterManager:', window.dataFilterManager); console.log('window.sectionManager:', window.sectionManager); console.log('window.ChunkLoader:', window.ChunkLoader);">
+            Log Dependencies to Console
+          </button>
+        </div>
+      `;
+      
+      // Log to console
+      console.log('=== Dependency Test Results ===');
+      console.log('Passed:', passCount, '/', tests.length);
+      console.log('Failed:', failCount, '/', tests.length);
+      console.log('window.dataFilterManager:', window.dataFilterManager);
+      console.log('window.sectionManager:', window.sectionManager);
+      console.log('window.ChunkLoader:', window.ChunkLoader);
+    });
+  </script>
+</body>
+</html>

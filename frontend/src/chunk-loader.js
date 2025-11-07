@@ -570,6 +570,14 @@ class ChunkLoader {
 }
 
 // Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = ChunkLoader;
-}
+(function() {
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ChunkLoader;
+  }
+  
+  // Also export to window for browser usage
+  if (typeof window !== 'undefined') {
+    window.ChunkLoader = ChunkLoader;
+    console.log('✅ ChunkLoader exported to window');
+  }
+})();

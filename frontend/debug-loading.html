@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Script Loading Debug</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+    }
+    h1 {
+      color: #4ec9b0;
+    }
+    .log-entry {
+      padding: 5px 10px;
+      margin: 2px 0;
+      border-left: 3px solid #4ec9b0;
+      background-color: #2d2d2d;
+    }
+    .log-entry.success {
+      border-left-color: #4ec9b0;
+    }
+    .log-entry.error {
+      border-left-color: #f48771;
+      background-color: #3d2d2d;
+    }
+    .log-entry.info {
+      border-left-color: #569cd6;
+    }
+    .timestamp {
+      color: #858585;
+      margin-right: 10px;
+    }
+    .status {
+      display: inline-block;
+      width: 20px;
+      text-align: center;
+      margin-right: 5px;
+    }
+    #summary {
+      background-color: #2d2d2d;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #0e639c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #1177bb;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Script Loading Debugger</h1>
+  <p>This page monitors script loading in real-time to help diagnose dependency issues.</p>
+  
+  <div>
+    <button onclick="location.reload()">🔄 Reload</button>
+    <button onclick="clearLogs()">🗑️ Clear Logs</button>
+    <button onclick="checkDependencies()">✅ Check Dependencies</button>
+  </div>
+  
+  <div id="summary"></div>
+  <div id="logs"></div>
+  
+  <script>
+    const startTime = Date.now();
+    const logs = [];
+    
+    function log(message, type = 'info') {
+      const timestamp = Date.now() - startTime;
+      const entry = {
+        timestamp,
+        message,
+        type
+      };
+      logs.push(entry);
+      
+      const logsDiv = document.getElementById('logs');
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry ${type}`;
+      
+      const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+      logEntry.innerHTML = `
+        <span class="status">${icon}</span>
+        <span class="timestamp">${timestamp}ms</span>
+        <span>${message}</span>
+      `;
+      logsDiv.appendChild(logEntry);
+      
+      // Auto-scroll to bottom
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    }
+    
+    function clearLogs() {
+      document.getElementById('logs').innerHTML = '';
+      logs.length = 0;
+    }
+    
+    function checkDependencies() {
+      log('Checking dependencies...', 'info');
+      
+      const deps = [
+        'ChunkLoader',
+        'DataFilterManager',
+        'dataFilterManager',
+        'SectionManager',
+        'sectionManager',
+        'TablePaginationManager',
+        'getYearFromDate',
+        'updateFilterChips'
+      ];
+      
+      deps.forEach(dep => {
+        const exists = typeof window[dep] !== 'undefined';
+        log(`${dep}: ${exists ? 'FOUND' : 'MISSING'}`, exists ? 'success' : 'error');
+      });
+      
+      updateSummary();
+    }
+    
+    function updateSummary() {
+      const summary = document.getElementById('summary');
+      const deps = [
+        'ChunkLoader',
+        'DataFilterManager',
+        'dataFilterManager',
+        'SectionManager',
+        'sectionManager'
+      ];
+      
+      const found = deps.filter(d => typeof window[d] !== 'undefined').length;
+      const total = deps.length;
+      
+      summary.innerHTML = `
+        <h3>Summary</h3>
+        <p>Dependencies: ${found}/${total} loaded</p>
+        <p>Time elapsed: ${Date.now() - startTime}ms</p>
+        <p>Log entries: ${logs.length}</p>
+      `;
+    }
+    
+    // Monitor script loading
+    log('Script monitor started', 'info');
+    
+    // Override script loading
+    const originalAppendChild = Node.prototype.appendChild;
+    Node.prototype.appendChild = function(child) {
+      if (child.tagName === 'SCRIPT' && child.src) {
+        const src = child.src;
+        log(`Loading: ${src.split('/').pop()}`, 'info');
+        
+        child.addEventListener('load', () => {
+          log(`Loaded: ${src.split('/').pop()}`, 'success');
+          updateSummary();
+        });
+        
+        child.addEventListener('error', () => {
+          log(`Failed: ${src.split('/').pop()}`, 'error');
+          updateSummary();
+        });
+      }
+      return originalAppendChild.call(this, child);
+    };
+    
+    // Check dependencies after page loads
+    window.addEventListener('load', () => {
+      log('Page fully loaded', 'success');
+      setTimeout(() => {
+        checkDependencies();
+      }, 500);
+    });
+  </script>
+  
+  <!-- Load scripts in the same order as demand-modular.html -->
+  <script src="src/chunk-loader.js?v=2"></script>
+  <script src="src/part-walker-optimized.js?v=1"></script>
+  <script src="src/utils.js?v=2"></script>
+  <script src="src/data-filter-manager.js?v=2"></script>
+  <script src="src/pagination-manager.js?v=2"></script>
+  <script src="src/filter-chips.js?v=2"></script>
+  <script src="src/filters.js?v=2"></script>
+  <script src="src/filter-initializers.js?v=2"></script>
+  
+  <script src="src/sections/engine-program/engine-program.js?v=2"></script>
+  <script src="src/sections/supplier/supplier.js?v=2"></script>
+  <script src="src/sections/rm-supplier/rm-supplier.js?v=2"></script>
+  <script src="src/sections/hw-owner/hw-owner.js?v=2"></script>
+  
+  <script src="src/sections/section-manager.js?v=2"></script>
+</body>
+</html>
