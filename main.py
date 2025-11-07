@@ -298,4 +298,4 @@ async def get_demand_chart_data(chart_type: str = "all"):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="localhost", port=8002, reload=False)
+    uvicorn.run("main:app", host="localhost", port=8000, reload=False)

@@ -82,7 +82,7 @@ function showProgramSuppliersModal(programName, suppliers, details) {
               </div>
               <div class="card-body">
                 <div class="table-responsive">
-                  <table class="table table-sm" id="programSuppliersTable">
+                  <table class="table table-sm table-bordered" id="programSuppliersTable">
                     <thead>
                       <tr>
                         <th>Supplier</th>

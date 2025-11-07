@@ -25,6 +25,20 @@
     border-color: var(--secondary) !important;
     color: white !important;
 }
+
+/* Popup modal table borders - add vertical borders */
+.modal .table-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.modal .table-bordered th,
+.modal .table-bordered td {
+    border: 1px solid #dee2e6 !important;
+}
+
+.modal .table thead th {
+    border-bottom: 2px solid #dee2e6 !important;
+}
       </style>
 </head>
 
@@ -698,9 +712,9 @@
   <script defer src="src/supplier-type-chart.js?v=4"></script>
   <script defer src="src/rm-supplier-raw-material-chart.js?v=4"></script>
   <script defer src="src/hw-owner-complexity-chart.js?v=2"></script>
-  <script defer src="src/supplier-popup.js?v=4"></script>
+  <script defer src="src/supplier-popup.js?v=5"></script>
   <script defer src="src/rm-supplier-popup.js?v=9"></script>
-  <script defer src="src/demand.js?v=43"></script>
+  <script defer src="src/demand.js?v=44"></script>
   <script defer src="src/dropdowns.js?v=2"></script>
 
   <!-- Chatbot Icon -->
@@ -770,7 +784,7 @@
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-sm" id="modalSupplierTypeDetailsTable">
+                <table class="table table-sm table-bordered" id="modalSupplierTypeDetailsTable">
                   <thead>
                     <tr>
                       <th>Supplier</th>
@@ -896,7 +910,7 @@
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-sm" id="modalHWOwnerDetailsTable">
+                <table class="table table-sm table-bordered" id="modalHWOwnerDetailsTable">
                   <thead>
                     <tr>
                       <th>Supplier</th>
@@ -1023,7 +1037,7 @@
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-sm" id="modalDetailsTable">
+                <table class="table table-sm table-bordered" id="modalDetailsTable">
                   <thead>
                     <tr>
                       <th>RM Supplier</th>
