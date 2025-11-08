@@ -6687,7 +6687,6 @@ function renderSupplierTypeModalTablePage(pageData) {
       <td>${supplier.partNumber}</td>
       <td>${supplier.description}</td>
       <td>${supplier.hwo}</td>
-      <td>${supplier.level || '-'}</td>
       <td>${supplier.quarters['2025-Q4'] || '-'}</td>
       <td>${supplier.quarters['2026-Q1'] || '-'}</td>
       <td>${supplier.quarters['2026-Q2'] || '-'}</td>
@@ -7318,7 +7317,6 @@ function renderHWOwnerModalTablePage(pageData) {
       <td>${item.partNumber}</td>
       <td>${item.description}</td>
       <td>${item.hwo}</td>
-      <td>${item.level || '-'}</td>
       <td><span class="${gapClass}">${gapDisplay}</span></td>
       <td>${item.quarters['2025-Q4'] || '-'}</td>
       <td>${item.quarters['2026-Q1'] || '-'}</td>

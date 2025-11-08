@@ -90,12 +90,10 @@ function showProgramSuppliersModal(programName, suppliers, details) {
                         <th>Parent Part No</th>
                         <th>Description</th>
                         <th>HWO</th>
-                        <th>Level</th>
                         <th colspan="4" class="text-center">2026</th>
                         <th colspan="4" class="text-center">2027</th>
                       </tr>
                       <tr>
-                        <th></th>
                         <th></th>
                         <th></th>
                         <th></th>
@@ -415,7 +413,6 @@ function renderProgramSuppliersPage() {
       <td>${detail.parentPartNo || ''}</td>
       <td>${detail.description || ''}</td>
       <td>${detail.hwo || ''}</td>
-      <td>${detail.level || ''}</td>
       <td>${q1_2026}</td>
       <td>${q2_2026}</td>
       <td>${q3_2026}</td>
