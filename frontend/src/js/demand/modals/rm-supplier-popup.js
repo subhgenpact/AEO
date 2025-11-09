@@ -13,9 +13,13 @@ function showRawMaterialDetailsModal(rawMaterialType) {
   // Clear search filters
   const modalSupplierSearch = document.getElementById('modalSupplierSearch');
   const modalPartNumberSearch = document.getElementById('modalPartNumberSearch');
+  const modalParentPartNumberSearch = document.getElementById('modalParentPartNumberSearch');
+  const modalParentPartSupplierSearch = document.getElementById('modalParentPartSupplierSearch');
   const modalHWOSearch = document.getElementById('modalHWOSearch');
   if (modalSupplierSearch) modalSupplierSearch.value = '';
   if (modalPartNumberSearch) modalPartNumberSearch.value = '';
+  if (modalParentPartNumberSearch) modalParentPartNumberSearch.value = '';
+  if (modalParentPartSupplierSearch) modalParentPartSupplierSearch.value = '';
   if (modalHWOSearch) modalHWOSearch.value = '';
   
   // Clear original data cache
@@ -590,6 +594,8 @@ function updateModalTablePaginationUI() {
 function setupRawMaterialSearchFilters(allData) {
   const supplierSearch = document.getElementById('modalSupplierSearch');
   const partNumberSearch = document.getElementById('modalPartNumberSearch');
+  const parentPartNumberSearch = document.getElementById('modalParentPartNumberSearch');
+  const parentPartSupplierSearch = document.getElementById('modalParentPartSupplierSearch');
   const hwoSearch = document.getElementById('modalHWOSearch');
   
   if (!window.modalTablePagination) return;
@@ -602,14 +608,18 @@ function setupRawMaterialSearchFilters(allData) {
   const filterData = () => {
     const supplierFilter = supplierSearch?.value.toLowerCase() || '';
     const partNumberFilter = partNumberSearch?.value.toLowerCase() || '';
+    const parentPartNumberFilter = parentPartNumberSearch?.value.toLowerCase() || '';
+    const parentPartSupplierFilter = parentPartSupplierSearch?.value.toLowerCase() || '';
     const hwoFilter = hwoSearch?.value.toLowerCase() || '';
     
     const filtered = window.originalRawMaterialData.filter(item => {
       const matchesSupplier = !supplierFilter || (item.name && item.name.toLowerCase().includes(supplierFilter));
       const matchesPartNumber = !partNumberFilter || (item.partNumber && item.partNumber.toLowerCase().includes(partNumberFilter));
+      const matchesParentPartNumber = !parentPartNumberFilter || (item.parentPartNo && item.parentPartNo.toLowerCase().includes(parentPartNumberFilter));
+      const matchesParentPartSupplier = !parentPartSupplierFilter || (item.parentPartSupplier && item.parentPartSupplier.toLowerCase().includes(parentPartSupplierFilter));
       const matchesHWO = !hwoFilter || (item.hwo && item.hwo.toLowerCase().includes(hwoFilter));
       
-      return matchesSupplier && matchesPartNumber && matchesHWO;
+      return matchesSupplier && matchesPartNumber && matchesParentPartNumber && matchesParentPartSupplier && matchesHWO;
     });
     
     window.modalTablePagination.setData(filtered);
@@ -626,6 +636,12 @@ function setupRawMaterialSearchFilters(allData) {
   }
   if (partNumberSearch) {
     partNumberSearch.addEventListener('input', filterData);
+  }
+  if (parentPartNumberSearch) {
+    parentPartNumberSearch.addEventListener('input', filterData);
+  }
+  if (parentPartSupplierSearch) {
+    parentPartSupplierSearch.addEventListener('input', filterData);
   }
   if (hwoSearch) {
     hwoSearch.addEventListener('input', filterData);

@@ -675,13 +675,30 @@
               <table class="table table-bordered table-sm">
                 <thead class="table-light">
                   <tr>
-                    <th>HWO</th>
-                    <th>Level 1 PN</th>
-                    <th>Description</th>
-                    <th>Supplier</th>
-                    <th>2025</th>
-                    <th>2026</th>
-                    <th>2027</th>
+                    <th rowspan="2">Supplier</th>
+                    <th rowspan="2">Part Number</th>
+                    <th rowspan="2">Part Description</th>
+                    <th rowspan="2">HWO</th>
+                    <th rowspan="2">Gap Status</th>
+                    <th colspan="1">2025</th>
+                    <th colspan="4">2026</th>
+                    <th colspan="4">2027</th>
+                    <th colspan="4">2028</th>
+                  </tr>
+                  <tr>
+                    <th>Q4</th>
+                    <th>Q1</th>
+                    <th>Q2</th>
+                    <th>Q3</th>
+                    <th>Q4</th>
+                    <th>Q1</th>
+                    <th>Q2</th>
+                    <th>Q3</th>
+                    <th>Q4</th>
+                    <th>Q1</th>
+                    <th>Q2</th>
+                    <th>Q3</th>
+                    <th>Q4</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -1003,16 +1020,26 @@
           <!-- Search Filters -->
           <div class="card mb-3">
             <div class="card-body">
-              <div class="row g-2">
-                <div class="col-md-4">
+              <div class="row g-2 mb-2">
+                <div class="col-md-3">
                   <label for="modalSupplierSearch" class="form-label">Search RM Supplier</label>
                   <input type="text" class="form-control form-control-sm" id="modalSupplierSearch" placeholder="Filter by RM supplier...">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <label for="modalPartNumberSearch" class="form-label">Search RM Part Number</label>
                   <input type="text" class="form-control form-control-sm" id="modalPartNumberSearch" placeholder="Filter by RM part number...">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                  <label for="modalParentPartNumberSearch" class="form-label">Search Parent Part Number</label>
+                  <input type="text" class="form-control form-control-sm" id="modalParentPartNumberSearch" placeholder="Filter by parent part number...">
+                </div>
+                <div class="col-md-3">
+                  <label for="modalParentPartSupplierSearch" class="form-label">Search Parent Part Supplier</label>
+                  <input type="text" class="form-control form-control-sm" id="modalParentPartSupplierSearch" placeholder="Filter by parent part supplier...">
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-md-3">
                   <label for="modalHWOSearch" class="form-label">Search HWO</label>
                   <input type="text" class="form-control form-control-sm" id="modalHWOSearch" placeholder="Filter by HWO...">
                 </div>

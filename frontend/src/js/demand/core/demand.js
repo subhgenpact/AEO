@@ -982,7 +982,7 @@ function renderRMSupplierTable(data) {
         if (!rmSupplierData.has(key)) {
           // Generate sample Level 1 PN and Description if not available
           const samplePN = level1PN || `RM-${key.substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-          const sampleDesc = description || `${key} Raw Material Component`;
+          const sampleDesc = description || `${key}`;
           rmSupplierData.set(key, { rmSupplier: key, level1PN: samplePN, description: sampleDesc, yearCounts: {} });
         }
         const rmInfo = rmSupplierData.get(key);
@@ -1084,6 +1084,7 @@ function renderRMSupplierTableContent(data, allData, rmSection, yearList) {
 function renderHWOwnerTable(data) {
   const hwSection = document.getElementById('section-hw-owner');
   if (!hwSection || !Array.isArray(data)) return;
+  
   let tbody = hwSection.querySelector('tbody');
   if (!tbody) {
     const table = hwSection.querySelector('table');
@@ -1095,59 +1096,78 @@ function renderHWOwnerTable(data) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // Collect HW Owner data from the actual hwo field
-  const years = new Set();
-  const hwOwnerData = new Map();
+  console.log('📊 Building HW Owner table from raw data');
+
+  // Collect all parts owned by each HW Owner with quarterly demand
+  const hwOwnerPartsMap = new Map(); // Key: "hwo|supplier|partNumber"
 
   data.forEach(program => {
     program.configs.forEach(cfg => {
-      (cfg.esns || []).forEach(esn => {
-        const y = getYearFromDate(esn.targetShipDate);
-        if (y) {
-          // Only include years that match the year filter (if active)
-          if (window.dataFilterManager.filters.years.size > 0) {
-            if (window.dataFilterManager.filters.years.has(y)) {
-              years.add(y);
-            }
-          } else {
-            years.add(y);
-          }
-        }
-      });
-
       (cfg.level1Parts || []).forEach(l1 => {
         if (l1.hwo) {
           // Handle both array and string formats for backward compatibility
           const hwos = Array.isArray(l1.hwo) ? l1.hwo : [l1.hwo];
+          const partNumber = l1.pn || l1.partNumber || '-';
+          const supplier = l1.supplier || '-';
+          const qpe = l1.qpe || 1;
 
           hwos.forEach(hwo => {
             // Apply HW owner filter at item level if active
             if (window.dataFilterManager.filters.hwOwners.size > 0) {
               if (!window.dataFilterManager.filters.hwOwners.has(hwo)) {
-                return; // Skip this HW owner if it doesn't match the filter
+                return;
               }
             }
             
-            if (!hwOwnerData.has(hwo)) {
-              hwOwnerData.set(hwo, {
-                hwOwner: hwo,
-                level1Pn: l1.pn || l1.partNumber || '-',
+            // Create unique key for this combination
+            const key = `${hwo}|${supplier}|${partNumber}`;
+            
+            if (!hwOwnerPartsMap.has(key)) {
+              // Determine gap status based on supplier availability
+              const hasSupplier = supplier && supplier !== '-' && supplier !== 'Unknown';
+              const gapStatus = hasSupplier ? 'N' : 'Y';
+              
+              hwOwnerPartsMap.set(key, {
+                name: supplier,
+                partNumber: partNumber,
                 description: l1.description || 'Component',
-                supplier: l1.supplier || '-',
-                yearCounts: {}
+                hwo: hwo,
+                gapStatus: gapStatus,
+                quarters: {
+                  '2025-Q4': 0,
+                  '2026-Q1': 0, '2026-Q2': 0, '2026-Q3': 0, '2026-Q4': 0,
+                  '2027-Q1': 0, '2027-Q2': 0, '2027-Q3': 0, '2027-Q4': 0,
+                  '2028-Q1': 0, '2028-Q2': 0, '2028-Q3': 0, '2028-Q4': 0
+                }
               });
             }
-            const hwInfo = hwOwnerData.get(hwo);
-
+            
+            const partEntry = hwOwnerPartsMap.get(key);
+            
+            // Aggregate quarterly demand from ESNs
             (cfg.esns || []).forEach(esn => {
-              const y = getYearFromDate(esn.targetShipDate);
-              if (y) {
-                // Only count years that match the year filter (if active)
-                const shouldIncludeYear = window.dataFilterManager.filters.years.size === 0 || 
-                                         window.dataFilterManager.filters.years.has(y);
-                if (shouldIncludeYear) {
-                  if (!hwInfo.yearCounts[y]) hwInfo.yearCounts[y] = 0;
-                  hwInfo.yearCounts[y] += (l1.qpe || 1);
+              // Get year from targetShipDate
+              const year = getYearFromDate(esn.targetShipDate);
+              
+              if (year) {
+                // Try to get quarter from targetShipDate (format: MM/DD/YYYY)
+                let quarter = 'Q1'; // default
+                if (esn.targetShipDate) {
+                  const parts = esn.targetShipDate.split('/');
+                  if (parts.length >= 2) {
+                    const month = parseInt(parts[0]);
+                    if (month >= 1 && month <= 3) quarter = 'Q1';
+                    else if (month >= 4 && month <= 6) quarter = 'Q2';
+                    else if (month >= 7 && month <= 9) quarter = 'Q3';
+                    else if (month >= 10 && month <= 12) quarter = 'Q4';
+                  }
+                }
+                
+                const quarterKey = `${year}-${quarter}`;
+                
+                // Add to the appropriate quarter if it exists in our structure
+                if (partEntry.quarters.hasOwnProperty(quarterKey)) {
+                  partEntry.quarters[quarterKey] += qpe;
                 }
               }
             });
@@ -1157,26 +1177,36 @@ function renderHWOwnerTable(data) {
     });
   });
 
-  const yearList = Array.from(years).sort();
+  // Convert map to array
+  const hwOwnerParts = Array.from(hwOwnerPartsMap.values());
+  
+  console.log(`📊 Built ${hwOwnerParts.length} HW Owner part entries`);
+  if (hwOwnerParts.length > 0) {
+    console.log('Sample entry:', hwOwnerParts[0]);
+  }
 
-  // Convert map to array for pagination
-  const hwOwnerArray = Array.from(hwOwnerData.values());
+  // Sort by HW Owner, then by supplier, then by part number
+  hwOwnerParts.sort((a, b) => {
+    if (a.hwo !== b.hwo) return a.hwo.localeCompare(b.hwo);
+    if (a.name !== b.name) return a.name.localeCompare(b.name);
+    return a.partNumber.localeCompare(b.partNumber);
+  });
 
   // Initialize pagination manager if not exists
   if (!window.paginationManagers['hw-owner']) {
     window.paginationManagers['hw-owner'] = new TablePaginationManager(
       'hw-owner',
-      (pageData, allData) => renderHWOwnerTableContent(pageData, allData, hwSection, yearList)
+      (pageData, allData) => renderHWOwnerTableContent(pageData, allData, hwSection)
     );
     window.paginationManagers['hw-owner'].initialize('hwOwnerPagination');
   }
 
   // Set data and render
-  window.paginationManagers['hw-owner'].setData(hwOwnerArray);
+  window.paginationManagers['hw-owner'].setData(hwOwnerParts);
   window.paginationManagers['hw-owner'].renderTable();
 }
 
-function renderHWOwnerTableContent(data, allData, hwSection, yearList) {
+function renderHWOwnerTableContent(data, allData, hwSection) {
   let tbody = hwSection.querySelector('tbody');
   if (!tbody) {
     const table = hwSection.querySelector('table');
@@ -1188,7 +1218,7 @@ function renderHWOwnerTableContent(data, allData, hwSection, yearList) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // Render table header
+  // Render table header with year groups and quarterly sub-columns
   const table = hwSection.querySelector('table');
   if (table) {
     let thead = table.querySelector('thead');
@@ -1196,13 +1226,77 @@ function renderHWOwnerTableContent(data, allData, hwSection, yearList) {
       thead = document.createElement('thead');
       table.insertBefore(thead, table.firstChild);
     }
-    thead.innerHTML = `<tr><th>HWO</th><th>Level 1 PN</th><th>Description</th><th>Supplier</th>${yearList.map(y => `<th>${y}</th>`).join('')}</tr>`;
+    thead.innerHTML = `
+      <tr>
+        <th rowspan="2">Supplier</th>
+        <th rowspan="2">Part Number</th>
+        <th rowspan="2">Part Description</th>
+        <th rowspan="2">HWO</th>
+        <th rowspan="2">Gap Status</th>
+        <th colspan="1">2025</th>
+        <th colspan="4">2026</th>
+        <th colspan="4">2027</th>
+        <th colspan="4">2028</th>
+      </tr>
+      <tr>
+        <th>Q4</th>
+        <th>Q1</th>
+        <th>Q2</th>
+        <th>Q3</th>
+        <th>Q4</th>
+        <th>Q1</th>
+        <th>Q2</th>
+        <th>Q3</th>
+        <th>Q4</th>
+        <th>Q1</th>
+        <th>Q2</th>
+        <th>Q3</th>
+        <th>Q4</th>
+      </tr>`;
   }
 
   // Render rows for current page data only
-  data.forEach(hwInfo => {
-    const yearValues = yearList.map(y => hwInfo.yearCounts[y] || 0);
-    tbody.innerHTML += `<tr><td>${hwInfo.hwOwner}</td><td>${hwInfo.level1Pn}</td><td>${hwInfo.description}</td><td>${hwInfo.supplier}</td>${yearValues.map(v => `<td>${v}</td>`).join('')}</tr>`;
+  data.forEach(item => {
+    // Determine gap status styling
+    const gapStatus = item.gapStatus || 'N/A';
+    let gapClass = '';
+    let gapDisplay = gapStatus;
+    
+    if (gapStatus === 'Y' || gapStatus === 'YES' || gapStatus === 'yes') {
+      gapClass = 'badge bg-danger';
+      gapDisplay = 'Gap';
+    } else if (gapStatus === 'N' || gapStatus === 'NO' || gapStatus === 'no') {
+      gapClass = 'badge bg-success';
+      gapDisplay = 'No Gap';
+    } else {
+      gapClass = 'badge bg-secondary';
+      gapDisplay = 'N/A';
+    }
+    
+    // Use 'name' for supplier (API format) and 'hwo' for HW Owner
+    const supplier = item.name || item.supplier || '-';
+    const hwOwner = item.hwo || item.hwOwner || '-';
+    
+    tbody.innerHTML += `<tr>
+      <td>${supplier}</td>
+      <td>${item.partNumber}</td>
+      <td>${item.description}</td>
+      <td>${hwOwner}</td>
+      <td><span class="${gapClass}">${gapDisplay}</span></td>
+      <td>${item.quarters['2025-Q4'] || '-'}</td>
+      <td>${item.quarters['2026-Q1'] || '-'}</td>
+      <td>${item.quarters['2026-Q2'] || '-'}</td>
+      <td>${item.quarters['2026-Q3'] || '-'}</td>
+      <td>${item.quarters['2026-Q4'] || '-'}</td>
+      <td>${item.quarters['2027-Q1'] || '-'}</td>
+      <td>${item.quarters['2027-Q2'] || '-'}</td>
+      <td>${item.quarters['2027-Q3'] || '-'}</td>
+      <td>${item.quarters['2027-Q4'] || '-'}</td>
+      <td>${item.quarters['2028-Q1'] || '-'}</td>
+      <td>${item.quarters['2028-Q2'] || '-'}</td>
+      <td>${item.quarters['2028-Q3'] || '-'}</td>
+      <td>${item.quarters['2028-Q4'] || '-'}</td>
+    </tr>`;
   });
 }
 
