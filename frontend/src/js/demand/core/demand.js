@@ -3139,6 +3139,12 @@ function renderProgramChart() {
   if (!rows.length) return;
   const labelIdx = headers.indexOf('Engine Program');
   
+  // Register Chart.js Zoom plugin if available
+  if (typeof Chart !== 'undefined' && typeof ChartZoom !== 'undefined') {
+    Chart.register(ChartZoom);
+    console.log('✅ Chart.js Zoom plugin registered for Program Chart');
+  }
+  
   // Dynamically find all year columns (skip first column which is the label)
   const yearColumns = [];
   const yearIndices = [];
@@ -3175,10 +3181,73 @@ function renderProgramChart() {
       responsive: true,
       maintainAspectRatio: false,
       scales: { x: { ticks: { color: '#2c3e50' }, grid: { color: 'rgba(44,62,80,0.2)' } }, y: { ticks: { color: '#2c3e50' }, grid: { color: 'rgba(44,62,80,0.2)' } } },
-      plugins: { legend: { labels: { color: '#2c3e50' } }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${Number(ctx.parsed.y).toLocaleString()}` } } }
+      plugins: { 
+        legend: { labels: { color: '#2c3e50' } }, 
+        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${Number(ctx.parsed.y).toLocaleString()}` } },
+        // Zoom plugin configuration
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'x',
+            modifierKey: 'ctrl'
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+              speed: 0.1
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'x',
+            drag: {
+              enabled: false
+            }
+          },
+          limits: {
+            x: { min: 'original', max: 'original' }
+          }
+        }
+      }
     }
   });
 }
+
+// Zoom control functions for Program Chart
+function zoomInProgramChart() {
+  console.log('🔍 Program Chart - Zoom In clicked');
+  if (programChart) {
+    console.log('📊 Chart found, zooming in...');
+    programChart.zoom(1.2);
+  } else {
+    console.warn('⚠️ programChart not found');
+  }
+}
+
+function zoomOutProgramChart() {
+  console.log('🔍 Program Chart - Zoom Out clicked');
+  if (programChart) {
+    console.log('📊 Chart found, zooming out...');
+    programChart.zoom(0.8);
+  } else {
+    console.warn('⚠️ programChart not found');
+  }
+}
+
+function resetZoomProgramChart() {
+  console.log('🔄 Program Chart - Reset Zoom clicked');
+  if (programChart) {
+    console.log('📊 Chart found, resetting zoom...');
+    programChart.resetZoom();
+  } else {
+    console.warn('⚠️ programChart not found');
+  }
+}
+
+// Make Program zoom functions globally available
+window.zoomInProgramChart = zoomInProgramChart;
+window.zoomOutProgramChart = zoomOutProgramChart;
+window.resetZoomProgramChart = resetZoomProgramChart;
 
 // REMOVED: renderConfigChart() - Unused legacy function (~300 lines)
 // This chart functionality is no longer used in the application.

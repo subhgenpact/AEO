@@ -65,7 +65,7 @@ function renderHWOwnerComplexityChart() {
 
                     ]
                 },
-                plugins: [ChartDataLabels],
+                plugins: [ChartDataLabels, ChartZoom],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -87,7 +87,11 @@ function renderHWOwnerComplexityChart() {
                             ticks: {
                                 font: {
                                     size: 11
-                                }
+                                },
+                                maxRotation: 45,
+                                minRotation: 0,
+                                autoSkip: true,
+                                autoSkipPadding: 10
                             },
                             grid: {
                                 display: false
@@ -198,6 +202,33 @@ function renderHWOwnerComplexityChart() {
                             anchor: 'center',
                             align: 'center',
                             clip: true
+                        },
+                        // Zoom plugin configuration
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                                modifierKey: 'ctrl'
+                            },
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    speed: 0.1
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x',
+                                drag: {
+                                    enabled: false
+                                }
+                            },
+                            limits: {
+                                x: {
+                                    min: 'original',
+                                    max: 'original'
+                                }
+                            }
                         }
                     },
                     // Add click handler to open HW Owner details modal
@@ -226,5 +257,27 @@ function renderHWOwnerComplexityChart() {
         });
 }
 
-// Make function available globally
+// Zoom control functions
+function zoomInHWOwnerChart() {
+    if (window.hwOwnerChart) {
+        window.hwOwnerChart.zoom(1.2); // Zoom in by 20%
+    }
+}
+
+function zoomOutHWOwnerChart() {
+    if (window.hwOwnerChart) {
+        window.hwOwnerChart.zoom(0.8); // Zoom out by 20%
+    }
+}
+
+function resetZoomHWOwnerChart() {
+    if (window.hwOwnerChart) {
+        window.hwOwnerChart.resetZoom();
+    }
+}
+
+// Make functions available globally
 window.renderHWOwnerComplexityChart = renderHWOwnerComplexityChart;
+window.zoomInHWOwnerChart = zoomInHWOwnerChart;
+window.zoomOutHWOwnerChart = zoomOutHWOwnerChart;
+window.resetZoomHWOwnerChart = resetZoomHWOwnerChart;
