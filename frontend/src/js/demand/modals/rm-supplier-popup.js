@@ -615,8 +615,14 @@ function setupRawMaterialSearchFilters(allData) {
     const filtered = window.originalRawMaterialData.filter(item => {
       const matchesSupplier = !supplierFilter || (item.name && item.name.toLowerCase().includes(supplierFilter));
       const matchesPartNumber = !partNumberFilter || (item.partNumber && item.partNumber.toLowerCase().includes(partNumberFilter));
-      const matchesParentPartNumber = !parentPartNumberFilter || (item.parentPartNo && item.parentPartNo.toLowerCase().includes(parentPartNumberFilter));
-      const matchesParentPartSupplier = !parentPartSupplierFilter || (item.parentPartSupplier && item.parentPartSupplier.toLowerCase().includes(parentPartSupplierFilter));
+      
+      // Check multiple possible field names for parent part number
+      const parentPartNo = item.parentPartNo || item.parentPartNumber || item.parent_part_no || '';
+      const matchesParentPartNumber = !parentPartNumberFilter || (parentPartNo && parentPartNo.toLowerCase().includes(parentPartNumberFilter));
+      
+      const parentPartSupp = item.parentPartSupplier || item.parent_part_supplier || '';
+      const matchesParentPartSupplier = !parentPartSupplierFilter || (parentPartSupp && parentPartSupp.toLowerCase().includes(parentPartSupplierFilter));
+      
       const matchesHWO = !hwoFilter || (item.hwo && item.hwo.toLowerCase().includes(hwoFilter));
       
       return matchesSupplier && matchesPartNumber && matchesParentPartNumber && matchesParentPartSupplier && matchesHWO;
