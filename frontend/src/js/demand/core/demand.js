@@ -25,6 +25,15 @@ let TOTALS_BY_YEAR = { '2025': 0, '2026': 0, '2027': 0 };
  * when filters change. This ensures consistency across the entire application.
  */
 class DataFilterManager {
+
+  /**
+   * Set the raw data and apply filters
+   */
+  setRawData(data) {
+    this.rawData = data || [];
+    this.applyFilters();
+    this.notifySubscribers();
+  }
   constructor() {
     this.filters = {
       productLines: new Set(),
@@ -187,6 +196,32 @@ class DataFilterManager {
     return filtered;
   }
   
+  /**
+   * Update a specific filter and re-apply all filters
+   * @param {string} filterType - The filter type (productLines, years, configs, etc.)
+   * @param {Set|Array} values - The filter values
+   */
+  updateFilter(filterType, values) {
+    if (this.filters.hasOwnProperty(filterType)) {
+      this.filters[filterType] = values instanceof Set ? values : new Set(values);
+      this.applyFilters();
+      this.notifySubscribers();
+    } else {
+      console.warn(`⚠️ Unknown filter type: ${filterType}`);
+    }
+  }
+
+  /**
+   * Clear all active filters
+   */
+  clearAllFilters() {
+    Object.keys(this.filters).forEach(key => {
+      this.filters[key].clear();
+    });
+    this.applyFilters();
+    this.notifySubscribers();
+  }
+
   /**
    * Subscribe to data changes
    */
@@ -2615,7 +2650,7 @@ function updateFilterChips() {
     chip.textContent = `Product Line: ${valueText}`;
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'Remove filter');
-    btn.textContent = 'Ã—';
+    btn.innerHTML = '&times;'; // Use HTML entity for proper × symbol
     btn.addEventListener('click', () => {
       selectedProductLines.clear();
       updateProductLineButtonText();
@@ -2636,7 +2671,7 @@ function updateFilterChips() {
     chip.textContent = `Year: ${valueText}`;
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'Remove filter');
-    btn.textContent = 'Ã—';
+    btn.innerHTML = '&times;'; // Use HTML entity for proper × symbol
     btn.addEventListener('click', () => {
       selectedYears.clear();
       updateYearButtonText();
@@ -2654,7 +2689,7 @@ function updateFilterChips() {
     chip.textContent = `Eng Config: ${window.selectedConfigs.size} selected`;
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'Remove filter');
-    btn.textContent = 'Ã—';
+    btn.innerHTML = '&times;'; // Use HTML entity for proper × symbol
     btn.addEventListener('click', () => { window.selectedConfigs.clear(); applyConfigFilter(); updateFilterChips(); });
     chip.appendChild(btn);
     chips.appendChild(chip);
@@ -2666,7 +2701,7 @@ function updateFilterChips() {
     chip.textContent = `Supplier: ${window.selectedSuppliers.size} selected`;
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'Remove filter');
-    btn.textContent = 'Ã—';
+    btn.innerHTML = '&times;'; // Use HTML entity for proper × symbol
     btn.addEventListener('click', () => { window.selectedSuppliers.clear(); applySupplierFilter(); updateFilterChips(); });
     chip.appendChild(btn);
     chips.appendChild(chip);
@@ -2678,7 +2713,7 @@ function updateFilterChips() {
     chip.textContent = `RM Supplier: ${window.selectedRMSuppliers.size} selected`;
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'Remove filter');
-    btn.textContent = 'Ã—';
+    btn.innerHTML = '&times;'; // Use HTML entity for proper × symbol
     btn.addEventListener('click', () => { window.selectedRMSuppliers.clear(); applyRMSupplierFilter(); updateFilterChips(); });
     chip.appendChild(btn);
     chips.appendChild(chip);
@@ -2690,7 +2725,7 @@ function updateFilterChips() {
     chip.textContent = `HW Owner: ${window.selectedHWOwners.size} selected`;
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'Remove filter');
-    btn.textContent = 'Ã—';
+    btn.innerHTML = '&times;'; // Use HTML entity for proper × symbol
     btn.addEventListener('click', () => { window.selectedHWOwners.clear(); applyHWOwnerFilter([]); updateFilterChips(); });
     chip.appendChild(btn);
     chips.appendChild(chip);
@@ -2702,7 +2737,7 @@ function updateFilterChips() {
     chip.textContent = `Part No: ${window.selectedPartNumbers.size} selected`;
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'Remove filter');
-    btn.textContent = 'Ã—';
+    btn.innerHTML = '&times;'; // Use HTML entity for proper × symbol
     btn.addEventListener('click', () => { window.selectedPartNumbers.clear(); applyPartNumberFilter([]); updateFilterChips(); });
     chip.appendChild(btn);
     chips.appendChild(chip);
@@ -2714,7 +2749,7 @@ function updateFilterChips() {
     chip.textContent = `Module: ${window.selectedModules.size} selected`;
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'Remove filter');
-    btn.textContent = 'Ã—';
+    btn.innerHTML = '&times;'; // Use HTML entity for proper × symbol
     btn.addEventListener('click', () => { window.selectedModules.clear(); applyModuleFilter([]); updateFilterChips(); });
     chip.appendChild(btn);
     chips.appendChild(chip);
@@ -2923,13 +2958,13 @@ function paginateEngineConfigTable(page = 1) {
       b.addEventListener('click', () => paginateEngineConfigTable(goPage));
       return b;
     };
-    pager.appendChild(makeBtn('Â«', 1, ecCurrentPage === 1));
-    pager.appendChild(makeBtn('â€¹', ecCurrentPage - 1, ecCurrentPage === 1));
+    pager.appendChild(makeBtn('«', 1, ecCurrentPage === 1));
+    pager.appendChild(makeBtn('‹', ecCurrentPage - 1, ecCurrentPage === 1));
     for (let p = 1; p <= pages; p++) {
       pager.appendChild(makeBtn(String(p), p, false, p === ecCurrentPage));
     }
-    pager.appendChild(makeBtn('â€º', ecCurrentPage + 1, ecCurrentPage === pages));
-    pager.appendChild(makeBtn('Â»', pages, ecCurrentPage === pages));
+    pager.appendChild(makeBtn('›', ecCurrentPage + 1, ecCurrentPage === pages));
+    pager.appendChild(makeBtn('»', pages, ecCurrentPage === pages));
   }
 }
 
@@ -3145,371 +3180,9 @@ function renderProgramChart() {
   });
 }
 
-function renderConfigChart() {
-  const { headers, rows } = getTableData('section-engine-config');
-  if (!rows.length) return;
-  const programIdx = 0;
-  const configIdx = 1;
-  
-  // Dynamically find all year columns (skip first two columns: program and config)
-  const yearIndices = [];
-  for (let i = 2; i < headers.length; i++) {
-    const header = headers[i];
-    // Check if header looks like a year (4 digits)
-    if (/^\d{4}$/.test(header)) {
-      yearIndices.push(i);
-    }
-  }
-
-  // Compute totals per config (outer ring) and per program (inner ring)
-  const outerItems = [];
-  const programTotals = {};
-  const programOrder = ['LM2500', 'LM6000', 'LMS100'];
-
-  rows.forEach(r => {
-    const program = r[programIdx];
-    const config = r[configIdx];
-    const total = yearIndices.reduce((sum, idx) => sum + Number(r[idx] || 0), 0);
-    // Only keep configs that have a positive total to avoid blank slices
-    if (total > 0 && config) {
-      outerItems.push({ program, config, total });
-      programTotals[program] = (programTotals[program] || 0) + total;
-    }
-  });
-
-  // Derive arrays after filtering
-  const outerLabels = outerItems.map(i => i.config);
-  const outerTotals = outerItems.map(i => i.total);
-  const innerLabels = programOrder.filter(p => (programTotals[p] || 0) > 0);
-  const innerTotals = innerLabels.map(p => programTotals[p]);
-
-  const ctx = document.getElementById('configChart');
-  if (!ctx) return;
-  configChart?.destroy();
-
-  // Colors: 3 base colors for programs; lighter variants for configs
-  const baseColors = { 'LM2500': colorForProgram('LM2500'), 'LM6000': colorForProgram('LM6000'), 'LMS100': colorForProgram('LMS100') };
-  function hexToRgba(hex, alpha) {
-    const h = hex.replace('#', '');
-    const r = parseInt(h.substring(0, 2), 16);
-    const g = parseInt(h.substring(2, 4), 16);
-    const b = parseInt(h.substring(4, 6), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
-  // Map each config slice to its program color with alternating alpha
-  const outerColors = outerItems.map((item, i) =>
-    hexToRgba(baseColors[item.program] || '#60a5fa', (i % 3 === 0) ? 0.85 : (i % 3 === 1 ? 0.65 : 0.45))
-  );
-  const innerColors = innerLabels.map(p => (baseColors[p] || '#60a5fa'));
-
-  // ===== Fill right-hand info panel with inner ring (product line) totals =====
-  (function updateConfigInfoPanel() {
-    const infoList = document.getElementById('configInfoList');
-    const infoTitle = document.getElementById('configInfoTitle');
-    const mostPctBadge = document.getElementById('configInfoMostPct');
-    const yearChips = document.getElementById('configYearChips');
-    const topConfigsList = document.getElementById('configTopConfigs');
-    if (!infoList || !infoTitle) return;
-    const items = innerLabels.map((pl, i) => ({ label: pl, total: innerTotals[i] || 0, color: innerColors[i] }));
-    const total = items.reduce((s, x) => s + Number(x.total || 0), 0) || 0;
-    infoTitle.textContent = `Totals (25â€“27): ${Number(total).toLocaleString()}`;
-    infoList.innerHTML = '';
-    items.forEach(it => {
-      const li = document.createElement('li');
-      const left = document.createElement('div');
-      const dot = document.createElement('span');
-      dot.className = 'dot';
-      dot.style.background = it.color;
-      left.appendChild(dot);
-      left.appendChild(document.createTextNode(it.label));
-      const right = document.createElement('div');
-      right.className = 'right-stack';
-      const valueEl = document.createElement('span');
-      valueEl.className = 'val';
-      valueEl.textContent = Number(it.total).toLocaleString();
-      const pct = total ? Math.round((it.total / total) * 100) : 0;
-      const pctEl = document.createElement('span');
-      pctEl.className = 'pct';
-      pctEl.textContent = `${pct}%`;
-      right.appendChild(valueEl);
-      right.appendChild(pctEl);
-      li.appendChild(left);
-      li.appendChild(right);
-      infoList.appendChild(li);
-    });
-
-    // Most-share product line badge
-    if (mostPctBadge) {
-      if (total > 0 && items.length) {
-        const maxItem = items.slice().sort((a, b) => b.total - a.total)[0];
-        const pct = Math.round((maxItem.total / total) * 100);
-        const display = CANONICAL_TO_DISPLAY[maxItem.label] || maxItem.label;
-        mostPctBadge.textContent = `${display} ${pct}%`;
-        mostPctBadge.style.display = '';
-      } else {
-        mostPctBadge.style.display = 'none';
-      }
-    }
-
-    // Year breakdown chips (sum per year across visible rows)
-    if (yearChips) {
-      const sums = {};
-      const years = [];
-      
-      // Dynamically find year columns
-      for (let i = 2; i < headers.length; i++) {
-        const header = headers[i];
-        if (/^\d{4}$/.test(header)) {
-          years.push(header);
-          sums[header] = 0;
-        }
-      }
-      
-      rows.forEach(r => {
-        years.forEach((year, idx) => {
-          sums[year] += Number(r[idx + 2] || 0); // +2 because first two columns are program and config
-        });
-      });
-      yearChips.innerHTML = '';
-      years.forEach((yr, idx) => {
-        const chip = document.createElement('span');
-        chip.className = 'config-year-chip';
-        const prev = idx > 0 ? sums[years[idx - 1]] : null;
-        const val = sums[yr] || 0;
-        let delta = 0, dir = 'flat';
-        if (prev !== null && prev !== undefined) {
-          delta = val - prev;
-          dir = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
-        }
-        chip.innerHTML = `<span class="yr">${yr}</span><span class="val">${Number(val).toLocaleString()}</span><span class="delta ${dir}">${delta === 0 ? '0' : (delta > 0 ? '+' : '') + Number(delta).toLocaleString()}</span>`;
-        yearChips.appendChild(chip);
-      });
-    }
-
-    // Top configs list with mini bars (across 25â€“27)
-    if (topConfigsList) {
-      const configTotals = rows.map(r => ({
-        program: r[programIdx],
-        config: r[configIdx],
-        total: Number(r[y2025] || 0) + Number(r[y2026] || 0) + Number(r[y2027] || 0)
-      })).filter(x => x.total > 0).sort((a, b) => b.total - a.total).slice(0, 5);
-      const maxTotal = configTotals.reduce((m, x) => Math.max(m, x.total), 0) || 1;
-      topConfigsList.innerHTML = '';
-      configTotals.forEach(ct => {
-        const li = document.createElement('li');
-        li.className = 'config-top-item';
-        const left = document.createElement('div');
-        left.className = 'label';
-        left.textContent = ct.config;
-        const barWrap = document.createElement('div');
-        barWrap.className = 'bar-wrap';
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        const color = colorForProgram(ct.program);
-        bar.style.background = color + 'CC';
-        bar.style.width = `${Math.max(6, Math.round((ct.total / maxTotal) * 100))}%`;
-        barWrap.appendChild(bar);
-        const value = document.createElement('div');
-        value.className = 'value';
-        value.textContent = Number(ct.total).toLocaleString();
-        li.appendChild(left);
-        li.appendChild(barWrap);
-        li.appendChild(value);
-        li.title = `${ct.program} â€¢ ${ct.config}`;
-        li.style.cursor = 'pointer';
-        li.addEventListener('click', () => {
-          if (selects && selects[2]) {
-            selects[2].value = ct.config;
-            selects[2].dispatchEvent(new Event('change'));
-          }
-          showSection('section-engine-config');
-          renderAllCharts();
-          updateFilterChips();
-        });
-        topConfigsList.appendChild(li);
-      });
-    }
-  })();
-
-  // Build nested doughnut (rings connected, thicker outer ring)
-  const inner = { data: innerTotals, backgroundColor: innerColors, borderColor: '#0b2545', borderWidth: 0, weight: 2, cutout: '35%', radius: '75%', hoverOffset: 8 };
-  const outer = { data: outerTotals, backgroundColor: outerColors, borderColor: '#0b2545', borderWidth: 0, weight: 3, cutout: '75%', radius: '100%', hoverOffset: 8 };
-
-  // Remember labels for tooltips in closure
-  const labelsForDataset = [innerLabels, outerLabels];
-
-  configChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: { labels: outerLabels, datasets: [inner, outer] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-          position: 'bottom',
-          labels: {
-            color: '#2c3e50',
-            filter: (item) => item.datasetIndex === 0,
-            generateLabels: (chart) => {
-              return innerLabels.map((lbl, i) => ({
-                text: lbl,
-                fillStyle: innerColors[i],
-                strokeStyle: innerColors[i],
-                hidden: false,
-                index: i,
-                datasetIndex: 0
-              }));
-            }
-          }
-        },
-        title: { display: false, text: 'Engine Config by Product Line', color: '#2c3e50', padding: { bottom: 6 } },
-        subtitle: { display: false, text: 'Click a ring to filter â€¢ Hover to inspect', color: '#5a6c7d' },
-        datalabels: {
-          color: '#ffffff',
-          backgroundColor: 'rgba(44,62,80,0.6)',
-          borderRadius: 4,
-          padding: 4,
-          font: { weight: '600', size: 10 },
-          display: (ctx) => {
-            // Show labels for both rings
-            return true;
-          },
-          formatter: (value, ctx) => {
-            const ds = ctx.datasetIndex;
-            const labels = labelsForDataset[ds];
-            const label = labels?.[ctx.dataIndex] || '';
-            const total = (ctx.chart.data.datasets[ds].data || []).reduce((s, v) => s + Number(v || 0), 0) || 1;
-            const pct = (Number(value || 0) / total) * 100;
-            if (pct < 8) return '';
-            // Outer ring: show value outside; Inner: show program name with percentage
-            return ds === 1 ? Number(value).toLocaleString() : `${label}\n${pct.toFixed(1)}%`;
-          },
-          // Place outer labels outside, inner labels inside
-          anchor: (ctx) => (ctx.datasetIndex === 1 ? 'end' : 'center'),
-          align: (ctx) => (ctx.datasetIndex === 1 ? 'end' : 'center'),
-          offset: (ctx) => (ctx.datasetIndex === 1 ? 15 : 0),
-          clip: false
-        },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const ds = ctx.datasetIndex; // 0 inner, 1 outer
-              const lbl = labelsForDataset[ds][ctx.dataIndex] || '';
-              const val = ctx.parsed;
-              const total = (ctx.chart.data.datasets[ds].data || []).reduce((s, v) => s + Number(v || 0), 0) || 1;
-              const pct = Math.round((Number(val || 0) / total) * 1000) / 10;
-              return `${lbl}: ${Number(val).toLocaleString()} (${pct}%)`;
-            }
-          }
-        }
-      },
-      rotation: -90,
-      circumference: 360,
-    },
-    plugins: [
-      {
-        id: 'centerText',
-        afterDraw(chart) {
-          const { ctx } = chart;
-          const totalOuter = (chart.data.datasets[1]?.data || []).reduce((s, v) => s + Number(v || 0), 0);
-          const active = chart.getActiveElements?.() || [];
-          const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
-          const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
-          ctx.save();
-          ctx.fillStyle = '#2c3e50';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          if (active.length) {
-            const a = active[0];
-            const ds = a.datasetIndex;
-            const label = (ds === 0 ? innerLabels[a.index] : outerLabels[a.index]) || '';
-            const value = chart.data.datasets[ds].data[a.index] || 0;
-            ctx.font = '600 13px IBM Plex Sans, Segoe UI, Tahoma, sans-serif';
-            ctx.fillText(label, centerX, centerY - 10);
-            ctx.font = '700 17px IBM Plex Sans, Segoe UI, Tahoma, sans-serif';
-            ctx.fillText(Number(value).toLocaleString(), centerX, centerY + 10);
-          } else {
-            ctx.font = '600 14px IBM Plex Sans, Segoe UI, Tahoma, sans-serif';
-            ctx.fillText('Engine Config', centerX, centerY - 10);
-            ctx.font = '700 16px IBM Plex Sans, Segoe UI, Tahoma, sans-serif';
-            ctx.fillText(Number(totalOuter).toLocaleString(), centerX, centerY + 10);
-          }
-          ctx.restore();
-        }
-      },
-      {
-        id: 'configLabelsInside',
-        afterDraw(chart) {
-          const { ctx } = chart;
-          const outerDataset = chart.data.datasets[1];
-          if (!outerDataset) return;
-
-          ctx.save();
-          ctx.fillStyle = '#2c3e50';
-          ctx.font = '600 9px IBM Plex Sans, Segoe UI, Tahoma, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-
-          const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
-          const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
-          const outerRadius = (chart.chartArea.right - chart.chartArea.left) / 2 * 0.85; // Position inside outer ring
-
-          outerDataset.data.forEach((value, index) => {
-            if (Number(value) === 0) return;
-
-            const total = outerDataset.data.reduce((s, v) => s + Number(v || 0), 0);
-            const startAngle = chart.getDatasetMeta(1).data[index].startAngle;
-            const endAngle = chart.getDatasetMeta(1).data[index].endAngle;
-            const midAngle = (startAngle + endAngle) / 2;
-
-            const x = centerX + Math.cos(midAngle) * outerRadius;
-            const y = centerY + Math.sin(midAngle) * outerRadius;
-
-            const configName = outerLabels[index];
-            if (configName && configName.length > 12) {
-              // Split long config names
-              const words = configName.split('-');
-              if (words.length > 1) {
-                ctx.fillText(words[0], x, y - 3);
-                ctx.fillText(words.slice(1).join('-'), x, y + 6);
-              } else {
-                ctx.fillText(configName.substring(0, 8), x, y);
-              }
-            } else {
-              ctx.fillText(configName, x, y);
-            }
-          });
-
-          ctx.restore();
-        }
-      }
-    ]
-  });
-
-  // Click to filter by ring selection
-  ctx.onclick = (evt) => {
-    const points = configChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, false);
-    if (!points.length) return;
-    const first = points[0];
-    const dsIdx = first.datasetIndex; // 0 inner, 1 outer
-    const idx = first.index;
-    if (dsIdx === 0) {
-      const program = innerLabels[idx];
-      const revMap = { 'LM2500': 'LM25', 'LM6000': 'LM60', 'LMS100': 'LMS100' };
-      applyProgramFilter(revMap[program] || program);
-    } else {
-      const configLabel = outerLabels[idx];
-      if (selects && selects[2]) {
-        selects[2].value = configLabel;
-        selects[2].dispatchEvent(new Event('change'));
-      }
-      showSection('section-engine-config');
-      renderAllCharts();
-      updateFilterChips();
-    }
-  };
-}
+// REMOVED: renderConfigChart() - Unused legacy function (~300 lines)
+// This chart functionality is no longer used in the application.
+// All config visualization is now handled by the new chart system.
 
 function renderSupplierChart(sectionId = 'section-supplier') {
   // For regular supplier section, use the new supplier type chart
@@ -4479,127 +4152,9 @@ function renderAllCharts() {
   }
 }
 
-function renderPartNumberChart() {
-  const section = document.getElementById('section-part-number');
-  if (!section) return;
-  const table = section.querySelector('table');
-  if (!table) return;
-  const headers = Array.from(table.tHead?.rows?.[0]?.cells || []).map(th => th.textContent.trim());
-  const bodyRows = Array.from(table.tBodies?.[0]?.rows || []).filter(tr => tr.style.display !== 'none');
-  if (!bodyRows.length) return;
-
-  // Use dynamic headers
-  const pnIdx = headers.indexOf('Part No'); // Changed from 'Part Number' to 'Part No'
-  if (pnIdx === -1) return;
-
-  // Get dynamic year columns
-  const yearColumns = headers.filter(h => /^\d{4}$/.test(h)).sort();
-  const yearIndices = yearColumns.map(year => headers.indexOf(year));
-  if (yearColumns.length === 0) return;
-
-  const labels = bodyRows.map(r => (r.cells[pnIdx]?.textContent || '').trim());
-  const totals = bodyRows.map(r => {
-    return yearIndices.reduce((sum, yearIdx) => {
-      const val = parseFloat(r.cells[yearIdx]?.textContent || '0') || 0;
-      return sum + val;
-    }, 0);
-  });
-
-  // Sort by total demand (highest first) for better visualization
-  const sortedData = labels.map((label, i) => ({ label, total: totals[i] }))
-    .sort((a, b) => b.total - a.total);
-
-  const ctx = document.getElementById('partNumberChart');
-  if (!ctx) return;
-  partNumberChart?.destroy();
-
-  // Use consistent product line colors
-  const baseColors = CONSISTENT_PALETTE;
-  const bgColors = sortedData.map((_, i) => baseColors[i % baseColors.length]);
-
-  partNumberChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: sortedData.map(d => d.label),
-      datasets: [{
-        label: 'Total Demand',
-        data: sortedData.map(d => d.total),
-        backgroundColor: bgColors,
-        borderColor: bgColors.map(color => color.replace(')', ',0.8)').replace('rgb', 'rgba')),
-        borderWidth: 1
-      }]
-    },
-    plugins: [ChartZoom],
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        title: {
-          display: true,
-          text: 'Part Number Demand Distribution',
-          font: { size: 14, weight: 'bold' },
-          padding: { bottom: 20 }
-        },
-        tooltip: {
-          callbacks: {
-            label: (context) => `Demand: ${Number(context.parsed.y).toLocaleString()} units`
-          }
-        },
-        zoom: {
-          pan: {
-            enabled: true,
-            mode: 'x',
-            modifierKey: 'ctrl'
-          },
-          zoom: {
-            wheel: {
-              enabled: true
-            },
-            pinch: {
-              enabled: true
-            },
-            mode: 'x',
-            drag: {
-              enabled: true,
-              backgroundColor: 'rgba(0, 0, 0, 0.1)',
-              borderColor: 'rgba(0, 0, 0, 0.3)',
-              borderWidth: 1
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Part Numbers'
-          },
-          ticks: {
-            maxRotation: 45,
-            minRotation: 45
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Total Demand'
-          },
-          beginAtZero: true,
-          ticks: {
-            callback: (value) => Number(value).toLocaleString()
-          }
-        }
-      },
-      interaction: {
-        intersect: false,
-        mode: 'index'
-      }
-    }
-  });
-}
+// REMOVED: renderPartNumberChart() - Unused legacy function (~120 lines)
+// This chart functionality is no longer used in the application.
+// Part number visualization is now handled by the new chart system.
 
 // Filter Application Functions (REMOVED DUPLICATE - using the one at line 2667)
 
@@ -5189,16 +4744,16 @@ function renderEngineProgramChart() {
 // Render Engine Program Summary Table
 function calculateGrowthIndicator(currentValue, previousValue, showOnlyIcon = false) {
   if (previousValue === 0) {
-    return currentValue > 0 ? ' <span class="badge bg-success ms-1" title="New entry">â†‘</span>' : '';
+  return currentValue > 0 ? ' <span class="badge bg-success ms-1" title="New entry">&#8593;</span>' : '';
   }
 
   const growthPercent = ((currentValue - previousValue) / previousValue * 100);
-  const growthIcon = growthPercent > 0 ? 'â†‘' : growthPercent < 0 ? 'â†“' : 'â†’';
+  const growthIcon = growthPercent > 0 ? '\u2191' : growthPercent < 0 ? '\u2193' : '\u2192';
   const growthBadge = growthPercent > 0 ? 'badge bg-success' : growthPercent < 0 ? 'badge bg-danger' : 'badge bg-secondary';
 
   // If showOnlyIcon is true, return only the icon without percentage
   if (showOnlyIcon) {
-    return ` <span class="${growthBadge} ms-1" title="${growthPercent.toFixed(1)}%">${growthIcon}</span>`;
+  return ` <span class="${growthBadge} ms-1" title="${growthPercent.toFixed(1)}%">${eval('"' + growthIcon + '"')}</span>`;
   }
 
   // Round to whole number
