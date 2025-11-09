@@ -702,22 +702,27 @@
   <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <!-- Chunk Loader for efficient data loading -->
-  <script defer src="src/chunk-loader.js?v=1"></script>
-  <!-- OPTIMIZATION #2: Iterative Part Walker (load before other scripts) -->
-  <script defer src="src/part-walker-optimized.js?v=1"></script>
-  <!-- Removed embedded-data.js - using 100% dynamic data from backend -->
-  <script defer src="src/charts.js?v=3"></script>
-  <script defer src="src/utils.js?v=3"></script>
-  <script defer src="src/filters.js?v=2"></script>
-  <script defer src="src/supplier-type-chart.js?v=4"></script>
-  <script defer src="src/rm-supplier-raw-material-chart.js?v=4"></script>
-  <script defer src="src/hw-owner-complexity-chart.js?v=2"></script>
-  <script defer src="src/supplier-popup.js?v=6"></script>
-  <script defer src="src/rm-supplier-popup.js?v=11"></script>
-  <script defer src="src/supplier-type-popup.js?v=1"></script>
-  <script defer src="src/hw-owner-popup.js?v=1"></script>
-  <script defer src="src/demand.js?v=48"></script>
-  <script defer src="src/dropdowns.js?v=2"></script>
+  <!-- Shared utilities -->
+  <script defer src="src/js/shared/chunk-loader.js?v=1"></script>
+  <script defer src="src/js/shared/part-walker-optimized.js?v=1"></script>
+  <script defer src="src/js/shared/utils.js?v=3"></script>
+  
+  <!-- Demand page - Charts -->
+  <script defer src="src/js/demand/charts/charts.js?v=3"></script>
+  <script defer src="src/js/demand/charts/supplier-type-chart.js?v=4"></script>
+  <script defer src="src/js/demand/charts/rm-supplier-raw-material-chart.js?v=4"></script>
+  <script defer src="src/js/demand/charts/hw-owner-complexity-chart.js?v=2"></script>
+  
+  <!-- Demand page - Modals -->
+  <script defer src="src/js/demand/modals/supplier-popup.js?v=6"></script>
+  <script defer src="src/js/demand/modals/rm-supplier-popup.js?v=11"></script>
+  <script defer src="src/js/demand/modals/supplier-type-popup.js?v=1"></script>
+  <script defer src="src/js/demand/modals/hw-owner-popup.js?v=1"></script>
+  
+  <!-- Demand page - Core -->
+  <script defer src="src/js/demand/core/filters.js?v=2"></script>
+  <script defer src="src/js/demand/core/demand.js?v=49"></script>
+  <script defer src="src/js/demand/core/dropdowns.js?v=2"></script>
 
   <!-- Chatbot Icon -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -1117,7 +1122,7 @@
   </div>
 
 <!-- DuckDB Integration - Ultra-Fast Filtering -->
-<script src="/src/duckdb-integration.js"></script>
+<script src="/src/js/shared/duckdb-integration.js"></script>
 
 </body>
 

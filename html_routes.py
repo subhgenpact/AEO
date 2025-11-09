@@ -93,10 +93,12 @@ async def serve_css(filename: str):
     raise HTTPException(status_code=404, detail="CSS file not found")
 
 
-@router.get("/src/{filename}")
-async def serve_js(filename: str):
-    """Serve JavaScript files from src"""
-    file_path = Path(f"frontend/src/{filename}")
+
+# Serve JS files from src/js/ and all subfolders
+@router.get("/src/js/{full_path:path}")
+async def serve_js_any_depth(full_path: str):
+    """Serve JS files from src/js and all subfolders"""
+    file_path = Path(f"frontend/src/js/{full_path}")
     if file_path.exists():
         return FileResponse(file_path)
     raise HTTPException(status_code=404, detail="JS file not found")
