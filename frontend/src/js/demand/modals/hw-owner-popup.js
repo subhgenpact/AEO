@@ -363,12 +363,56 @@ function renderHWOwnerDetailsChart(hwoName) {
       
       console.log('✅ HW Owner chart rendered successfully');
       
+      // Setup range selector dropdown
+      const rangeSelect = document.getElementById('hwOwnerRangeSelect');
+      if (rangeSelect) {
+        rangeSelect.onchange = () => {
+          if (window.modalHWOwnerChart && window.fullHWOwnerChartData) {
+            const range = rangeSelect.value;
+            let startIdx, endIdx;
+            
+            if (range === 'all') {
+              // Show all records
+              startIdx = 0;
+              endIdx = window.fullHWOwnerChartData.labels.length;
+            } else {
+              // Parse range like "1-5", "6-10", etc.
+              const [start, end] = range.split('-').map(Number);
+              startIdx = start - 1; // Convert to 0-based index
+              endIdx = end;
+            }
+            
+            // Slice the data for the selected range
+            const rangeLabels = window.fullHWOwnerChartData.labels.slice(startIdx, endIdx);
+            const rangeData2025 = window.fullHWOwnerChartData.data2025.slice(startIdx, endIdx);
+            const rangeData2026 = window.fullHWOwnerChartData.data2026.slice(startIdx, endIdx);
+            const rangeData2027 = window.fullHWOwnerChartData.data2027.slice(startIdx, endIdx);
+            const rangeData2028 = window.fullHWOwnerChartData.data2028.slice(startIdx, endIdx);
+            
+            // Update chart
+            window.modalHWOwnerChart.data.labels = rangeLabels;
+            window.modalHWOwnerChart.data.datasets[0].data = rangeData2025;
+            window.modalHWOwnerChart.data.datasets[1].data = rangeData2026;
+            window.modalHWOwnerChart.data.datasets[2].data = rangeData2027;
+            window.modalHWOwnerChart.data.datasets[3].data = rangeData2028;
+            window.modalHWOwnerChart.options.scales.y.min = 0;
+            window.modalHWOwnerChart.options.scales.y.max = Math.max(0, rangeLabels.length - 1);
+            window.modalHWOwnerChart.update();
+          }
+        };
+      }
+      
       // Setup reset zoom button
       const resetBtn = document.getElementById('resetHWOwnerZoom');
       if (resetBtn) {
         resetBtn.onclick = () => {
           if (window.modalHWOwnerChart) {
-            // Reset to show top 5
+            // Reset to show top 5 and reset dropdown
+            const rangeSelect = document.getElementById('hwOwnerRangeSelect');
+            if (rangeSelect) {
+              rangeSelect.value = '1-5';
+            }
+            
             window.modalHWOwnerChart.data.labels = top5Data.labels;
             window.modalHWOwnerChart.data.datasets[0].data = top5Data.data2025;
             window.modalHWOwnerChart.data.datasets[1].data = top5Data.data2026;
@@ -376,23 +420,6 @@ function renderHWOwnerDetailsChart(hwoName) {
             window.modalHWOwnerChart.data.datasets[3].data = top5Data.data2028;
             window.modalHWOwnerChart.options.scales.y.min = 0;
             window.modalHWOwnerChart.options.scales.y.max = 4;
-            window.modalHWOwnerChart.update();
-          }
-        };
-      }
-      
-      // Setup show all button
-      const showAllBtn = document.getElementById('showAllHWOwner');
-      if (showAllBtn) {
-        showAllBtn.onclick = () => {
-          if (window.modalHWOwnerChart && window.fullHWOwnerChartData) {
-            window.modalHWOwnerChart.data.labels = window.fullHWOwnerChartData.labels;
-            window.modalHWOwnerChart.data.datasets[0].data = window.fullHWOwnerChartData.data2025;
-            window.modalHWOwnerChart.data.datasets[1].data = window.fullHWOwnerChartData.data2026;
-            window.modalHWOwnerChart.data.datasets[2].data = window.fullHWOwnerChartData.data2027;
-            window.modalHWOwnerChart.data.datasets[3].data = window.fullHWOwnerChartData.data2028;
-            window.modalHWOwnerChart.options.scales.y.min = 0;
-            window.modalHWOwnerChart.options.scales.y.max = Math.min(9, window.fullHWOwnerChartData.labels.length - 1);
             window.modalHWOwnerChart.update();
           }
         };

@@ -909,10 +909,17 @@
           <div class="card chart-card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h6 class="mb-0" id="modalHWOwnerChartTitle">Part Number vs Demand</h6>
-              <div class="btn-group">
-                <button class="btn btn-sm btn-outline-primary" id="showAllHWOwner" title="Show all part numbers">
-                  <i class="bi bi-eye"></i> Show All
-                </button>
+              <div class="d-flex gap-2 align-items-center">
+                <label for="hwOwnerRangeSelect" class="mb-0 small">Show:</label>
+                <select class="form-select form-select-sm" id="hwOwnerRangeSelect" style="width: auto;">
+                  <option value="1-5" selected>1-5</option>
+                  <option value="6-10">6-10</option>
+                  <option value="11-15">11-15</option>
+                  <option value="16-20">16-20</option>
+                  <option value="21-25">21-25</option>
+                  <option value="26-30">26-30</option>
+                  <option value="all">All</option>
+                </select>
                 <button class="btn btn-sm btn-outline-secondary" id="resetHWOwnerZoom" title="Reset to top 5">
                   <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </button>
@@ -923,7 +930,7 @@
                 <canvas id="modalHWOwnerChart"></canvas>
               </div>
               <div class="text-muted small text-center mt-2">
-                💡 <strong>Tip:</strong> Scroll to pan vertically • Click bar to filter table • Double-click to reset to top 5
+                💡 <strong>Tip:</strong> Scroll to pan vertically • Click bar to filter table • Use dropdown to view different ranges
               </div>
             </div>
           </div>
