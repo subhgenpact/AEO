@@ -37,19 +37,19 @@ function getHWOwnerTop5(fullData) {
   };
 }
 
-// Helper function to filter HW Owner table by part number
-function filterHWOwnerTableByPartNumber(partNumber) {
+// Helper function to filter HW Owner table by supplier
+function filterHWOwnerTableBySupplier(supplier) {
   if (!window.originalHWOwnerData) {
     console.warn('No original data available for filtering');
     return;
   }
   
-  // Filter the data by part number
+  // Filter the data by parent part supplier
   const filteredData = window.originalHWOwnerData.filter(row => 
-    row.partNumber === partNumber
+    row.parentPartSupplier === supplier
   );
   
-  console.log(`Filtered to ${filteredData.length} rows for part number: ${partNumber}`);
+  console.log(`Filtered to ${filteredData.length} rows for supplier: ${supplier}`);
   
   // Update the table pagination with filtered data
   if (window.modalHWOwnerTablePagination) {
@@ -80,36 +80,37 @@ function updateHWOwnerChartWithFilteredData() {
     return matchesHWO && matchesPartNumber && matchesParentPartSupplier && matchesRMSupplier;
   });
   
-  // Rebuild chart data from filtered data - aggregate by Part Number
-  const partNumberMap = new Map();
+  // Rebuild chart data from filtered data - aggregate by Parent Part Supplier
+  const supplierMap = new Map();
   
   filteredData.forEach(row => {
-    if (!partNumberMap.has(row.partNumber)) {
-      partNumberMap.set(row.partNumber, { '2025': 0, '2026': 0, '2027': 0, '2028': 0 });
+    const supplier = row.parentPartSupplier || row.name || 'Unknown';
+    if (!supplierMap.has(supplier)) {
+      supplierMap.set(supplier, { '2025': 0, '2026': 0, '2027': 0, '2028': 0 });
     }
     
-    const yearData = partNumberMap.get(row.partNumber);
+    const yearData = supplierMap.get(supplier);
     if (row.year2025) yearData['2025'] += row.year2025;
     if (row.year2026) yearData['2026'] += row.year2026;
     if (row.year2027) yearData['2027'] += row.year2027;
     if (row.year2028) yearData['2028'] += row.year2028;
   });
   
-  // Sort part numbers by total demand
-  const partNumbers = Array.from(partNumberMap.keys()).sort((a, b) => {
-    const totalA = partNumberMap.get(a)['2025'] + partNumberMap.get(a)['2026'] + partNumberMap.get(a)['2027'] + partNumberMap.get(a)['2028'];
-    const totalB = partNumberMap.get(b)['2025'] + partNumberMap.get(b)['2026'] + partNumberMap.get(b)['2027'] + partNumberMap.get(b)['2028'];
+  // Sort suppliers by total demand
+  const suppliers = Array.from(supplierMap.keys()).sort((a, b) => {
+    const totalA = supplierMap.get(a)['2025'] + supplierMap.get(a)['2026'] + supplierMap.get(a)['2027'] + supplierMap.get(a)['2028'];
+    const totalB = supplierMap.get(b)['2025'] + supplierMap.get(b)['2026'] + supplierMap.get(b)['2027'] + supplierMap.get(b)['2028'];
     return totalB - totalA;
   });
   
-  const data2025 = partNumbers.map(pn => partNumberMap.get(pn)['2025'] || 0);
-  const data2026 = partNumbers.map(pn => partNumberMap.get(pn)['2026'] || 0);
-  const data2027 = partNumbers.map(pn => partNumberMap.get(pn)['2027'] || 0);
-  const data2028 = partNumbers.map(pn => partNumberMap.get(pn)['2028'] || 0);
+  const data2025 = suppliers.map(s => supplierMap.get(s)['2025'] || 0);
+  const data2026 = suppliers.map(s => supplierMap.get(s)['2026'] || 0);
+  const data2027 = suppliers.map(s => supplierMap.get(s)['2027'] || 0);
+  const data2028 = suppliers.map(s => supplierMap.get(s)['2028'] || 0);
   
   // Update full data
   window.fullHWOwnerChartData = {
-    labels: partNumbers,
+    labels: suppliers,
     data2025: data2025,
     data2026: data2026,
     data2027: data2027,
@@ -126,8 +127,8 @@ function updateHWOwnerChartWithFilteredData() {
   window.modalHWOwnerChart.data.datasets[2].data = top5Data.data2027;
   window.modalHWOwnerChart.data.datasets[3].data = top5Data.data2028;
   window.modalHWOwnerChart.options.scales.y.min = 0;
-  window.modalHWOwnerChart.options.scales.y.max = Math.min(4, partNumbers.length - 1);
-  window.modalHWOwnerChart.options.plugins.zoom.limits.y.max = partNumbers.length - 1;
+  window.modalHWOwnerChart.options.scales.y.max = Math.min(4, suppliers.length - 1);
+  window.modalHWOwnerChart.options.plugins.zoom.limits.y.max = suppliers.length - 1;
   window.modalHWOwnerChart.update();
 }
 
@@ -178,7 +179,7 @@ function renderHWOwnerDetailsChart(hwoName) {
   // Set chart title
   const chartTitle = document.getElementById('modalHWOwnerChartTitle');
   if (chartTitle) {
-    chartTitle.textContent = `${hwoName} - Part Number vs Demand`;
+    chartTitle.textContent = `${hwoName} - Parent Part Supplier vs Demand`;
   }
   
   // Fetch chart data from backend
@@ -197,16 +198,16 @@ function renderHWOwnerDetailsChart(hwoName) {
       
       const hwOwnerData = result.data;
       
-      // Aggregate by Part Number (group by HW OWNER and Part Number, sum QPE)
-      const partNumberMap = new Map();
+      // Aggregate by Parent Part Supplier (group by HW OWNER and Parent Part Supplier, sum QPE)
+      const supplierMap = new Map();
       
       hwOwnerData.forEach(item => {
-        const partNumber = item.partNumber;
-        if (!partNumberMap.has(partNumber)) {
-          partNumberMap.set(partNumber, { '2025': 0, '2026': 0, '2027': 0, '2028': 0 });
+        const supplier = item.parentPartSupplier || item.name || 'Unknown';
+        if (!supplierMap.has(supplier)) {
+          supplierMap.set(supplier, { '2025': 0, '2026': 0, '2027': 0, '2028': 0 });
         }
         
-        const yearData = partNumberMap.get(partNumber);
+        const yearData = supplierMap.get(supplier);
         Object.keys(item.quarters).forEach(quarterKey => {
           const year = parseInt(quarterKey.split('-')[0]);
           if (year >= 2025 && year <= 2028) {
@@ -215,28 +216,28 @@ function renderHWOwnerDetailsChart(hwoName) {
         });
       });
       
-      // Sort part numbers by total demand (descending)
-      const partNumbers = Array.from(partNumberMap.keys()).sort((a, b) => {
-        const totalA = partNumberMap.get(a)['2025'] + partNumberMap.get(a)['2026'] + partNumberMap.get(a)['2027'] + partNumberMap.get(a)['2028'];
-        const totalB = partNumberMap.get(b)['2025'] + partNumberMap.get(b)['2026'] + partNumberMap.get(b)['2027'] + partNumberMap.get(b)['2028'];
+      // Sort suppliers by total demand (descending)
+      const suppliers = Array.from(supplierMap.keys()).sort((a, b) => {
+        const totalA = supplierMap.get(a)['2025'] + supplierMap.get(a)['2026'] + supplierMap.get(a)['2027'] + supplierMap.get(a)['2028'];
+        const totalB = supplierMap.get(b)['2025'] + supplierMap.get(b)['2026'] + supplierMap.get(b)['2027'] + supplierMap.get(b)['2028'];
         return totalB - totalA;
       });
       
-      const data2025 = partNumbers.map(pn => partNumberMap.get(pn)['2025'] || 0);
-      const data2026 = partNumbers.map(pn => partNumberMap.get(pn)['2026'] || 0);
-      const data2027 = partNumbers.map(pn => partNumberMap.get(pn)['2027'] || 0);
-      const data2028 = partNumbers.map(pn => partNumberMap.get(pn)['2028'] || 0);
+      const data2025 = suppliers.map(s => supplierMap.get(s)['2025'] || 0);
+      const data2026 = suppliers.map(s => supplierMap.get(s)['2026'] || 0);
+      const data2027 = suppliers.map(s => supplierMap.get(s)['2027'] || 0);
+      const data2028 = suppliers.map(s => supplierMap.get(s)['2028'] || 0);
       
       console.log('📊 Chart data prepared:', {
-        partNumbers: partNumbers.length,
-        sample: partNumbers[0],
+        suppliers: suppliers.length,
+        sample: suppliers[0],
         data2025Sample: data2025[0],
         data2026Sample: data2026[0]
       });
       
       // Store full data for zoom/pan
       window.fullHWOwnerChartData = {
-        labels: partNumbers,
+        labels: suppliers,
         data2025: data2025,
         data2026: data2026,
         data2027: data2027,
@@ -351,7 +352,7 @@ function renderHWOwnerDetailsChart(hwoName) {
               limits: {
                 y: {
                   min: 0,
-                  max: partNumbers.length - 1
+                  max: suppliers.length - 1
                 }
               }
             }
@@ -364,7 +365,7 @@ function renderHWOwnerDetailsChart(hwoName) {
             },
             y: {
               stacked: true,
-              title: { display: true, text: 'Part Number' },
+              title: { display: true, text: 'Parent Part Supplier' },
               min: 0,
               max: 4  // Show 5 items (0-4)
             }
@@ -381,12 +382,12 @@ function renderHWOwnerDetailsChart(hwoName) {
               chart.options.scales.y.max = 4;
               chart.update();
             } else if (activeElements.length > 0) {
-              // Get the clicked part number
+              // Get the clicked supplier
               const clickedIndex = activeElements[0].index;
-              const partNumber = chart.data.labels[clickedIndex];
+              const supplier = chart.data.labels[clickedIndex];
               
-              // Filter the table by this part number
-              filterHWOwnerTableByPartNumber(partNumber);
+              // Filter the table by this supplier
+              filterHWOwnerTableBySupplier(supplier);
             }
           }
         }
@@ -395,7 +396,7 @@ function renderHWOwnerDetailsChart(hwoName) {
       console.log('✅ HW Owner chart rendered successfully');
       
       // Populate dynamic dropdown options based on actual data count
-      const totalRecords = partNumbers.length;
+      const totalRecords = suppliers.length;
       const rangeSelect = document.getElementById('hwOwnerRangeSelect');
       if (rangeSelect) {
         // Clear existing options
