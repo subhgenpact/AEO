@@ -907,18 +907,13 @@
           </div>
           <!-- Demand Chart -->
           <div class="card chart-card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
               <h6 class="mb-0" id="modalHWOwnerChartTitle">Part Number vs Demand</h6>
               <div class="d-flex gap-2 align-items-center">
-                <label for="hwOwnerRangeSelect" class="mb-0 small">Show:</label>
+                <label for="hwOwnerRangeSelect" class="mb-0 small">Quick Select:</label>
                 <select class="form-select form-select-sm" id="hwOwnerRangeSelect" style="width: auto;">
-                  <option value="1-5" selected>1-5</option>
-                  <option value="6-10">6-10</option>
-                  <option value="11-15">11-15</option>
-                  <option value="16-20">16-20</option>
-                  <option value="21-25">21-25</option>
-                  <option value="26-30">26-30</option>
-                  <option value="all">All</option>
+                  <option value="1-5" selected>Top 1-5</option>
+                  <!-- Dynamic options will be populated by JavaScript -->
                 </select>
                 <button class="btn btn-sm btn-outline-secondary" id="resetHWOwnerZoom" title="Reset to top 5">
                   <i class="bi bi-arrow-counterclockwise"></i> Reset
@@ -926,11 +921,23 @@
               </div>
             </div>
             <div class="card-body">
+              <!-- Compact Range Slider -->
+              <div class="mb-2 px-2">
+                <div class="d-flex align-items-center gap-2">
+                  <label class="mb-0 small text-nowrap">Range:</label>
+                  <input type="number" class="form-control form-control-sm" id="hwOwnerRangeStart" min="1" max="30" value="1" style="width: 60px;">
+                  <span class="text-muted">-</span>
+                  <input type="number" class="form-control form-control-sm" id="hwOwnerRangeEnd" min="1" max="30" value="5" style="width: 60px;">
+                  <input type="range" class="form-range flex-fill" id="hwOwnerRangeSlider" min="1" max="30" value="1" step="1" style="min-width: 150px;">
+                  <button class="btn btn-sm btn-primary px-2 py-1" id="applyHWOwnerRange">Go</button>
+                </div>
+              </div>
+              
               <div class="chart-container" style="height: 300px;">
                 <canvas id="modalHWOwnerChart"></canvas>
               </div>
               <div class="text-muted small text-center mt-2">
-                💡 <strong>Tip:</strong> Scroll to pan vertically • Click bar to filter table • Use dropdown to view different ranges
+                💡 <strong>Tip:</strong> Adjust range above • Click bar to filter table • Scroll to pan vertically
               </div>
             </div>
           </div>

@@ -288,10 +288,16 @@ function renderHWOwnerDetailsChart(hwoName) {
             }
           ]
         },
+        plugins: [ChartDataLabels],
         options: {
           responsive: true,
           maintainAspectRatio: false,
           indexAxis: 'y',
+          layout: {
+            padding: {
+              right: 60  // Add padding on right for total labels
+            }
+          },
           plugins: {
             legend: { position: 'top' },
             tooltip: {
@@ -300,6 +306,31 @@ function renderHWOwnerDetailsChart(hwoName) {
                   if (context.parsed.x === 0) return null;
                   return `${context.dataset.label}: ${context.parsed.x}`;
                 }
+              }
+            },
+            // Configure datalabels to show totals to the right of bars
+            datalabels: {
+              display: function(context) {
+                // Only show label on the last dataset (2028) to avoid duplicates
+                return context.datasetIndex === 3;
+              },
+              formatter: function(value, context) {
+                // Calculate total across all years for this part number
+                const dataIndex = context.dataIndex;
+                const total = 
+                  (context.chart.data.datasets[0].data[dataIndex] || 0) +
+                  (context.chart.data.datasets[1].data[dataIndex] || 0) +
+                  (context.chart.data.datasets[2].data[dataIndex] || 0) +
+                  (context.chart.data.datasets[3].data[dataIndex] || 0);
+                return total.toLocaleString();
+              },
+              anchor: 'end',
+              align: 'end',
+              offset: 4,
+              color: '#1f2937',
+              font: {
+                weight: 'bold',
+                size: 11
               }
             },
             zoom: {
@@ -363,43 +394,143 @@ function renderHWOwnerDetailsChart(hwoName) {
       
       console.log('✅ HW Owner chart rendered successfully');
       
-      // Setup range selector dropdown
+      // Populate dynamic dropdown options based on actual data count
+      const totalRecords = partNumbers.length;
       const rangeSelect = document.getElementById('hwOwnerRangeSelect');
       if (rangeSelect) {
+        // Clear existing options
+        rangeSelect.innerHTML = '';
+        
+        // Generate dynamic options in increments of 5
+        for (let i = 1; i <= totalRecords; i += 5) {
+          const end = Math.min(i + 4, totalRecords);
+          const option = document.createElement('option');
+          option.value = `${i}-${end}`;
+          option.textContent = `${i}-${end}`;
+          if (i === 1) option.selected = true;
+          rangeSelect.appendChild(option);
+        }
+        
+        // Add "All" option
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = `All (${totalRecords})`;
+        rangeSelect.appendChild(allOption);
+        
+        // Setup dropdown change handler
         rangeSelect.onchange = () => {
           if (window.modalHWOwnerChart && window.fullHWOwnerChartData) {
             const range = rangeSelect.value;
             let startIdx, endIdx;
             
             if (range === 'all') {
-              // Show all records
               startIdx = 0;
               endIdx = window.fullHWOwnerChartData.labels.length;
             } else {
-              // Parse range like "1-5", "6-10", etc.
               const [start, end] = range.split('-').map(Number);
-              startIdx = start - 1; // Convert to 0-based index
+              startIdx = start - 1;
               endIdx = end;
             }
             
-            // Slice the data for the selected range
-            const rangeLabels = window.fullHWOwnerChartData.labels.slice(startIdx, endIdx);
-            const rangeData2025 = window.fullHWOwnerChartData.data2025.slice(startIdx, endIdx);
-            const rangeData2026 = window.fullHWOwnerChartData.data2026.slice(startIdx, endIdx);
-            const rangeData2027 = window.fullHWOwnerChartData.data2027.slice(startIdx, endIdx);
-            const rangeData2028 = window.fullHWOwnerChartData.data2028.slice(startIdx, endIdx);
+            updateHWOwnerChartRange(startIdx, endIdx);
             
-            // Update chart
-            window.modalHWOwnerChart.data.labels = rangeLabels;
-            window.modalHWOwnerChart.data.datasets[0].data = rangeData2025;
-            window.modalHWOwnerChart.data.datasets[1].data = rangeData2026;
-            window.modalHWOwnerChart.data.datasets[2].data = rangeData2027;
-            window.modalHWOwnerChart.data.datasets[3].data = rangeData2028;
-            window.modalHWOwnerChart.options.scales.y.min = 0;
-            window.modalHWOwnerChart.options.scales.y.max = Math.max(0, rangeLabels.length - 1);
-            window.modalHWOwnerChart.update();
+            // Update range controls to match
+            const rangeStartInput = document.getElementById('hwOwnerRangeStart');
+            const rangeEndInput = document.getElementById('hwOwnerRangeEnd');
+            const rangeSlider = document.getElementById('hwOwnerRangeSlider');
+            if (rangeStartInput && rangeEndInput && rangeSlider) {
+              rangeStartInput.value = startIdx + 1;
+              rangeEndInput.value = endIdx;
+              rangeSlider.value = startIdx + 1;
+            }
           }
         };
+      }
+      
+      // Setup compact range controls
+      const rangeStart = document.getElementById('hwOwnerRangeStart');
+      const rangeEnd = document.getElementById('hwOwnerRangeEnd');
+      const rangeSlider = document.getElementById('hwOwnerRangeSlider');
+      const applyRangeBtn = document.getElementById('applyHWOwnerRange');
+      
+      if (rangeStart && rangeEnd && rangeSlider) {
+        // Set max values based on actual data
+        rangeStart.max = totalRecords;
+        rangeEnd.max = totalRecords;
+        rangeSlider.max = totalRecords;
+        rangeStart.value = 1;
+        rangeEnd.value = Math.min(5, totalRecords);
+        rangeSlider.value = 1;
+        
+        // Slider controls the start position, end is calculated as start + 4 (5 items)
+        rangeSlider.oninput = () => {
+          const start = parseInt(rangeSlider.value);
+          const end = Math.min(start + 4, totalRecords);
+          rangeStart.value = start;
+          rangeEnd.value = end;
+        };
+        
+        // Number inputs update each other
+        rangeStart.oninput = () => {
+          const start = parseInt(rangeStart.value);
+          if (start > parseInt(rangeEnd.value)) {
+            rangeEnd.value = Math.min(start + 4, totalRecords);
+          }
+          rangeSlider.value = start;
+        };
+        
+        rangeEnd.oninput = () => {
+          const end = parseInt(rangeEnd.value);
+          if (end < parseInt(rangeStart.value)) {
+            rangeStart.value = Math.max(1, end - 4);
+          }
+        };
+        
+        // Apply button handler
+        if (applyRangeBtn) {
+          applyRangeBtn.onclick = () => {
+            const start = parseInt(rangeStart.value);
+            const end = parseInt(rangeEnd.value);
+            
+            if (start > end) {
+              alert('Start value must be less than or equal to End value');
+              return;
+            }
+            
+            if (start < 1 || end > totalRecords) {
+              alert(`Range must be between 1 and ${totalRecords}`);
+              return;
+            }
+            
+            updateHWOwnerChartRange(start - 1, end);
+            
+            // Try to match dropdown value
+            const matchingOption = Array.from(rangeSelect.options).find(opt => opt.value === `${start}-${end}`);
+            if (matchingOption) {
+              rangeSelect.value = matchingOption.value;
+            }
+          };
+        }
+      }
+      
+      // Helper function to update chart with range
+      function updateHWOwnerChartRange(startIdx, endIdx) {
+        if (!window.modalHWOwnerChart || !window.fullHWOwnerChartData) return;
+        
+        const rangeLabels = window.fullHWOwnerChartData.labels.slice(startIdx, endIdx);
+        const rangeData2025 = window.fullHWOwnerChartData.data2025.slice(startIdx, endIdx);
+        const rangeData2026 = window.fullHWOwnerChartData.data2026.slice(startIdx, endIdx);
+        const rangeData2027 = window.fullHWOwnerChartData.data2027.slice(startIdx, endIdx);
+        const rangeData2028 = window.fullHWOwnerChartData.data2028.slice(startIdx, endIdx);
+        
+        window.modalHWOwnerChart.data.labels = rangeLabels;
+        window.modalHWOwnerChart.data.datasets[0].data = rangeData2025;
+        window.modalHWOwnerChart.data.datasets[1].data = rangeData2026;
+        window.modalHWOwnerChart.data.datasets[2].data = rangeData2027;
+        window.modalHWOwnerChart.data.datasets[3].data = rangeData2028;
+        window.modalHWOwnerChart.options.scales.y.min = 0;
+        window.modalHWOwnerChart.options.scales.y.max = Math.max(0, rangeLabels.length - 1);
+        window.modalHWOwnerChart.update();
       }
       
       // Setup reset zoom button
@@ -407,12 +538,23 @@ function renderHWOwnerDetailsChart(hwoName) {
       if (resetBtn) {
         resetBtn.onclick = () => {
           if (window.modalHWOwnerChart) {
-            // Reset to show top 5 and reset dropdown
+            // Reset to show top 5
             const rangeSelect = document.getElementById('hwOwnerRangeSelect');
             if (rangeSelect) {
               rangeSelect.value = '1-5';
             }
             
+            // Reset range controls
+            const rangeStart = document.getElementById('hwOwnerRangeStart');
+            const rangeEnd = document.getElementById('hwOwnerRangeEnd');
+            const rangeSlider = document.getElementById('hwOwnerRangeSlider');
+            if (rangeStart && rangeEnd && rangeSlider) {
+              rangeStart.value = 1;
+              rangeEnd.value = 5;
+              rangeSlider.value = 1;
+            }
+            
+            // Reset chart
             window.modalHWOwnerChart.data.labels = top5Data.labels;
             window.modalHWOwnerChart.data.datasets[0].data = top5Data.data2025;
             window.modalHWOwnerChart.data.datasets[1].data = top5Data.data2026;
