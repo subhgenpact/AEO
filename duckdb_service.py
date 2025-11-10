@@ -1356,16 +1356,31 @@ class DuckDBService:
             # Build gap column select
             gap_select = f'"{gap_col}" as gap_status,' if gap_col else "'N/A' as gap_status,"
             
+            # Check if required columns exist
+            column_names = [desc[0] for desc in self.conn.execute(f'DESCRIBE {main_table}').fetchall()]
+            parent_supplier_col = "Parent_Part_Supplier" if "Parent_Part_Supplier" in column_names else self.supplier_col
+            rm_supplier_col = "Level_2_Raw_Material_Supplier" if "Level_2_Raw_Material_Supplier" in column_names else self.rm_supplier_col
+            lt_col = "Total_LT" if "Total_LT" in column_names else ("LT" if "LT" in column_names else None)
+            
+            # Build column selects with ANY_VALUE for aggregation
+            lt_select = f'ANY_VALUE("{lt_col}") as lt' if lt_col else "'N/A' as lt"
+            gap_col_select = f'ANY_VALUE("{gap_col}")' if gap_col else "'N/A'"
+            
             # Query to get HW Owner details with quarterly aggregation by supplier
+            # Including Parent_Part_Supplier, RM_Supplier, and Total_LT
+            # Use ANY_VALUE for columns that may vary but we just need one value
             query = f"""
                 WITH quarterly_data AS (
                     SELECT 
                         "{self.supplier_col}" as supplier,
                         "{self.part_col}" as part_number,
-                        "Part_Description" as part_description,
+                        ANY_VALUE("Part_Description") as part_description,
                         "{self.hw_owner_col}" as hwo,
+                        ANY_VALUE("{parent_supplier_col}") as parent_part_supplier,
+                        ANY_VALUE("{rm_supplier_col}") as rm_supplier,
+                        {lt_select},
                         'L1' as level,
-                        {gap_select}
+                        {gap_col_select} as gap_status,
                         CAST(EXTRACT(YEAR FROM CAST("{self.target_date_col}" AS DATE)) AS INTEGER) as year,
                         CAST(CEIL(EXTRACT(MONTH FROM CAST("{self.target_date_col}" AS DATE)) / 3.0) AS INTEGER) as quarter,
                         COUNT(*) as count
@@ -1380,9 +1395,7 @@ class DuckDBService:
                     GROUP BY 
                         "{self.supplier_col}",
                         "{self.part_col}",
-                        "Part_Description",
                         "{self.hw_owner_col}",
-                        gap_status,
                         year,
                         quarter
                 )
@@ -1399,11 +1412,14 @@ class DuckDBService:
                 part_number = row[1]
                 part_description = row[2]
                 hwo = row[3]
-                level = row[4]
-                gap_status = row[5]
-                year = row[6]
-                quarter = row[7]
-                count = row[8]
+                parent_part_supplier = row[4]
+                rm_supplier = row[5]
+                lt = row[6]
+                level = row[7]
+                gap_status = row[8]
+                year = row[9]
+                quarter = row[10]
+                count = row[11]
                 
                 key = f"{supplier}|{part_number}"
                 
@@ -1413,6 +1429,9 @@ class DuckDBService:
                         "partNumber": part_number,
                         "description": part_description or "Part",
                         "hwo": hwo or hw_owner,
+                        "parentPartSupplier": parent_part_supplier or "-",
+                        "rmSupplier": rm_supplier or "-",
+                        "lt": lt or "-",
                         "level": level,
                         "gapStatus": gap_status if gap_status else "N/A",
                         "quarters": {}

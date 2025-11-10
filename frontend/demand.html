@@ -887,24 +887,20 @@
             <div class="card-body">
               <div class="row g-2">
                 <div class="col-md-3">
-                  <label for="modalHWOwnerSupplierSearch" class="form-label">Search Supplier</label>
-                  <input type="text" class="form-control form-control-sm" id="modalHWOwnerSupplierSearch" placeholder="Filter by supplier...">
+                  <label for="modalHWOwnerHWOSearch" class="form-label">Search HWO</label>
+                  <input type="text" class="form-control form-control-sm" id="modalHWOwnerHWOSearch" placeholder="Filter by HWO...">
                 </div>
                 <div class="col-md-3">
                   <label for="modalHWOwnerPartNumberSearch" class="form-label">Search Part Number</label>
                   <input type="text" class="form-control form-control-sm" id="modalHWOwnerPartNumberSearch" placeholder="Filter by part number...">
                 </div>
                 <div class="col-md-3">
-                  <label for="modalHWOwnerPartDescSearch" class="form-label">Search Part Description</label>
-                  <input type="text" class="form-control form-control-sm" id="modalHWOwnerPartDescSearch" placeholder="Filter by description...">
+                  <label for="modalHWOwnerParentPartSupplierSearch" class="form-label">Search Parent Part Supplier</label>
+                  <input type="text" class="form-control form-control-sm" id="modalHWOwnerParentPartSupplierSearch" placeholder="Filter by parent part supplier...">
                 </div>
                 <div class="col-md-3">
-                  <label for="modalHWOwnerGapStatusFilter" class="form-label">Gap Status</label>
-                  <select class="form-select form-select-sm" id="modalHWOwnerGapStatusFilter">
-                    <option value="">All</option>
-                    <option value="gap">Gap</option>
-                    <option value="nogap">No Gap</option>
-                  </select>
+                  <label for="modalHWOwnerRMSupplierSearch" class="form-label">Search RM Supplier</label>
+                  <input type="text" class="form-control form-control-sm" id="modalHWOwnerRMSupplierSearch" placeholder="Filter by RM supplier...">
                 </div>
               </div>
             </div>
@@ -912,9 +908,9 @@
           <!-- Demand Chart -->
           <div class="card chart-card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-              <h6 class="mb-0" id="modalHWOwnerChartTitle">Supplier Demand per Part</h6>
+              <h6 class="mb-0" id="modalHWOwnerChartTitle">Part Number vs Demand</h6>
               <div class="btn-group">
-                <button class="btn btn-sm btn-outline-primary" id="showAllHWOwner" title="Show all suppliers">
+                <button class="btn btn-sm btn-outline-primary" id="showAllHWOwner" title="Show all part numbers">
                   <i class="bi bi-eye"></i> Show All
                 </button>
                 <button class="btn btn-sm btn-outline-secondary" id="resetHWOwnerZoom" title="Reset to top 5">
@@ -943,22 +939,17 @@
                 <table class="table table-sm table-bordered" id="modalHWOwnerDetailsTable">
                   <thead>
                     <tr>
-                      <th>Supplier</th>
-                      <th>Part Number</th>
-                      <th>Part Description</th>
-                      <th>HWO</th>
-                      <th>Gap Status</th>
+                      <th rowspan="2">HWO</th>
+                      <th rowspan="2">Part Number</th>
+                      <th rowspan="2">Parent Part Supplier</th>
+                      <th rowspan="2">RM Supplier</th>
+                      <th rowspan="2">LT</th>
                       <th colspan="1" class="text-center">2025</th>
                       <th colspan="4" class="text-center">2026</th>
                       <th colspan="4" class="text-center">2027</th>
                       <th colspan="4" class="text-center">2028</th>
                     </tr>
                     <tr>
-                      <th></th>
-                      <th></th>
-                      <th></th>
-                      <th></th>
-                      <th></th>
                       <th>Q4</th>
                       <th>Q1</th>
                       <th>Q2</th>
