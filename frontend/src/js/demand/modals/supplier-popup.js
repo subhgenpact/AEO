@@ -54,23 +54,37 @@ function showProgramSuppliersModal(programName, suppliers, details) {
 
             <!-- Demand Chart -->
             <div class="card chart-card mb-4">
-              <div class="card-header d-flex justify-content-between align-items-center">
+              <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                 <h6 class="mb-0" id="programModalChartTitle">${programName} Supplier Demand</h6>
-                <div>
-                  <button class="btn btn-sm btn-outline-primary me-2" id="showAllProgramSuppliers" title="Show all suppliers">
-                    <i class="bi bi-list"></i> Show All
-                  </button>
+                <div class="d-flex gap-2 align-items-center">
+                  <label for="programSupplierRangeSelect" class="mb-0 small">Quick Select:</label>
+                  <select class="form-select form-select-sm" id="programSupplierRangeSelect" style="width: auto;">
+                    <option value="1-5" selected>Top 5</option>
+                    <!-- Dynamic options will be populated by JavaScript -->
+                  </select>
                   <button class="btn btn-sm btn-outline-secondary" id="resetProgramSupplierZoom" title="Reset to top 5">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                   </button>
                 </div>
               </div>
               <div class="card-body">
+                <!-- Compact Range Slider -->
+                <div class="mb-2 px-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0 small text-nowrap">Range:</label>
+                    <input type="number" class="form-control form-control-sm" id="programSupplierRangeStart" min="1" max="30" value="1" style="width: 60px;">
+                    <span class="text-muted">-</span>
+                    <input type="number" class="form-control form-control-sm" id="programSupplierRangeEnd" min="1" max="30" value="5" style="width: 60px;">
+                    <input type="range" class="form-range flex-fill" id="programSupplierRangeSlider" min="1" max="30" value="5" step="1" style="min-width: 150px;">
+                    <button class="btn btn-sm btn-primary px-2 py-1" id="applyProgramSupplierRange">Go</button>
+                  </div>
+                </div>
+                
                 <div class="chart-container" style="height: 300px;">
                   <canvas id="programModalChart"></canvas>
                 </div>
                 <div class="text-muted small text-center mt-2">
-                  💡 <strong>Tip:</strong> Scroll to navigate, Click bar to filter table, Double-click to reset
+                  💡 <strong>Tip:</strong> Adjust range above • Click bar to show only that bar • Double-click to reset
                 </div>
               </div>
             </div>
@@ -304,45 +318,208 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
           chart.options.scales.y.max = 4;
           chart.update();
         } else if (activeElements.length > 0) {
-          // Get the clicked supplier name
+          // Get the clicked supplier and its index in the full data
           const clickedIndex = activeElements[0].index;
-          const supplierName = chart.data.labels[clickedIndex];
+          const currentLabel = chart.data.labels[clickedIndex];
           
-          // Filter the table by this supplier
-          filterProgramTableBySupplier(supplierName);
+          // Find the index in the full dataset
+          const fullDataIndex = window.fullProgramSupplierChartData.labels.indexOf(currentLabel);
+          
+          if (fullDataIndex !== -1) {
+            // Show only the clicked bar
+            chart.data.labels = [window.fullProgramSupplierChartData.labels[fullDataIndex]];
+            chart.data.datasets[0].data = [window.fullProgramSupplierChartData.data2025[fullDataIndex]];
+            chart.data.datasets[1].data = [window.fullProgramSupplierChartData.data2026[fullDataIndex]];
+            chart.data.datasets[2].data = [window.fullProgramSupplierChartData.data2027[fullDataIndex]];
+            chart.options.scales.y.min = 0;
+            chart.options.scales.y.max = 0; // Single item
+            chart.update();
+            
+            // Also filter the table by this supplier
+            filterProgramTableBySupplier(currentLabel);
+          }
         }
       }
     }
   });
 
+  // Populate Quick Select dropdown with Top 5, Top 10, Top 15, and All
+  const totalRecords = labels.length;
+  const rangeSelect = document.getElementById('programSupplierRangeSelect');
+  if (rangeSelect) {
+    // Clear existing options
+    rangeSelect.innerHTML = '';
+    
+    // Add Top 5, Top 10, Top 15 options
+    const topOptions = [5, 10, 15];
+    topOptions.forEach((count, index) => {
+      if (count <= totalRecords) {
+        const option = document.createElement('option');
+        option.value = `1-${count}`;
+        option.textContent = `Top ${count}`;
+        if (index === 0) option.selected = true;
+        rangeSelect.appendChild(option);
+      }
+    });
+    
+    // Add "All" option
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = `All (${totalRecords})`;
+    rangeSelect.appendChild(allOption);
+    
+    // Setup dropdown change handler
+    rangeSelect.onchange = () => {
+      if (programModalChart && window.fullProgramSupplierChartData) {
+        const range = rangeSelect.value;
+        let startIdx, endIdx;
+        
+        if (range === 'all') {
+          startIdx = 0;
+          endIdx = window.fullProgramSupplierChartData.labels.length;
+        } else {
+          const [start, end] = range.split('-').map(Number);
+          startIdx = start - 1;
+          endIdx = end;
+        }
+        
+        updateProgramSupplierChartRange(startIdx, endIdx);
+        
+        // Update range controls to match
+        const rangeStartInput = document.getElementById('programSupplierRangeStart');
+        const rangeEndInput = document.getElementById('programSupplierRangeEnd');
+        const rangeSlider = document.getElementById('programSupplierRangeSlider');
+        if (rangeStartInput && rangeEndInput && rangeSlider) {
+          rangeStartInput.value = startIdx + 1;
+          rangeEndInput.value = endIdx;
+          rangeSlider.value = endIdx;
+        }
+      }
+    };
+  }
+  
+  // Setup compact range controls
+  const rangeStart = document.getElementById('programSupplierRangeStart');
+  const rangeEnd = document.getElementById('programSupplierRangeEnd');
+  const rangeSlider = document.getElementById('programSupplierRangeSlider');
+  const applyRangeBtn = document.getElementById('applyProgramSupplierRange');
+  
+  if (rangeStart && rangeEnd && rangeSlider) {
+    // Set max values based on actual data
+    rangeStart.max = totalRecords;
+    rangeEnd.max = totalRecords;
+    rangeSlider.max = totalRecords;
+    rangeStart.value = 1;
+    rangeEnd.value = Math.min(5, totalRecords);
+    rangeSlider.value = Math.min(5, totalRecords);
+    
+    // Slider controls the end position (mapped to end range number)
+    rangeSlider.oninput = () => {
+      const end = parseInt(rangeSlider.value);
+      rangeEnd.value = end;
+      // Keep start at 1 for "Top N" behavior, or adjust if needed
+      if (parseInt(rangeStart.value) > end) {
+        rangeStart.value = Math.max(1, end - 4);
+      }
+    };
+    
+    // Number inputs update slider
+    rangeStart.oninput = () => {
+      const start = parseInt(rangeStart.value);
+      if (start > parseInt(rangeEnd.value)) {
+        rangeEnd.value = Math.min(start + 4, totalRecords);
+        rangeSlider.value = rangeEnd.value;
+      }
+    };
+    
+    rangeEnd.oninput = () => {
+      const end = parseInt(rangeEnd.value);
+      if (end < parseInt(rangeStart.value)) {
+        rangeStart.value = Math.max(1, end - 4);
+      }
+      rangeSlider.value = end;
+    };
+    
+    // Apply button handler
+    if (applyRangeBtn) {
+      applyRangeBtn.onclick = () => {
+        const start = parseInt(rangeStart.value);
+        const end = parseInt(rangeEnd.value);
+        
+        if (start > end) {
+          alert('Start value must be less than or equal to End value');
+          return;
+        }
+        
+        if (start < 1 || end > totalRecords) {
+          alert(`Range must be between 1 and ${totalRecords}`);
+          return;
+        }
+        
+        updateProgramSupplierChartRange(start - 1, end);
+        
+        // Try to match dropdown value (for Top 5, Top 10, Top 15, or All)
+        if (start === 1) {
+          const matchingOption = Array.from(rangeSelect.options).find(opt => opt.value === `1-${end}`);
+          if (matchingOption) {
+            rangeSelect.value = matchingOption.value;
+          }
+        } else if (end === totalRecords) {
+          rangeSelect.value = 'all';
+        }
+        
+        // Update slider to match end value
+        rangeSlider.value = end;
+      };
+    }
+  }
+  
+  // Helper function to update chart with range
+  function updateProgramSupplierChartRange(startIdx, endIdx) {
+    if (!programModalChart || !window.fullProgramSupplierChartData) return;
+    
+    const rangeLabels = window.fullProgramSupplierChartData.labels.slice(startIdx, endIdx);
+    const rangeData2025 = window.fullProgramSupplierChartData.data2025.slice(startIdx, endIdx);
+    const rangeData2026 = window.fullProgramSupplierChartData.data2026.slice(startIdx, endIdx);
+    const rangeData2027 = window.fullProgramSupplierChartData.data2027.slice(startIdx, endIdx);
+    
+    programModalChart.data.labels = rangeLabels;
+    programModalChart.data.datasets[0].data = rangeData2025;
+    programModalChart.data.datasets[1].data = rangeData2026;
+    programModalChart.data.datasets[2].data = rangeData2027;
+    programModalChart.options.scales.y.min = 0;
+    programModalChart.options.scales.y.max = Math.max(0, rangeLabels.length - 1);
+    programModalChart.update();
+  }
+  
   // Setup reset button
   const resetBtn = document.getElementById('resetProgramSupplierZoom');
   if (resetBtn) {
     resetBtn.onclick = () => {
       if (programModalChart) {
         // Reset to show top 5
+        const rangeSelect = document.getElementById('programSupplierRangeSelect');
+        if (rangeSelect) {
+          rangeSelect.value = '1-5';
+        }
+        
+        // Reset range controls
+        const rangeStart = document.getElementById('programSupplierRangeStart');
+        const rangeEnd = document.getElementById('programSupplierRangeEnd');
+        const rangeSlider = document.getElementById('programSupplierRangeSlider');
+        if (rangeStart && rangeEnd && rangeSlider) {
+          rangeStart.value = 1;
+          rangeEnd.value = 5;
+          rangeSlider.value = 5;
+        }
+        
+        // Reset chart
         programModalChart.data.labels = top5Data.labels;
         programModalChart.data.datasets[0].data = top5Data.data2025;
         programModalChart.data.datasets[1].data = top5Data.data2026;
         programModalChart.data.datasets[2].data = top5Data.data2027;
         programModalChart.options.scales.y.min = 0;
         programModalChart.options.scales.y.max = 4;
-        programModalChart.update();
-      }
-    };
-  }
-
-  // Setup show all button
-  const showAllBtn = document.getElementById('showAllProgramSuppliers');
-  if (showAllBtn) {
-    showAllBtn.onclick = () => {
-      if (programModalChart && window.fullProgramSupplierChartData) {
-        programModalChart.data.labels = window.fullProgramSupplierChartData.labels;
-        programModalChart.data.datasets[0].data = window.fullProgramSupplierChartData.data2025;
-        programModalChart.data.datasets[1].data = window.fullProgramSupplierChartData.data2026;
-        programModalChart.data.datasets[2].data = window.fullProgramSupplierChartData.data2027;
-        programModalChart.options.scales.y.min = 0;
-        programModalChart.options.scales.y.max = Math.min(9, window.fullProgramSupplierChartData.labels.length - 1);
         programModalChart.update();
       }
     };

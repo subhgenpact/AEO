@@ -779,23 +779,37 @@
           </div>
           <!-- Demand Chart -->
           <div class="card chart-card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
               <h6 class="mb-0" id="modalSupplierTypeChartTitle">Supplier Demand per Part</h6>
-              <div class="btn-group">
-                <button class="btn btn-sm btn-outline-primary" id="showAllSupplierType" title="Show all suppliers">
-                  <i class="bi bi-eye"></i> Show All
-                </button>
+              <div class="d-flex gap-2 align-items-center">
+                <label for="supplierTypeRangeSelect" class="mb-0 small">Quick Select:</label>
+                <select class="form-select form-select-sm" id="supplierTypeRangeSelect" style="width: auto;">
+                  <option value="1-5" selected>Top 5</option>
+                  <!-- Dynamic options will be populated by JavaScript -->
+                </select>
                 <button class="btn btn-sm btn-outline-secondary" id="resetSupplierTypeZoom" title="Reset to top 5">
                   <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </button>
               </div>
             </div>
             <div class="card-body">
+              <!-- Compact Range Slider -->
+              <div class="mb-2 px-2">
+                <div class="d-flex align-items-center gap-2">
+                  <label class="mb-0 small text-nowrap">Range:</label>
+                  <input type="number" class="form-control form-control-sm" id="supplierTypeRangeStart" min="1" max="30" value="1" style="width: 60px;">
+                  <span class="text-muted">-</span>
+                  <input type="number" class="form-control form-control-sm" id="supplierTypeRangeEnd" min="1" max="30" value="5" style="width: 60px;">
+                  <input type="range" class="form-range flex-fill" id="supplierTypeRangeSlider" min="1" max="30" value="5" step="1" style="min-width: 150px;">
+                  <button class="btn btn-sm btn-primary px-2 py-1" id="applySupplierTypeRange">Go</button>
+                </div>
+              </div>
+              
               <div class="chart-container" style="height: 300px;">
                 <canvas id="modalSupplierTypeChart"></canvas>
               </div>
               <div class="text-muted small text-center mt-2">
-                💡 <strong>Tip:</strong> Scroll to pan vertically • Click bar to filter table • Double-click to reset to top 5
+                💡 <strong>Tip:</strong> Adjust range above • Click bar to show only that bar • Double-click to reset
               </div>
             </div>
           </div>
@@ -1047,23 +1061,37 @@
           </div>
           <!-- Demand Chart -->
           <div class="card chart-card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
               <h6 class="mb-0" id="modalChartTitle">Raw Material Demand per Supplier</h6>
-              <div>
-                <button class="btn btn-sm btn-outline-primary me-2" id="showAllRMSuppliers" title="Show all suppliers">
-                  <i class="bi bi-list"></i> Show All
-                </button>
+              <div class="d-flex gap-2 align-items-center">
+                <label for="rmSupplierRangeSelect" class="mb-0 small">Quick Select:</label>
+                <select class="form-select form-select-sm" id="rmSupplierRangeSelect" style="width: auto;">
+                  <option value="1-5" selected>Top 5</option>
+                  <!-- Dynamic options will be populated by JavaScript -->
+                </select>
                 <button class="btn btn-sm btn-outline-secondary" id="resetRawMaterialZoom" title="Reset to top 5">
                   <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </button>
               </div>
             </div>
             <div class="card-body">
+              <!-- Compact Range Slider -->
+              <div class="mb-2 px-2">
+                <div class="d-flex align-items-center gap-2">
+                  <label class="mb-0 small text-nowrap">Range:</label>
+                  <input type="number" class="form-control form-control-sm" id="rmSupplierRangeStart" min="1" max="30" value="1" style="width: 60px;">
+                  <span class="text-muted">-</span>
+                  <input type="number" class="form-control form-control-sm" id="rmSupplierRangeEnd" min="1" max="30" value="5" style="width: 60px;">
+                  <input type="range" class="form-range flex-fill" id="rmSupplierRangeSlider" min="1" max="30" value="5" step="1" style="min-width: 150px;">
+                  <button class="btn btn-sm btn-primary px-2 py-1" id="applyRMSupplierRange">Go</button>
+                </div>
+              </div>
+              
               <div class="chart-container" style="height: 300px;">
                 <canvas id="modalRawMaterialChart"></canvas>
               </div>
               <div class="text-muted small text-center mt-2">
-                💡 <strong>Tip:</strong> Scroll to navigate, Click bar to filter table, Double-click to reset
+                💡 <strong>Tip:</strong> Adjust range above • Click bar to show only that bar • Double-click to reset
               </div>
             </div>
           </div>

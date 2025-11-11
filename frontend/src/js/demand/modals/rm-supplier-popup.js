@@ -206,16 +206,182 @@ function renderModalRawMaterialChart(data, rawType) {
               chart.options.scales.y.max = 4;
               chart.update();
             } else if (activeElements.length > 0) {
-              // Get the clicked supplier name
+              // Get the clicked supplier and its index in the full data
               const clickedIndex = activeElements[0].index;
-              const supplierName = chart.data.labels[clickedIndex];
+              const currentLabel = chart.data.labels[clickedIndex];
               
-              // Filter the table by this supplier
-              filterTableBySupplier(supplierName);
+              // Find the index in the full dataset
+              const fullDataIndex = window.fullSupplierChartData.suppliers.indexOf(currentLabel);
+              
+              if (fullDataIndex !== -1) {
+                // Show only the clicked bar
+                chart.data.labels = [window.fullSupplierChartData.suppliers[fullDataIndex]];
+                chart.data.datasets[0].data = [window.fullSupplierChartData.data2025[fullDataIndex]];
+                chart.data.datasets[1].data = [window.fullSupplierChartData.data2026[fullDataIndex]];
+                chart.data.datasets[2].data = [window.fullSupplierChartData.data2027[fullDataIndex]];
+                chart.data.datasets[3].data = [window.fullSupplierChartData.data2028[fullDataIndex]];
+                chart.options.scales.y.min = 0;
+                chart.options.scales.y.max = 0; // Single item
+                chart.update();
+                
+                // Also filter the table by this supplier
+                filterTableBySupplier(currentLabel);
+              }
             }
           }
         }
       });
+      
+      // Populate Quick Select dropdown with Top 5, Top 10, Top 15, and All
+      const totalRecords = supplierData.suppliers.length;
+      const rangeSelect = document.getElementById('rmSupplierRangeSelect');
+      if (rangeSelect) {
+        // Clear existing options
+        rangeSelect.innerHTML = '';
+        
+        // Add Top 5, Top 10, Top 15 options
+        const topOptions = [5, 10, 15];
+        topOptions.forEach((count, index) => {
+          if (count <= totalRecords) {
+            const option = document.createElement('option');
+            option.value = `1-${count}`;
+            option.textContent = `Top ${count}`;
+            if (index === 0) option.selected = true;
+            rangeSelect.appendChild(option);
+          }
+        });
+        
+        // Add "All" option
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = `All (${totalRecords})`;
+        rangeSelect.appendChild(allOption);
+        
+        // Setup dropdown change handler
+        rangeSelect.onchange = () => {
+          if (modalChart && window.fullSupplierChartData) {
+            const range = rangeSelect.value;
+            let startIdx, endIdx;
+            
+            if (range === 'all') {
+              startIdx = 0;
+              endIdx = window.fullSupplierChartData.suppliers.length;
+            } else {
+              const [start, end] = range.split('-').map(Number);
+              startIdx = start - 1;
+              endIdx = end;
+            }
+            
+            updateRMSupplierChartRange(startIdx, endIdx);
+            
+            // Update range controls to match
+            const rangeStartInput = document.getElementById('rmSupplierRangeStart');
+            const rangeEndInput = document.getElementById('rmSupplierRangeEnd');
+            const rangeSlider = document.getElementById('rmSupplierRangeSlider');
+            if (rangeStartInput && rangeEndInput && rangeSlider) {
+              rangeStartInput.value = startIdx + 1;
+              rangeEndInput.value = endIdx;
+              rangeSlider.value = endIdx;
+            }
+          }
+        };
+      }
+      
+      // Setup compact range controls
+      const rangeStart = document.getElementById('rmSupplierRangeStart');
+      const rangeEnd = document.getElementById('rmSupplierRangeEnd');
+      const rangeSlider = document.getElementById('rmSupplierRangeSlider');
+      const applyRangeBtn = document.getElementById('applyRMSupplierRange');
+      
+      if (rangeStart && rangeEnd && rangeSlider) {
+        // Set max values based on actual data
+        rangeStart.max = totalRecords;
+        rangeEnd.max = totalRecords;
+        rangeSlider.max = totalRecords;
+        rangeStart.value = 1;
+        rangeEnd.value = Math.min(5, totalRecords);
+        rangeSlider.value = Math.min(5, totalRecords);
+        
+        // Slider controls the end position (mapped to end range number)
+        rangeSlider.oninput = () => {
+          const end = parseInt(rangeSlider.value);
+          rangeEnd.value = end;
+          // Keep start at 1 for "Top N" behavior, or adjust if needed
+          if (parseInt(rangeStart.value) > end) {
+            rangeStart.value = Math.max(1, end - 4);
+          }
+        };
+        
+        // Number inputs update slider
+        rangeStart.oninput = () => {
+          const start = parseInt(rangeStart.value);
+          if (start > parseInt(rangeEnd.value)) {
+            rangeEnd.value = Math.min(start + 4, totalRecords);
+            rangeSlider.value = rangeEnd.value;
+          }
+        };
+        
+        rangeEnd.oninput = () => {
+          const end = parseInt(rangeEnd.value);
+          if (end < parseInt(rangeStart.value)) {
+            rangeStart.value = Math.max(1, end - 4);
+          }
+          rangeSlider.value = end;
+        };
+        
+        // Apply button handler
+        if (applyRangeBtn) {
+          applyRangeBtn.onclick = () => {
+            const start = parseInt(rangeStart.value);
+            const end = parseInt(rangeEnd.value);
+            
+            if (start > end) {
+              alert('Start value must be less than or equal to End value');
+              return;
+            }
+            
+            if (start < 1 || end > totalRecords) {
+              alert(`Range must be between 1 and ${totalRecords}`);
+              return;
+            }
+            
+            updateRMSupplierChartRange(start - 1, end);
+            
+            // Try to match dropdown value (for Top 5, Top 10, Top 15, or All)
+            if (start === 1) {
+              const matchingOption = Array.from(rangeSelect.options).find(opt => opt.value === `1-${end}`);
+              if (matchingOption) {
+                rangeSelect.value = matchingOption.value;
+              }
+            } else if (end === totalRecords) {
+              rangeSelect.value = 'all';
+            }
+            
+            // Update slider to match end value
+            rangeSlider.value = end;
+          };
+        }
+      }
+      
+      // Helper function to update chart with range
+      function updateRMSupplierChartRange(startIdx, endIdx) {
+        if (!modalChart || !window.fullSupplierChartData) return;
+        
+        const rangeLabels = window.fullSupplierChartData.suppliers.slice(startIdx, endIdx);
+        const rangeData2025 = window.fullSupplierChartData.data2025.slice(startIdx, endIdx);
+        const rangeData2026 = window.fullSupplierChartData.data2026.slice(startIdx, endIdx);
+        const rangeData2027 = window.fullSupplierChartData.data2027.slice(startIdx, endIdx);
+        const rangeData2028 = window.fullSupplierChartData.data2028.slice(startIdx, endIdx);
+        
+        modalChart.data.labels = rangeLabels;
+        modalChart.data.datasets[0].data = rangeData2025;
+        modalChart.data.datasets[1].data = rangeData2026;
+        modalChart.data.datasets[2].data = rangeData2027;
+        modalChart.data.datasets[3].data = rangeData2028;
+        modalChart.options.scales.y.min = 0;
+        modalChart.options.scales.y.max = Math.max(0, rangeLabels.length - 1);
+        modalChart.update();
+      }
       
       // Setup reset zoom button
       const resetBtn = document.getElementById('resetRawMaterialZoom');
@@ -223,6 +389,22 @@ function renderModalRawMaterialChart(data, rawType) {
         resetBtn.onclick = () => {
           if (modalChart) {
             // Reset to show top 5
+            const rangeSelect = document.getElementById('rmSupplierRangeSelect');
+            if (rangeSelect) {
+              rangeSelect.value = '1-5';
+            }
+            
+            // Reset range controls
+            const rangeStart = document.getElementById('rmSupplierRangeStart');
+            const rangeEnd = document.getElementById('rmSupplierRangeEnd');
+            const rangeSlider = document.getElementById('rmSupplierRangeSlider');
+            if (rangeStart && rangeEnd && rangeSlider) {
+              rangeStart.value = 1;
+              rangeEnd.value = 5;
+              rangeSlider.value = 5;
+            }
+            
+            // Reset chart
             modalChart.data.labels = top5Data.suppliers;
             modalChart.data.datasets[0].data = top5Data.data2025;
             modalChart.data.datasets[1].data = top5Data.data2026;
@@ -230,23 +412,6 @@ function renderModalRawMaterialChart(data, rawType) {
             modalChart.data.datasets[3].data = top5Data.data2028;
             modalChart.options.scales.y.min = 0;
             modalChart.options.scales.y.max = 4;
-            modalChart.update();
-          }
-        };
-      }
-      
-      // Add "Show All" button functionality
-      const showAllBtn = document.getElementById('showAllRMSuppliers');
-      if (showAllBtn) {
-        showAllBtn.onclick = () => {
-          if (modalChart && window.fullSupplierChartData) {
-            modalChart.data.labels = window.fullSupplierChartData.suppliers;
-            modalChart.data.datasets[0].data = window.fullSupplierChartData.data2025;
-            modalChart.data.datasets[1].data = window.fullSupplierChartData.data2026;
-            modalChart.data.datasets[2].data = window.fullSupplierChartData.data2027;
-            modalChart.data.datasets[3].data = window.fullSupplierChartData.data2028;
-            modalChart.options.scales.y.min = 0;
-            modalChart.options.scales.y.max = Math.min(9, window.fullSupplierChartData.suppliers.length - 1);
             modalChart.update();
           }
         };

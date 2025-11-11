@@ -353,12 +353,27 @@ function renderModalSupplierTypeChart(supplierType) {
               chart.options.scales.y.max = 4;
               chart.update();
             } else if (activeElements.length > 0) {
-              // Get the clicked supplier name
+              // Get the clicked supplier and its index in the full data
               const clickedIndex = activeElements[0].index;
-              const supplierName = chart.data.labels[clickedIndex];
+              const currentLabel = chart.data.labels[clickedIndex];
               
-              // Filter the table by this supplier
-              filterSupplierTypeTableBySupplier(supplierName);
+              // Find the index in the full dataset
+              const fullDataIndex = window.fullSupplierTypeChartData.labels.indexOf(currentLabel);
+              
+              if (fullDataIndex !== -1) {
+                // Show only the clicked bar
+                chart.data.labels = [window.fullSupplierTypeChartData.labels[fullDataIndex]];
+                chart.data.datasets[0].data = [window.fullSupplierTypeChartData.data2025[fullDataIndex]];
+                chart.data.datasets[1].data = [window.fullSupplierTypeChartData.data2026[fullDataIndex]];
+                chart.data.datasets[2].data = [window.fullSupplierTypeChartData.data2027[fullDataIndex]];
+                chart.data.datasets[3].data = [window.fullSupplierTypeChartData.data2028[fullDataIndex]];
+                chart.options.scales.y.min = 0;
+                chart.options.scales.y.max = 0; // Single item
+                chart.update();
+                
+                // Also filter the table by this supplier
+                filterSupplierTypeTableBySupplier(currentLabel);
+              }
             }
           }
         }
@@ -366,12 +381,179 @@ function renderModalSupplierTypeChart(supplierType) {
       
       console.log('✅ Supplier type chart rendered successfully');
       
+      // Populate Quick Select dropdown with Top 5, Top 10, Top 15, and All
+      const totalRecords = suppliers.length;
+      const rangeSelect = document.getElementById('supplierTypeRangeSelect');
+      if (rangeSelect) {
+        // Clear existing options
+        rangeSelect.innerHTML = '';
+        
+        // Add Top 5, Top 10, Top 15 options
+        const topOptions = [5, 10, 15];
+        topOptions.forEach((count, index) => {
+          if (count <= totalRecords) {
+            const option = document.createElement('option');
+            option.value = `1-${count}`;
+            option.textContent = `Top ${count}`;
+            if (index === 0) option.selected = true;
+            rangeSelect.appendChild(option);
+          }
+        });
+        
+        // Add "All" option
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = `All (${totalRecords})`;
+        rangeSelect.appendChild(allOption);
+        
+        // Setup dropdown change handler
+        rangeSelect.onchange = () => {
+          if (window.modalSupplierTypeChart && window.fullSupplierTypeChartData) {
+            const range = rangeSelect.value;
+            let startIdx, endIdx;
+            
+            if (range === 'all') {
+              startIdx = 0;
+              endIdx = window.fullSupplierTypeChartData.labels.length;
+            } else {
+              const [start, end] = range.split('-').map(Number);
+              startIdx = start - 1;
+              endIdx = end;
+            }
+            
+            updateSupplierTypeChartRange(startIdx, endIdx);
+            
+            // Update range controls to match
+            const rangeStartInput = document.getElementById('supplierTypeRangeStart');
+            const rangeEndInput = document.getElementById('supplierTypeRangeEnd');
+            const rangeSlider = document.getElementById('supplierTypeRangeSlider');
+            if (rangeStartInput && rangeEndInput && rangeSlider) {
+              rangeStartInput.value = startIdx + 1;
+              rangeEndInput.value = endIdx;
+              rangeSlider.value = endIdx;
+            }
+          }
+        };
+      }
+      
+      // Setup compact range controls
+      const rangeStart = document.getElementById('supplierTypeRangeStart');
+      const rangeEnd = document.getElementById('supplierTypeRangeEnd');
+      const rangeSlider = document.getElementById('supplierTypeRangeSlider');
+      const applyRangeBtn = document.getElementById('applySupplierTypeRange');
+      
+      if (rangeStart && rangeEnd && rangeSlider) {
+        // Set max values based on actual data
+        rangeStart.max = totalRecords;
+        rangeEnd.max = totalRecords;
+        rangeSlider.max = totalRecords;
+        rangeStart.value = 1;
+        rangeEnd.value = Math.min(5, totalRecords);
+        rangeSlider.value = Math.min(5, totalRecords);
+        
+        // Slider controls the end position (mapped to end range number)
+        rangeSlider.oninput = () => {
+          const end = parseInt(rangeSlider.value);
+          rangeEnd.value = end;
+          // Keep start at 1 for "Top N" behavior, or adjust if needed
+          if (parseInt(rangeStart.value) > end) {
+            rangeStart.value = Math.max(1, end - 4);
+          }
+        };
+        
+        // Number inputs update slider
+        rangeStart.oninput = () => {
+          const start = parseInt(rangeStart.value);
+          if (start > parseInt(rangeEnd.value)) {
+            rangeEnd.value = Math.min(start + 4, totalRecords);
+            rangeSlider.value = rangeEnd.value;
+          }
+        };
+        
+        rangeEnd.oninput = () => {
+          const end = parseInt(rangeEnd.value);
+          if (end < parseInt(rangeStart.value)) {
+            rangeStart.value = Math.max(1, end - 4);
+          }
+          rangeSlider.value = end;
+        };
+        
+        // Apply button handler
+        if (applyRangeBtn) {
+          applyRangeBtn.onclick = () => {
+            const start = parseInt(rangeStart.value);
+            const end = parseInt(rangeEnd.value);
+            
+            if (start > end) {
+              alert('Start value must be less than or equal to End value');
+              return;
+            }
+            
+            if (start < 1 || end > totalRecords) {
+              alert(`Range must be between 1 and ${totalRecords}`);
+              return;
+            }
+            
+            updateSupplierTypeChartRange(start - 1, end);
+            
+            // Try to match dropdown value (for Top 5, Top 10, Top 15, or All)
+            if (start === 1) {
+              const matchingOption = Array.from(rangeSelect.options).find(opt => opt.value === `1-${end}`);
+              if (matchingOption) {
+                rangeSelect.value = matchingOption.value;
+              }
+            } else if (end === totalRecords) {
+              rangeSelect.value = 'all';
+            }
+            
+            // Update slider to match end value
+            rangeSlider.value = end;
+          };
+        }
+      }
+      
+      // Helper function to update chart with range
+      function updateSupplierTypeChartRange(startIdx, endIdx) {
+        if (!window.modalSupplierTypeChart || !window.fullSupplierTypeChartData) return;
+        
+        const rangeLabels = window.fullSupplierTypeChartData.labels.slice(startIdx, endIdx);
+        const rangeData2025 = window.fullSupplierTypeChartData.data2025.slice(startIdx, endIdx);
+        const rangeData2026 = window.fullSupplierTypeChartData.data2026.slice(startIdx, endIdx);
+        const rangeData2027 = window.fullSupplierTypeChartData.data2027.slice(startIdx, endIdx);
+        const rangeData2028 = window.fullSupplierTypeChartData.data2028.slice(startIdx, endIdx);
+        
+        window.modalSupplierTypeChart.data.labels = rangeLabels;
+        window.modalSupplierTypeChart.data.datasets[0].data = rangeData2025;
+        window.modalSupplierTypeChart.data.datasets[1].data = rangeData2026;
+        window.modalSupplierTypeChart.data.datasets[2].data = rangeData2027;
+        window.modalSupplierTypeChart.data.datasets[3].data = rangeData2028;
+        window.modalSupplierTypeChart.options.scales.y.min = 0;
+        window.modalSupplierTypeChart.options.scales.y.max = Math.max(0, rangeLabels.length - 1);
+        window.modalSupplierTypeChart.update();
+      }
+      
       // Setup reset zoom button
       const resetBtn = document.getElementById('resetSupplierTypeZoom');
       if (resetBtn) {
         resetBtn.onclick = () => {
           if (window.modalSupplierTypeChart) {
             // Reset to show top 5
+            const rangeSelect = document.getElementById('supplierTypeRangeSelect');
+            if (rangeSelect) {
+              rangeSelect.value = '1-5';
+            }
+            
+            // Reset range controls
+            const rangeStart = document.getElementById('supplierTypeRangeStart');
+            const rangeEnd = document.getElementById('supplierTypeRangeEnd');
+            const rangeSlider = document.getElementById('supplierTypeRangeSlider');
+            if (rangeStart && rangeEnd && rangeSlider) {
+              rangeStart.value = 1;
+              rangeEnd.value = 5;
+              rangeSlider.value = 5;
+            }
+            
+            // Reset chart
             window.modalSupplierTypeChart.data.labels = top5Data.labels;
             window.modalSupplierTypeChart.data.datasets[0].data = top5Data.data2025;
             window.modalSupplierTypeChart.data.datasets[1].data = top5Data.data2026;
@@ -379,23 +561,6 @@ function renderModalSupplierTypeChart(supplierType) {
             window.modalSupplierTypeChart.data.datasets[3].data = top5Data.data2028;
             window.modalSupplierTypeChart.options.scales.y.min = 0;
             window.modalSupplierTypeChart.options.scales.y.max = 4;
-            window.modalSupplierTypeChart.update();
-          }
-        };
-      }
-      
-      // Setup show all button
-      const showAllBtn = document.getElementById('showAllSupplierType');
-      if (showAllBtn) {
-        showAllBtn.onclick = () => {
-          if (window.modalSupplierTypeChart && window.fullSupplierTypeChartData) {
-            window.modalSupplierTypeChart.data.labels = window.fullSupplierTypeChartData.labels;
-            window.modalSupplierTypeChart.data.datasets[0].data = window.fullSupplierTypeChartData.data2025;
-            window.modalSupplierTypeChart.data.datasets[1].data = window.fullSupplierTypeChartData.data2026;
-            window.modalSupplierTypeChart.data.datasets[2].data = window.fullSupplierTypeChartData.data2027;
-            window.modalSupplierTypeChart.data.datasets[3].data = window.fullSupplierTypeChartData.data2028;
-            window.modalSupplierTypeChart.options.scales.y.min = 0;
-            window.modalSupplierTypeChart.options.scales.y.max = Math.min(9, window.fullSupplierTypeChartData.labels.length - 1);
             window.modalSupplierTypeChart.update();
           }
         };
