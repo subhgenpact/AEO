@@ -552,7 +552,7 @@ function renderModalDetailsTable(data, rawType) {
   const tableBody = document.getElementById('modalDetailsTableBody');
   
   // Show loading state
-  tableBody.innerHTML = '<tr><td colspan="20" class="text-center">Loading data...</td></tr>';
+  tableBody.innerHTML = '<tr><td colspan="19" class="text-center">Loading data...</td></tr>';
   
   // Get active filters from DataFilterManager
   const filters = window.dataFilterManager ? {
@@ -617,7 +617,7 @@ function renderModalDetailsTable(data, rawType) {
           });
         } else {
           console.error('❌ TablePaginationManager not loaded yet');
-          tableBody.innerHTML = '<tr><td colspan="20" class="text-center text-danger">Error: TablePaginationManager not loaded</td></tr>';
+          tableBody.innerHTML = '<tr><td colspan="19" class="text-center text-danger">Error: TablePaginationManager not loaded</td></tr>';
           return;
         }
       }
@@ -636,7 +636,7 @@ function renderModalDetailsTable(data, rawType) {
     })
     .catch(error => {
       console.error('Error fetching RM supplier details:', error);
-      tableBody.innerHTML = `<tr><td colspan="20" class="text-center text-danger">Error loading data: ${error.message}</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="19" class="text-center text-danger">Error loading data: ${error.message}</td></tr>`;
     });
 }
 
@@ -655,7 +655,6 @@ function renderModalTablePage(pageData) {
       <td>${supplier.parentPartNo || '-'}</td>
       <td>${supplier.parentPartSupplier || '-'}</td>
       <td>${supplier.hwo}</td>
-      <td>${supplier.level || '-'}</td>
       <td>${supplier.mfgLT}</td>
       <td>${supplier.quarters['2025-Q4'] || '-'}</td>
       <td>${supplier.quarters['2026-Q1'] || '-'}</td>
