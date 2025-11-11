@@ -870,7 +870,7 @@ function renderSupplierTable(data) {
           if (!supplierData.has(key)) {
             // Generate sample Level 1 PN and Description if not available
             const samplePN = l1.partNumber || `PN-${l1.supplier.substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-            const sampleDesc = l1.description || `${l1.supplier} Component Assembly`;
+            const sampleDesc = l1.description || `${l1.supplier}`;
             supplierData.set(key, { supplier: l1.supplier, level1PN: samplePN, description: sampleDesc, yearCounts: {} });
           }
           const supplierInfo = supplierData.get(key);
