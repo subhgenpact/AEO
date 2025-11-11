@@ -257,10 +257,16 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
   programModalChart = new Chart(ctx, {
     type: 'bar',
     data: { labels: top5Data.labels, datasets: datasets },
+    plugins: [ChartDataLabels],
     options: {
       responsive: true,
       maintainAspectRatio: false,
       indexAxis: 'y',
+      layout: {
+        padding: {
+          right: 60  // Add padding on right for total labels
+        }
+      },
       plugins: {
         legend: { position: 'top' },
         tooltip: {
@@ -269,6 +275,30 @@ function renderProgramSuppliersChart(programName, suppliers, details) {
               if (context.parsed.x === 0) return null;
               return `${context.dataset.label}: ${context.parsed.x}`;
             }
+          }
+        },
+        // Configure datalabels to show totals to the right of bars
+        datalabels: {
+          display: function(context) {
+            // Only show label on the last dataset (2027) to avoid duplicates
+            return context.datasetIndex === 2;
+          },
+          formatter: function(value, context) {
+            // Calculate total across all years for this supplier
+            const dataIndex = context.dataIndex;
+            const total = 
+              (context.chart.data.datasets[0].data[dataIndex] || 0) +
+              (context.chart.data.datasets[1].data[dataIndex] || 0) +
+              (context.chart.data.datasets[2].data[dataIndex] || 0);
+            return total.toLocaleString();
+          },
+          anchor: 'end',
+          align: 'end',
+          offset: 4,
+          color: '#1f2937',
+          font: {
+            weight: 'bold',
+            size: 11
           }
         },
         zoom: {
