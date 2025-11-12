@@ -55,7 +55,10 @@ class GapAnalysisDashboard {
       console.log('Step 5: Updating KPIs...');
       this.updateKPIs();
       
-      console.log('Step 6: Showing critical alerts...');
+      console.log('Step 6: Creating Gap by Raw Material chart...');
+      this.createGapByRawMaterialChart();
+      
+      console.log('Step 7: Showing critical alerts...');
       this.showCriticalAlertsPopup();
       
       console.log('Dashboard initialization complete!');
@@ -1584,10 +1587,194 @@ class GapAnalysisDashboard {
     }
   }
 
+  /**
+   * Create Gap % by Raw Material Chart
+   */
+  createGapByRawMaterialChart() {
+    const ctx = document.getElementById('gapByRawMaterialChart');
+    if (!ctx) {
+      console.warn('Gap by Raw Material chart canvas not found');
+      return;
+    }
+
+    // Check if data is available
+    if (!this.allTableData || this.allTableData.length === 0) {
+      console.warn('No data available for Gap by Raw Material chart');
+      ctx.parentElement.innerHTML = '<div class="text-center text-muted p-4">No data available</div>';
+      return;
+    }
+
+    // Aggregate data by raw material type
+    const rawMaterialMap = new Map();
+    
+    this.allTableData.forEach(row => {
+      const rmType = row['Level_2_Raw_Type'] || row['Level 2 Raw Type'] || 'Unknown';
+      const hasGap = row['Have_Gap'] || row['Have Gap'] || row['Gap_Y_N'] || row['Gap Y/N'];
+      const gapStatus = String(hasGap).toUpperCase().trim();
+      const isGap = gapStatus === 'Y' || gapStatus === 'YES' || gapStatus === '1' || gapStatus === 'TRUE';
+      
+      if (!rawMaterialMap.has(rmType)) {
+        rawMaterialMap.set(rmType, { noGap: 0, gap: 0 });
+      }
+      
+      const stats = rawMaterialMap.get(rmType);
+      if (isGap) {
+        stats.gap++;
+      } else {
+        stats.noGap++;
+      }
+    });
+    
+    // Sort by total count (descending)
+    const sortedMaterials = Array.from(rawMaterialMap.entries())
+      .sort((a, b) => {
+        const totalA = a[1].noGap + a[1].gap;
+        const totalB = b[1].noGap + b[1].gap;
+        return totalB - totalA;
+      });
+    
+    // Calculate percentages
+    const labels = sortedMaterials.map(([material]) => material);
+    const noGapPercentages = sortedMaterials.map(([, stats]) => {
+      const total = stats.noGap + stats.gap;
+      return total > 0 ? (stats.noGap / total) * 100 : 0;
+    });
+    const gapPercentages = sortedMaterials.map(([, stats]) => {
+      const total = stats.noGap + stats.gap;
+      return total > 0 ? (stats.gap / total) * 100 : 0;
+    });
+    
+    // Destroy existing chart if it exists
+    if (window.gapByRawMaterialChart && typeof window.gapByRawMaterialChart.destroy === 'function') {
+      window.gapByRawMaterialChart.destroy();
+    }
+    
+    // Create the chart
+    window.gapByRawMaterialChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'No Gap',
+            data: noGapPercentages,
+            backgroundColor: '#4caf50',
+            borderColor: '#4caf50',
+            borderWidth: 1
+          },
+          {
+            label: 'Gap',
+            data: gapPercentages,
+            backgroundColor: '#f44336',
+            borderColor: '#f44336',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              boxWidth: 20,
+              padding: 15,
+              font: {
+                size: 12,
+                weight: '500'
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const value = context.parsed.x.toFixed(1);
+                const materialIndex = context.dataIndex;
+                const stats = sortedMaterials[materialIndex][1];
+                const count = label === 'No Gap' ? stats.noGap : stats.gap;
+                return `${label}: ${value}% (${count} records)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            beginAtZero: true,
+            max: 100,
+            title: {
+              display: true,
+              text: 'Percentage (%)',
+              font: {
+                size: 12,
+                weight: '500'
+              }
+            },
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            }
+          },
+          y: {
+            stacked: true,
+            title: {
+              display: false
+            },
+            ticks: {
+              font: {
+                size: 11
+              }
+            }
+          }
+        },
+        onClick: (event, activeElements, chart) => {
+          if (activeElements.length > 0) {
+            const clickedIndex = activeElements[0].index;
+            const material = chart.data.labels[clickedIndex];
+            
+            // Filter table by this raw material
+            this.filterTableByRawMaterial(material);
+          }
+        }
+      }
+    });
+    
+    console.log('Gap by Raw Material chart created successfully');
+  }
+  
+  /**
+   * Filter table by raw material type
+   */
+  filterTableByRawMaterial(material) {
+    console.log(`Filtering table by raw material: ${material}`);
+    
+    // Filter the data
+    this.tableData = this.allTableData.filter(row => {
+      const rmType = row['Level_2_Raw_Type'] || row['Level 2 Raw Type'] || 'Unknown';
+      return rmType === material;
+    });
+    
+    // Reset to first page
+    this.currentPage = 1;
+    this.totalRecords = this.tableData.length;
+    
+    // Update table
+    this.renderTable();
+    this.renderPagination();
+    
+    // Scroll to table
+    const table = document.getElementById('gapAnalysisTable');
+    if (table) {
+      table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 }
 
-// Initialize the dashboard when the page loads
-let gapDashboard;
+// Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  gapDashboard = new GapAnalysisDashboard();
+  window.gapDashboard = new GapAnalysisDashboard();
 });
